@@ -17,6 +17,16 @@ class MyRobot(wpilib.IterativeRobot):
         self.leftMotor = wpilib.Talon(1)
         self.rightMotor = wpilib.Talon(2)
 
+        self.frontSolExtend = wpilib.Solenoid(1, 1)
+        self.frontSolRetract = wpilib.Solenoid(1, 0)
+        self.rearSolExtend = wpilib.Solenoid(1, 3)
+        self.rearSolRetract = wpilib.Solenoid(1, 2)
+
+        self.frontSolExtend.set(False)
+        self.frontSolRetract.set(True)
+        self.rearSolExtend.set(False)
+        self.rearSolRetract.set(True)
+        
         self.myRobot = DifferentialDrive(self.leftMotor, self.rightMotor)
         self.myRobot.setExpiration(0.1)
 
@@ -38,6 +48,18 @@ class MyRobot(wpilib.IterativeRobot):
         """Runs the motors with tank steering"""
         self.myRobot.tankDrive(self.stick.getRawAxis(5), self.stick.getRawAxis(1))
 
+        if self.stick.getRawButtonPressed(1): #A
+            self.frontSolExtend.set(False)
+            self.frontSolRetract.set(True)
+        elif self.stick.getRawButtonPressed(4): #Y
+            self.frontSolExtend.set(True)
+            self.frontSolRetract.set(False)
+        elif self.stick.getRawButtonPressed(2): #B
+            self.rearSolExtend.set(True)
+            self.rearSolRetract.set(False)
+        elif self.stick.getRawButtonPressed(3): #X
+            self.rearSolExtend.set(False)
+            self.rearSolRetract.set(True)
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)
