@@ -12,6 +12,9 @@ from wpilib.drive import DifferentialDrive
 class MyRobot(wpilib.IterativeRobot):
     def robotInit(self):
         """Robot initialization function"""
+        # variables for managing pneumatics sequence
+        self.State = -1
+        self.wait_timer_count = 0
 
         # object that handles basic drive operations
         self.leftMotor = wpilib.Talon(1)
@@ -49,6 +52,44 @@ class MyRobot(wpilib.IterativeRobot):
         self.myRobot.tankDrive(self.stick.getRawAxis(5), self.stick.getRawAxis(1))
 
         if self.stick.getRawButtonPressed(1): #A
+            self.State = 0
+
+        if self.State == 0:
+            self.frontSolExtend.set(True)
+            self.frontSolRetract.set(False)
+            self.rearSolExtend.set(False)
+            self.rearSolRetract.set(True)
+            self.wait_timer_count = 0
+            self.State = 1
+
+        elif self.State == 1:
+            self.wait_timer_count += 1
+            if self.wait_timer_count > 100:
+                self.State = 2
+
+        elif self.State == 2:
+            self.frontSolExtend.set(False)
+            self.frontSolRetract.set(True)
+            self.rearSolExtend.set(True)
+            self.rearSolRetract.set(False)
+            self.wait_timer_count = 0
+            self.State = 3
+
+        elif self.State == 3:
+            self.wait_timer_count += 1
+            if self.wait_timer_count > 250:
+                self.State = 4
+
+        elif self.State == 4:
+            self.frontSolExtend.set(False)
+            self.frontSolRetract.set(True)
+            self.rearSolExtend.set(False)
+            self.rearSolRetract.set(True)
+            
+            self.State = -1
+            
+'''
+        if self.stick.getRawButtonPressed(1): #A
             self.frontSolExtend.set(False)
             self.frontSolRetract.set(True)
         elif self.stick.getRawButtonPressed(4): #Y
@@ -60,6 +101,7 @@ class MyRobot(wpilib.IterativeRobot):
         elif self.stick.getRawButtonPressed(3): #X
             self.rearSolExtend.set(False)
             self.rearSolRetract.set(True)
+'''
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)
