@@ -14,7 +14,7 @@ class MyRobot(wpilib.IterativeRobot):
         """Robot initialization function"""
         # variables for managing pneumatics sequence
         self.State = -1
-        self.wait_timer_count = 0
+        self.wait_timer = wpilib.Timer()
 
         # object that handles basic drive operations
         self.leftMotor = wpilib.Talon(1)
@@ -55,39 +55,45 @@ class MyRobot(wpilib.IterativeRobot):
             self.State = 0
 
         if self.State == 0:
+            print("State0")
             self.frontSolExtend.set(True)
             self.frontSolRetract.set(False)
             self.rearSolExtend.set(False)
             self.rearSolRetract.set(True)
-            self.wait_timer_count = 0
+            self.wait_timer.reset()
+            self.wait_timer.start()
             self.State = 1
 
         elif self.State == 1:
-            self.wait_timer_count += 1
-            if self.wait_timer_count > 100:
+            if self.wait_timer.get() > 5.0:
                 self.State = 2
+            else:
+                print("State1, Waiting for 5 seconds to elapse")
 
         elif self.State == 2:
             self.frontSolExtend.set(False)
             self.frontSolRetract.set(True)
             self.rearSolExtend.set(True)
             self.rearSolRetract.set(False)
-            self.wait_timer_count = 0
+            self.wait_timer.reset()
+            self.wait_timer.start()
             self.State = 3
 
         elif self.State == 3:
-            self.wait_timer_count += 1
-            if self.wait_timer_count > 250:
+            if self.wait_timer.get() > 5.0:
                 self.State = 4
+            else:
+                print("State3, Waiting for 5 seconds to elapse")
 
         elif self.State == 4:
+            print("State4")
             self.frontSolExtend.set(False)
             self.frontSolRetract.set(True)
             self.rearSolExtend.set(False)
             self.rearSolRetract.set(True)
             
             self.State = -1
-            
+
 '''
         if self.stick.getRawButtonPressed(1): #A
             self.frontSolExtend.set(False)
