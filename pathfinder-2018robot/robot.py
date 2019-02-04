@@ -7,6 +7,7 @@
 # friction and momentum are ignored), so performance of these exact parameters
 # on a real robot won't be so great.
 #
+import csv
 
 import math
 import wpilib
@@ -25,11 +26,14 @@ class MyRobot(wpilib.TimedRobot):
     ENCODER_COUNTS_PER_REV = 4096
 
     # Pathfinder constants
-    MAX_VELOCITY = 5  # ft/s
-    MAX_ACCELERATION = 6 #ft/s/s
+    MAX_VELOCITY = 4  # ft/s
+    MAX_ACCELERATION = 2 #ft/s/s
 
     def robotInit(self):
         """Robot-wide initialization code should go here"""
+
+        self.timer = wpilib.Timer()
+        self.timer.start()
 
         self.navx = navx.AHRS.create_spi()
 
@@ -44,14 +48,25 @@ class MyRobot(wpilib.TimedRobot):
         self.l_motor_slave.set(ControlMode.Follower, 3)        
         self.r_motor_slave.set(ControlMode.Follower, 1)
 
-        self.l_motor_master.setInverted(True)
+        self.l_motor_master.setInverted(False)
         self.l_motor_slave.setInverted(False)
-        self.r_motor_master.setInverted(True)
+        self.r_motor_master.setInverted(False)
         self.r_motor_slave.setInverted(False)
 
+        self.l_motor_master.setSensorPhase(True)
+        self.r_motor_master.setSensorPhase(False)        
+        
         self.robot_drive = wpilib.RobotDrive(self.l_motor_master, self.r_motor_master)
 
     def autonomousInit(self):
+
+        self.robot_drive.setSafetyEnabled(False)
+        self.navx.reset()
+        self.l_motor_master.setSelectedSensorPosition(0, 0, 10)
+        self.r_motor_master.setSelectedSensorPosition(0, 0, 10)
+	
+        self.l_motor_master.getSensorCollection().setQuadraturePosition(0, 10)
+        self.r_motor_master.getSensorCollection().setQuadraturePosition(0, 10)        
 
         # Set up the trajectory
         points = [pf.Waypoint(0, 0, 0), pf.Waypoint(9, 5, 0)]
@@ -65,6 +80,13 @@ class MyRobot(wpilib.TimedRobot):
             max_acceleration=self.MAX_ACCELERATION,
             max_jerk=120.0,
         )
+        
+        csv = open('/home/lvuser/out.csv', 'w+')
+        for seg in trajectory:
+            csv.write(str(seg.dt) + ", " + str(seg.x) + ", " + str(seg.y) + ", " + str(seg.position) + ", " + str(seg.velocity) + ", " + str(seg.acceleration) + ", " + str(seg.jerk) + ", " + str(seg.heading) + "\n")
+        csv.close()
+
+        print("autonomousInit: " + str(len(trajectory)))
 
         # Wheelbase Width = 2 ft
         modifier = pf.modifiers.TankModifier(trajectory).modify(2.1)
@@ -77,13 +99,13 @@ class MyRobot(wpilib.TimedRobot):
         leftFollower.configureEncoder(
             self.l_motor_master.getSelectedSensorPosition(0), self.ENCODER_COUNTS_PER_REV, self.WHEEL_DIAMETER
         )
-        leftFollower.configurePIDVA(1.0, 0.0, 0.0, 1 / self.MAX_VELOCITY, 0)
+        leftFollower.configurePIDVA(0.1, 0.0, 0.0, 1 / self.MAX_VELOCITY, 0)
 
         rightFollower = pf.followers.EncoderFollower(right)
         rightFollower.configureEncoder(
             self.r_motor_master.getSelectedSensorPosition(0), self.ENCODER_COUNTS_PER_REV, self.WHEEL_DIAMETER
         )
-        rightFollower.configurePIDVA(1.0, 0.0, 0.0, 1 / self.MAX_VELOCITY, 0)
+        rightFollower.configurePIDVA(0.1, 0.0, 0.0, 1 / self.MAX_VELOCITY, 0)
 
         self.leftFollower = leftFollower
         self.rightFollower = rightFollower
@@ -120,14 +142,29 @@ class MyRobot(wpilib.TimedRobot):
         angleDifference = pf.boundHalfDegrees(desired_heading - gyro_heading)
         turn = 5 * (-1.0 / 80.0) * angleDifference
 
+        if self.timer.hasPeriodPassed(0.5):
+            print("l: " + str(l) + ", r: " + str(r) + ", turn: " + str(turn))
+            #print("current segment: " + str(self.leftFollower.getSegment().position))            
+
         l = l + turn
         r = r - turn
 
-        # -1 is forward, so invert both values
-        self.robot_drive.tankDrive(-l, -r)
+        if self.leftFollower.isFinished() or self.rightFollower.isFinished():
+            self.robot_drive.tankDrive(0, 0)
+        else:
+            # -1 is forward, so invert both values
+            self.robot_drive.tankDrive(-l, -r)
 
     def teleopPeriodic(self):
-        self.robot_drive.arcadeDrive(self.lstick)
+        self.robot_drive.setSafetyEnabled(False)
+        #self.robot_drive.arcadeDrive(self.lstick.getRawAxis(1), self.lstick.getRawAxis(0), False)
+        self.robot_drive.tankDrive(self.lstick.getRawAxis(1), self.lstick.getRawAxis(5))
+        if self.timer.hasPeriodPassed(1.0):
+            print("left-encoder: " + str(self.l_motor_master.getSelectedSensorPosition(0)))
+            print("right-encoder: " + str(self.r_motor_master.getSelectedSensorPosition(0)))
+            print("velocity: " + str(self.l_motor_master.getSelectedSensorVelocity(0)))  
+            print("fps: " + str(self.l_motor_master.getSelectedSensorVelocity(0) * 31.4 * self.WHEEL_DIAMETER / 4096))  
+            print("navx: " + str(self.navx.getAngle()))
 
 
 if __name__ == "__main__":
