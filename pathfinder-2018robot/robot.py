@@ -16,6 +16,7 @@ import pathfinder as pf
 import navx
 import ctre
 from ctre import *
+import csv
 
 
 class MyRobot(wpilib.TimedRobot):
@@ -87,6 +88,13 @@ class MyRobot(wpilib.TimedRobot):
         csv.close()
 
         print("autonomousInit: " + str(len(trajectory)))
+
+        with open('/home/lvuser/out.csv', 'w+') as points:
+            points_writer = csv.writer(points, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+            points_writer.writerow(['dt', 'x', 'y', 'position', 'velocity', 'acceleration', 'jerk', 'heading'])
+            for i in trajectory:
+                points_writer.writerow([i.dt, i.x, i.y, i.position, i.velocity, i.acceleration, i.jerk, i.heading])
 
         # Wheelbase Width = 2 ft
         modifier = pf.modifiers.TankModifier(trajectory).modify(2.1)
