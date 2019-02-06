@@ -1,3 +1,3 @@
-# Team 1923 PowerUp
+# path generation part 2
 
-Team 1923's official repository for the 2018 FIRST PowerUp game.
+path generating for the 2018 FIRST PowerUp game.
