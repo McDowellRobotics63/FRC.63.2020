@@ -16,15 +16,15 @@ from ctre._impl import *
 class MyRobot(wpilib.TimedRobot):
   
   WHEEL_DIAMETER = 0.5  # 6 inches
-  ENCODER_COUNTS_PER_REV = 4096
-
+  
   # Pathfinder constants
   MAX_VELOCITY = 48  # in/s
   MAX_ACCELERATION = 24 #in/s/s
   MAX_JERK = 120 #in/s/s/s
 
-  TIMEOUT_MS = 10 #milliseconds
+  CAN_BUS_TIMEOUT_MS = 10
 
+  ENCODER_COUNTS_PER_REV = 4096
   PIGEON_UNITS_PER_ROTATION = 8192
 
   TALON_MOTIONPROFILE_SLOT = 2
@@ -35,6 +35,8 @@ class MyRobot(wpilib.TimedRobot):
   LEFT_SLAVE_CAN_ID = 4
   RIGHT_SLAVE_CAN_ID = 2
   PIGEON_IMU_CAN_ID = 5
+
+  BASE_TRAJECTORY_PERIOD_MS = 20
 
   VELOCITY_MULTIPLIER = 1
 
@@ -49,7 +51,7 @@ class MyRobot(wpilib.TimedRobot):
     self.rightTalonSlave = TalonSRX(self.RIGHT_SLAVE_CAN_ID)
     
     self.leftTalonSlave.set(ControlMode.Follower, self.LEFT_MASTER_CAN_ID)
-    self.rightTalonSlave.set(ControlMode.Follower, RIGHT_MASTER_CAN_ID)
+    self.rightTalonSlave.set(ControlMode.Follower, self.RIGHT_MASTER_CAN_ID)
 
     self.masterTalons = [self.leftTalonMaster, self.rightTalonMaster]
     self.slaveTalons = [self.leftTalonSlave, self.rightTalonSlave]
@@ -60,56 +62,56 @@ class MyRobot(wpilib.TimedRobot):
     self.talons = [self.leftTalonMaster, self.leftTalonSlave, self.rightTalonMaster, self.rightTalonSlave]
 
     for talon in self.talons:
-      talon.configureNominalOutputForward(0.0, self.TIMEOUT_MS)
-      talon.configNominalOutputReverse(0.0, self.TIMEOUT_MS)
-      talon.configPeakOutputForward(1.0, self.TIMEOUT_MS)
-      talon.configPeakOutputReverse(-1.0, self.TIMEOUT_MS)
+      talon.configureNominalOutputForward(0.0, self.CAN_BUS_TIMEOUT_MS)
+      talon.configNominalOutputReverse(0.0, self.CAN_BUS_TIMEOUT_MS)
+      talon.configPeakOutputForward(1.0, self.CAN_BUS_TIMEOUT_MS)
+      talon.configPeakOutputReverse(-1.0, self.CAN_BUS_TIMEOUT_MS)
 
       talon.enableVoltageCompensation(True)
-      talon.configVoltageCompSaturation(11.5, self.TIMEOUT_MS) #Need nominal output voltage
-      talon.configOpenloopRamp(0.125, self.TIMEOUT_MS) #Need ramp rate
+      talon.configVoltageCompSaturation(11.5, self.CAN_BUS_TIMEOUT_MS) #Need nominal output voltage
+      talon.configOpenloopRamp(0.125, self.CAN_BUS_TIMEOUT_MS) #Need ramp rate
 
     for talon in self.leftTalons:
       talon.setInverted(True)
     
     for talon in self.masterTalons:
-      talon.configRemoteFeedbackFilter(5, RemoteSensorSource.GadgeteerPigeon_Yaw, 1, self.TIMEOUT_MS)
+      talon.configRemoteFeedbackFilter(5, RemoteSensorSource.GadgeteerPigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
 
-      talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, 0, self.TIMEOUT_MS)
-      talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor1, 1, self.TIMEOUT_MS)
-      talon.configSelectedFeedbackCoefficient(1.0, 0, self.TIMEOUT_MS)
-      talon.configSelectedFeedbackCoefficient(3600 / self.PIGEON_UNITS_PER_ROTATION, 1, self.TIMEOUT_MS)
+      talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, 0, self.CAN_BUS_TIMEOUT_MS)
+      talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor1, 1, self.CAN_BUS_TIMEOUT_MS)
+      talon.configSelectedFeedbackCoefficient(1.0, 0, self.CAN_BUS_TIMEOUT_MS)
+      talon.configSelectedFeedbackCoefficient(3600 / self.PIGEON_UNITS_PER_ROTATION, 1, self.CAN_BUS_TIMEOUT_MS)
 
       talon.configMotionAcceleration(((self.MAX_ACCELERATION * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
       talon.configMotionCruiseVelocity(((self.MAX_VELOCITY * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
-      talon.configMotionProfileTrajectoryPeriod(20, self.TIMEOUT_MS)
+      talon.configMotionProfileTrajectoryPeriod(self.BASE_TRAJECTORY_PERIOD_MS, self.CAN_BUS_TIMEOUT_MS)
 
       if talon is self.rightTalonMaster:
         talon.setSensorPhase(True)
-        talon.configAuxPIDPolarity(False, self.TIMEOUT_MS)
+        talon.configAuxPIDPolarity(False, self.CAN_BUS_TIMEOUT_MS)
 
       if talon is self.leftTalonMaster:
         talon.setSensorPhase(False)
-        talon.configAuxPIDPolarity(True, self.TIMEOUT_MS)
+        talon.configAuxPIDPolarity(True, self.CAN_BUS_TIMEOUT_MS)
 
     self.pigeon = PigeonIMU(3)
-    self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.TIMEOUT_MS)
+    self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.CAN_BUS_TIMEOUT_MS)
 
   def autonomousInit(self):
     #self.robot_drive.setSafetyEnabled(False)
 
-    self.pigeon.setYaw(0, self.TIMEOUT_MS)
-    self.pigeon.setFusedHeading(0, self.TIMEOUT_MS)
+    self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
+    self.pigeon.setFusedHeading(0, self.CAN_BUS_TIMEOUT_MS)
     #self.pigeon.setCompassAngle(0, self.TIMEOUT_MS)
 
-    self.leftTalonMaster.setSelectedSensorPosition(0, 0, self.TIMEOUT_MS)
-    self.leftTalonMaster.getSensorCollection().setQuadraturePosition(0, self.TIMEOUT_MS)
+    self.leftTalonMaster.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
+    self.leftTalonMaster.getSensorCollection().setQuadraturePosition(0, self.CAN_BUS_TIMEOUT_MS)
     self.leftTalonMaster.clearMotionProfileTrajectories()
     self.leftTalonMaster.clearMotionProfileHasUnderrun(0)
     self.leftTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Disable.value)
 
-    self.rightTalonMaster.setSelectedSensorPosition(0, 0, self.TIMEOUT_MS)
-    self.rightTalonMaster.getSensorCollection().setQuadraturePosition(0, self.TIMEOUT_MS)
+    self.rightTalonMaster.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
+    self.rightTalonMaster.getSensorCollection().setQuadraturePosition(0, self.CAN_BUS_TIMEOUT_MS)
     self.rightTalonMaster.clearMotionProfileTrajectories()
     self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
     self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Disable.value)
@@ -147,7 +149,7 @@ class MyRobot(wpilib.TimedRobot):
       self.leftTrajectory[i].auxiliaryPos = self.rightTrajectory[i].auxiliaryPos = 10 * math.degrees(leftSeg.heading)
       self.leftTrajectory[i].profileSlotSelect0 = self.rightTrajectory[i].profileSelect0 = self.TALON_MOTIONPROFILE_SLOT
       self.leftTrajectory[i].profileSlotSelect1 = self.rightTrajectory[i].profileSelect1 = self.TALON_GYRO_SLOT
-      self.leftTrajectory[i].timeDur = self.rightTrajectory[i].timeDur = TrajectoryPoint.TrajectoryDuration.Trajectory_Duration_0ms
+      self.leftTrajectory[i].timeDur = self.rightTrajectory[i].timeDur = 0
       self.leftTrajectory[i].zeroPos = self.rightTrajectory[i].zeroPos = i == 0
       self.leftTrajectory[i].isLastPoint = self.rightTrajectory[i].isLastPoint = i == len(trajectory.segments) - 1
 
@@ -164,18 +166,18 @@ class MyRobot(wpilib.TimedRobot):
     self.rightDone = False
 
   def autonomousPeriodic(self):
-    self.leftTalonMaster.getMotionProfileStatus(self.leftMPStatus)
-    self.rightTalonMaster.getMotionProfileStatus(self.rightMPStatus)
+    self.leftMPStatus = self.leftTalonMaster.getMotionProfileStatus()
+    self.rightMPStatus = self.rightTalonMaster.getMotionProfileStatus()
 
     self.leftTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
     self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
 
-    if self.leftMPStatus.isLast and self.leftMPStatus.outPutEnable == SetValueMotionProfile.Enable and not self.leftDone:
+    if self.leftMPStatus.isLast and self.leftMPStatus.outputEnable == SetValueMotionProfile.Enable and not self.leftDone:
       self.leftTalonMaster.neutralOutput()
       self.leftTalonMaster.set(ControlMode.PercentOutput, 0)
       self.leftDone = True
 
-    if self.rightMPStatus.isLast and self.rightMPStatus.outPutEnable == SetValueMotionProfile.Enable and not self.rightDone:
+    if self.rightMPStatus.isLast and self.rightMPStatus.outputEnable == SetValueMotionProfile.Enable and not self.rightDone:
       self.rightTalonMaster.neutralOutput()
       self.rightTalonMaster.set(ControlMode.PercentOutput, 0)
       self.rightDone = True
