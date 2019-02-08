@@ -17,7 +17,7 @@ import navx
 import ctre
 from ctre import *
 import csv
-
+import pickle;
 
 class MyRobot(wpilib.TimedRobot):
     """Main robot class"""
@@ -27,7 +27,7 @@ class MyRobot(wpilib.TimedRobot):
     ENCODER_COUNTS_PER_REV = 4096
 
     # Pathfinder constants
-    MAX_VELOCITY = 4  # ft/s
+    MAX_VELOCITY = 2  # ft/s
     MAX_ACCELERATION = 2 #ft/s/s
 
     def robotInit(self):
@@ -69,32 +69,37 @@ class MyRobot(wpilib.TimedRobot):
         self.l_motor_master.getSensorCollection().setQuadraturePosition(0, 10)
         self.r_motor_master.getSensorCollection().setQuadraturePosition(0, 10)        
 
-        # Set up the trajectory
-        points = [pf.Waypoint(0, 0, 0), pf.Waypoint(9, 5, 0)]
+        if self.isSimulation():
+            # Set up the trajectory
+            points = [pf.Waypoint(0, 0, 0), pf.Waypoint(9, 6, 0)]
 
-        info, trajectory = pf.generate(
-            points,
-            pf.FIT_HERMITE_CUBIC,
-            pf.SAMPLES_HIGH,
-            dt=self.getPeriod(),
-            max_velocity=self.MAX_VELOCITY,
-            max_acceleration=self.MAX_ACCELERATION,
-            max_jerk=120.0,
-        )
-        
-        csv = open('/home/lvuser/out.csv', 'w+')
-        for seg in trajectory:
-            csv.write(str(seg.dt) + ", " + str(seg.x) + ", " + str(seg.y) + ", " + str(seg.position) + ", " + str(seg.velocity) + ", " + str(seg.acceleration) + ", " + str(seg.jerk) + ", " + str(seg.heading) + "\n")
-        csv.close()
+            info, trajectory = pf.generate(
+                points,
+                pf.FIT_HERMITE_CUBIC,
+                pf.SAMPLES_HIGH,
+                dt=self.getPeriod(),
+                max_velocity=self.MAX_VELOCITY,
+                max_acceleration=self.MAX_ACCELERATION,
+                max_jerk=120.0,
+            )
+
+            with open("/home/ubuntu/traj", "wb") as fp:
+                pickle.dump(trajectory, fp)
+        else:
+            with open("/home/lvuser/traj", "rb") as fp:
+                trajectory = pickle.load(fp)
+            print("len of read trajectory: " + str(len(trajectory)))
+
 
         print("autonomousInit: " + str(len(trajectory)))
 
-        with open('/home/lvuser/out.csv', 'w+') as points:
-            points_writer = csv.writer(points, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        if self.isSimulation():
+            with open('/home/ubuntu/out.csv', 'w+') as points:
+                points_writer = csv.writer(points, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
-            points_writer.writerow(['dt', 'x', 'y', 'position', 'velocity', 'acceleration', 'jerk', 'heading'])
-            for i in trajectory:
-                points_writer.writerow([i.dt, i.x, i.y, i.position, i.velocity, i.acceleration, i.jerk, i.heading])
+                points_writer.writerow(['dt', 'x', 'y', 'position', 'velocity', 'acceleration', 'jerk', 'heading'])
+                for i in trajectory:
+                    points_writer.writerow([i.dt, i.x, i.y, i.position, i.velocity, i.acceleration, i.jerk, i.heading])
 
         # Wheelbase Width = 2 ft
         modifier = pf.modifiers.TankModifier(trajectory).modify(2.1)
@@ -107,13 +112,13 @@ class MyRobot(wpilib.TimedRobot):
         leftFollower.configureEncoder(
             self.l_motor_master.getSelectedSensorPosition(0), self.ENCODER_COUNTS_PER_REV, self.WHEEL_DIAMETER
         )
-        leftFollower.configurePIDVA(0.1, 0.0, 0.0, 1 / self.MAX_VELOCITY, 0)
+        leftFollower.configurePIDVA(1.0, 0.0, 0.0, 1 / self.MAX_VELOCITY, 0)
 
         rightFollower = pf.followers.EncoderFollower(right)
         rightFollower.configureEncoder(
             self.r_motor_master.getSelectedSensorPosition(0), self.ENCODER_COUNTS_PER_REV, self.WHEEL_DIAMETER
         )
-        rightFollower.configurePIDVA(0.1, 0.0, 0.0, 1 / self.MAX_VELOCITY, 0)
+        rightFollower.configurePIDVA(1.0, 0.0, 0.0, 1 / self.MAX_VELOCITY, 0)
 
         self.leftFollower = leftFollower
         self.rightFollower = rightFollower
