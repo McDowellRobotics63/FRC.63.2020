@@ -3,7 +3,15 @@ import wpilib
 
 import pathfinder as pf
 import navx
+
+#from ctre import TalonSRX
+#from ctre import TrajectoryPoint
+#from ctre import PigeonIMU
+#from ctre.pigeonimu import PigeonIMU_StatusFrame
+from ctre.pigeonimu import *
 from ctre import *
+from ctre import TrajectoryPoint
+from ctre._impl import *
 
 class MyRobot(wpilib.TimedRobot):
   
@@ -22,20 +30,26 @@ class MyRobot(wpilib.TimedRobot):
   TALON_MOTIONPROFILE_SLOT = 2
   TALON_GYRO_SLOT = 1
 
+  LEFT_MASTER_CAN_ID = 3
+  RIGHT_MASTER_CAN_ID = 1
+  LEFT_SLAVE_CAN_ID = 4
+  RIGHT_SLAVE_CAN_ID = 2
+  PIGEON_IMU_CAN_ID = 5
+
   VELOCITY_MULTIPLIER = 1
 
   def robotInit(self):
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.leftTalonMaster = ctre.TalonSRX(3)
-    self.leftTalonSlave = ctre.TalonSRX(4)
+    self.leftTalonMaster = TalonSRX(self.LEFT_MASTER_CAN_ID)
+    self.leftTalonSlave = TalonSRX(self.LEFT_SLAVE_CAN_ID)
 
-    self.rightTalonMaster = ctre.TalonSRX(1)
-    self.rightTalonSlave = ctre.TalonSRX(2)
+    self.rightTalonMaster = TalonSRX(self.RIGHT_MASTER_CAN_ID)
+    self.rightTalonSlave = TalonSRX(self.RIGHT_SLAVE_CAN_ID)
     
-    self.leftTalonSlave.set(ControlMode.Follower, 3)
-    self.rightTalonSlave.set(ControlMode.Follower, 1)
+    self.leftTalonSlave.set(ControlMode.Follower, self.LEFT_MASTER_CAN_ID)
+    self.rightTalonSlave.set(ControlMode.Follower, RIGHT_MASTER_CAN_ID)
 
     self.masterTalons = [self.leftTalonMaster, self.rightTalonMaster]
     self.slaveTalons = [self.leftTalonSlave, self.rightTalonSlave]
@@ -66,8 +80,8 @@ class MyRobot(wpilib.TimedRobot):
       talon.configSelectedFeedbackCoefficient(1.0, 0, self.TIMEOUT_MS)
       talon.configSelectedFeedbackCoefficient(3600 / self.PIGEON_UNITS_PER_ROTATION, 1, self.TIMEOUT_MS)
 
-      talon.configMotionAcceleration(((MAX_ACCELERATION * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
-      talon.configMotionCruiseVelocity(((MAX_VELOCITY * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
+      talon.configMotionAcceleration(((self.MAX_ACCELERATION * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
+      talon.configMotionCruiseVelocity(((self.MAX_VELOCITY * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
       talon.configMotionProfileTrajectoryPeriod(20, self.TIMEOUT_MS)
 
       if talon is self.rightTalonMaster:
@@ -79,10 +93,10 @@ class MyRobot(wpilib.TimedRobot):
         talon.configAuxPIDPolarity(True, self.TIMEOUT_MS)
 
     self.pigeon = PigeonIMU(3)
-    self.pigeon.setStatusFramePeriod(Pigeon_IMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.TIMEOUT_MS)
+    self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.TIMEOUT_MS)
 
   def autonomousInit(self):
-    self.robot_drive.setSafetyEnabled(False)
+    #self.robot_drive.setSafetyEnabled(False)
 
     self.pigeon.setYaw(0, self.TIMEOUT_MS)
     self.pigeon.setFusedHeading(0, self.TIMEOUT_MS)
@@ -134,17 +148,17 @@ class MyRobot(wpilib.TimedRobot):
       self.leftTrajectory[i].profileSlotSelect0 = self.rightTrajectory[i].profileSelect0 = self.TALON_MOTIONPROFILE_SLOT
       self.leftTrajectory[i].profileSlotSelect1 = self.rightTrajectory[i].profileSelect1 = self.TALON_GYRO_SLOT
       self.leftTrajectory[i].timeDur = self.rightTrajectory[i].timeDur = TrajectoryPoint.TrajectoryDuration.Trajectory_Duration_0ms
-      self.leftTrajectory[i].zeroPos = rightTrajectory[i].zeroPos = i == 0
-      self.leftTrajectory[i].isLastPoint = rightTrajectory[i].isLastPoint = i == len(trajectory.segments) - 1
+      self.leftTrajectory[i].zeroPos = self.rightTrajectory[i].zeroPos = i == 0
+      self.leftTrajectory[i].isLastPoint = self.rightTrajectory[i].isLastPoint = i == len(trajectory.segments) - 1
 
       self.leftTrajectory[i].velocity = (((leftSeg.velocity - velCorrection) * 12) * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER) / 10
       self.rightTrajectory[i].velocity = (((rightSeg.velocity + velCorrection) * 12) * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER) / 10
 
     for point in self.leftTrajectory:
-      self.leftTalons.pushMotionProfileTrajectory(point)
+      self.leftTalonMaster.pushMotionProfileTrajectory(point)
 
     for point in self.rightTrajectory:
-      self.rightTalons.pushMotionProfileTrajectory(point)
+      self.rightTalonMaster.pushMotionProfileTrajectory(point)
 
     self.leftDone = False
     self.rightDone = False
