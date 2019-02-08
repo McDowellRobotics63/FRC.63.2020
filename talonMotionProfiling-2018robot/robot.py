@@ -68,44 +68,59 @@ class MyRobot(wpilib.TimedRobot):
     self.talons = [self.leftTalonMaster, self.leftTalonSlave, self.rightTalonMaster, self.rightTalonSlave]
 
     for talon in self.talons:
-      talon.configureNominalOutputForward(0.0, self.CAN_BUS_TIMEOUT_MS)
+      talon.configNominalOutputForward(0.0, self.CAN_BUS_TIMEOUT_MS)
       talon.configNominalOutputReverse(0.0, self.CAN_BUS_TIMEOUT_MS)
       talon.configPeakOutputForward(1.0, self.CAN_BUS_TIMEOUT_MS)
       talon.configPeakOutputReverse(-1.0, self.CAN_BUS_TIMEOUT_MS)
 
       talon.enableVoltageCompensation(True)
       talon.configVoltageCompSaturation(11.5, self.CAN_BUS_TIMEOUT_MS) #Need nominal output voltage
-      talon.configOpenloopRamp(0.125, self.CAN_BUS_TIMEOUT_MS) #Need ramp rate
+      talon.configOpenLoopRamp(0.125, self.CAN_BUS_TIMEOUT_MS) #Need ramp rate
 
     for talon in self.leftTalons:
       talon.setInverted(True)
     
     for talon in self.masterTalons:
-      talon.configRemoteFeedbackFilter(5, RemoteSensorSource.GadgeteerPigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
+      if not self.isSimulation():
+        talon.configRemoteFeedbackFilter(5, RemoteSensorSource.GadgeteerPigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
+      else:
+        print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
 
       talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, 0, self.CAN_BUS_TIMEOUT_MS)
       talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor1, 1, self.CAN_BUS_TIMEOUT_MS)
       talon.configSelectedFeedbackCoefficient(1.0, 0, self.CAN_BUS_TIMEOUT_MS)
       talon.configSelectedFeedbackCoefficient(3600 / self.PIGEON_UNITS_PER_ROTATION, 1, self.CAN_BUS_TIMEOUT_MS)
 
-      talon.configMotionAcceleration(((self.MAX_ACCELERATION * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
-      talon.configMotionCruiseVelocity(((self.MAX_VELOCITY * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
-      talon.configMotionProfileTrajectoryPeriod(self.BASE_TRAJECTORY_PERIOD_MS, self.CAN_BUS_TIMEOUT_MS)
+      if not self.isSimulation():
+        talon.configMotionAcceleration(((self.MAX_ACCELERATION * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
+        talon.configMotionCruiseVelocity(((self.MAX_VELOCITY * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
+        talon.configMotionProfileTrajectoryPeriod(self.BASE_TRAJECTORY_PERIOD_MS, self.CAN_BUS_TIMEOUT_MS)
+      else:
+        print("configMotionAcceleration() doesn't work in pyfrc simulator")
+        print("configMotionCruiseVelocity() doesn't work in pyfrc simulator")
+        print("configMotionProfileTrajectoryPeriod() doesn't work in pyfrc simulator")
 
       if talon is self.rightTalonMaster:
         talon.setSensorPhase(True)
-        talon.configAuxPIDPolarity(False, self.CAN_BUS_TIMEOUT_MS)
+        if not self.isSimulation():
+          talon.configAuxPIDPolarity(False, self.CAN_BUS_TIMEOUT_MS)
+        else:
+          print("configAuxPIDPolarity() is not implemented in pyfrc simulator")
 
       if talon is self.leftTalonMaster:
         talon.setSensorPhase(False)
-        talon.configAuxPIDPolarity(True, self.CAN_BUS_TIMEOUT_MS)
+        if not self.isSimulation():
+          talon.configAuxPIDPolarity(True, self.CAN_BUS_TIMEOUT_MS)
+        else:
+          print("configAuxPIDPolarity() is not implemented in pyfrc simulator")
 
-    self.pigeon = PigeonIMU(self.PIGEON_IMU_CAN_ID)
-    self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.CAN_BUS_TIMEOUT_MS)
+      if not self.isSimulation():
+        self.pigeon = PigeonIMU(self.PIGEON_IMU_CAN_ID)
+        self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.CAN_BUS_TIMEOUT_MS)
+      else:
+        print("Creating pigeon object does not work correctly in pyfrc simulator")
 
   def autonomousInit(self):
-    #self.robot_drive.setSafetyEnabled(False)
-
     self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
     self.pigeon.setFusedHeading(0, self.CAN_BUS_TIMEOUT_MS)
     #self.pigeon.setCompassAngle(0, self.TIMEOUT_MS)
@@ -257,19 +272,34 @@ class MyRobot(wpilib.TimedRobot):
 
   def teleopPeriodic(self):
     if self.timer.hasPeriodPassed(0.25):
-      ypr = self.pigeon.getYawPitchRoll()
+      if not self.isSimulation():
+        ypr = self.pigeon.getYawPitchRoll()
+        primary_fdbk = self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(self.PRIMARY_PID_LOOP))
+        aux_fdbk = self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(self.AUX_PID_LOOP))
+        lOutput = self.leftTalonMaster.getMotorOutputPercent()
+        rOutput = self.rightTalonMaster.getMotorOutputPercent()
+        lTicks = self.leftTalonMaster.getQuadratureVelocity()
+        rTicks = self.rightTalonMaster.getQuadratureVelocity()
+        lSpeed = self.unitsToInches(self.leftTalonMaster.getQuadratureVelocity()) * 10
+        rSpeed = self.unitsToInches(self.rightTalonMaster.getQuadratureVelocity()) * 10
+      else:
+        ypr = [0, 0, 0]
+        primary_fdbk = 0
+        aux_fdbk = 0
+        lOutput = 0
+        rOutput = 0
+        lTicks = 0
+        rTicks = 0
+        lSpeed = 0
+        rSpeed = 0
 
       print(f'\
         *************teleopPeriodic*************\n\
          Sticks <{self.stick.getRawAxis(1)}, {self.stick.getRawAxis(5)}>\n\
-         Motor Output % <{self.leftTalonMaster.getMotorOutputPercent()}, {self.rightTalonMaster.getMotorOutputPercent()}>\n\
-         Ticks per 100ms <{self.leftTalonMaster.getQuadratureVelocity()}, {self.rightTalonMaster.getQuadratureVelocity()}>\n\
-         Left/Right Speed (in/sec) <\
-{self.unitsToInches(self.leftTalonMaster.getQuadratureVelocity()) * 10}, \
-{self.unitsToInches(self.rightTalonMaster.getQuadratureVelocity()) * 10}>\n\
-         Primary/Aux Feedback<\
-{self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(self.PRIMARY_PID_LOOP))}, \
-{self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(self.AUX_PID_LOOP))}>\n\
+         Motor Output % <{lOutput}, {rOutput}>\n\
+         Ticks per 100ms <{lTicks}, {rTicks}>\n\
+         Left/Right Speed (in/sec) <{lSpeed},{rSpeed}>\n\
+         Primary/Aux Feedback <{primary_fdbk}, {aux_fdbk}>\n\
          Yaw/Pitch/Roll <{ypr[0]}, {ypr[1]}, {ypr[2]}>\n\
         ****************************************\n\
         ')
@@ -289,3 +319,6 @@ class MyRobot(wpilib.TimedRobot):
 
   def inchesToUnits(self, inches):
     return inches * self.ENCODER_COUNTS_PER_REV / self.WHEEL_CIRCUMFERENCE
+
+if __name__ == "__main__":
+    wpilib.run(MyRobot, physics_enabled=True)
