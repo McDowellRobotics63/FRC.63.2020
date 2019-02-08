@@ -116,9 +116,6 @@ class MyRobot(wpilib.TimedRobot):
     self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
     self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Disable.value)
 
-    self.leftMPStatus = MotionProfileStatus()
-    self.rightMPStatus = MotionProfileStatus()
-
     points = [pf.Waypoint(0, 0, 0), pf.Waypoint(9, 5, 0)]
 
     info, trajectory = pf.generate(
@@ -167,6 +164,7 @@ class MyRobot(wpilib.TimedRobot):
     self.motionProfileEnabled = False
     self.bufferProcessingStartTime = 0
     self.executionStartTime = 0
+    self.executionFinishTime = 0
 
   def autonomousPeriodic(self):
     self.leftMPStatus = self.leftTalonMaster.getMotionProfileStatus()
@@ -187,8 +185,14 @@ class MyRobot(wpilib.TimedRobot):
 
     '''Let's time this to see if it's really worth doing it the more sophisticated way'''
     if self.leftMPStatus.btmBufferCnt == 0 and self.rightMPStatus.btmBufferCnt == 0:
+      print("Beginning to funnel trajectory points into the Talons")
       self.bufferProcessingStartTime = self.timer.getFPGATimestamp()
 
+    '''
+    Don't print anything while funneling points into the Talons.
+    Printing will slow down execution and we want to measure time
+    that it took to do this operation.
+    '''
     if self.leftMPStatus.topBufferCnt > 0:
       self.leftTalonMaster.processMotionProfileBuffer()
 
@@ -202,16 +206,42 @@ class MyRobot(wpilib.TimedRobot):
       self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
       self.motionProfileEnabled = True
       self.executionStartTime = self.timer.getFPGATimestamp()
+      print("Beginning motion profile execution")
 
     if self.leftMPStatus.isLast and self.leftMPStatus.outputEnable == SetValueMotionProfile.Enable and not self.leftDone:
       self.leftTalonMaster.neutralOutput()
       self.leftTalonMaster.set(ControlMode.PercentOutput, 0)
       self.leftDone = True
+      print("Left motion profile is finished executing")
 
     if self.rightMPStatus.isLast and self.rightMPStatus.outputEnable == SetValueMotionProfile.Enable and not self.rightDone:
       self.rightTalonMaster.neutralOutput()
       self.rightTalonMaster.set(ControlMode.PercentOutput, 0)
       self.rightDone = True
+      print("Right motion profile is finished executing")
+
+
+    '''
+    It's ok to print debug info on every loop here because the execution
+    is all happening inside the Talon firmware. However... continuosly
+    calling into the Talons to get profile status, output percent, closed loop error etc
+    may cause too much loading on the Talon firware or too much traffic on the
+    CAN bus network... so maybe need to be careful with that.
+    '''
+    if not self.leftDone or not self.rightDone:
+      print(f'\
+        ****************************************\n\
+         Points Remaining <{self.leftMPStatus.btmBufferCnt}, {self.rightMPStatus.btmBufferCnt}>\n\
+         Motor Output <{self.leftTalonMaster.getMotorOutputPercent()}, {self.rightTalonMaster.getMotorOutputPercent()}>\n\
+         Underrun <{self.leftMPStatus.hasUnderrun}, {self.rightMPStatus.hasUnderrun}>\n\
+         Closed Loop Error <{self.leftTalonMaster.getClosedLoopError(0)}, {self.rightTalonMaster.getClosedLoopError(0)}>\n\
+        ****************************************\n\
+        ')
+    else:
+      self.executionFinishTime = self.timer.getFPGATimestamp()
+      print("Both Left and Right motion profiles are finished executing")
+      print(f'Buffer fill time: {self.executionStartTime - self.bufferProcessingStartTime}')
+      print(f'Profile exec time: {self.executionFinishTime - self.executionStartTime}')
 
   def teleopInit(self):
       print("MODE: teleopInit")
