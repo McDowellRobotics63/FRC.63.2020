@@ -37,6 +37,9 @@ class MyRobot(wpilib.TimedRobot):
   RIGHT_SLAVE_CAN_ID = 2
   PIGEON_IMU_CAN_ID = 5
 
+  PRIMARY_PID_LOOP = 0
+  AUX_PID_LOOP = 1
+
   BASE_TRAJECTORY_PERIOD_MS = 20
 
   VELOCITY_MULTIPLIER = 1
@@ -237,7 +240,10 @@ class MyRobot(wpilib.TimedRobot):
          Points Remaining <{self.leftMPStatus.btmBufferCnt}, {self.rightMPStatus.btmBufferCnt}>\n\
          Motor Output <{self.leftTalonMaster.getMotorOutputPercent()}, {self.rightTalonMaster.getMotorOutputPercent()}>\n\
          Underrun <{self.leftMPStatus.hasUnderrun}, {self.rightMPStatus.hasUnderrun}>\n\
-         Closed Loop Error <{self.leftTalonMaster.getClosedLoopError(0)}, {self.rightTalonMaster.getClosedLoopError(0)}>\n\
+         Closed Loop Error <\
+{self.leftTalonMaster.getClosedLoopError(self.PRIMARY_PID_LOOP)}, \
+{self.rightTalonMaster.getClosedLoopError(self.PRIMARY_PID_LOOP)}, \
+{self.rightTalonMaster.getClosedLoopError(self.AUX_PID_LOOP)}>\n\
         ****************************************\n\
         ')
     else:
@@ -262,8 +268,8 @@ class MyRobot(wpilib.TimedRobot):
 {self.unitsToInches(self.leftTalonMaster.getQuadratureVelocity()) * 10}, \
 {self.unitsToInches(self.rightTalonMaster.getQuadratureVelocity()) * 10}>\n\
          Primary/Aux Feedback<\
-{self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(0))}, \
-{self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(1))}>\n\
+{self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(self.PRIMARY_PID_LOOP))}, \
+{self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(self.AUX_PID_LOOP))}>\n\
          Yaw/Pitch/Roll <{ypr[0]}, {ypr[1]}, {ypr[2]}>\n\
         ****************************************\n\
         ')
