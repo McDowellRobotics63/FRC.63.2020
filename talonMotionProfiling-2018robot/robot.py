@@ -164,14 +164,44 @@ class MyRobot(wpilib.TimedRobot):
 
     self.leftDone = False
     self.rightDone = False
+    self.motionProfileEnabled = False
+    self.bufferProcessingStartTime = 0
+    self.executionStartTime = 0
 
   def autonomousPeriodic(self):
     self.leftMPStatus = self.leftTalonMaster.getMotionProfileStatus()
     self.rightMPStatus = self.rightTalonMaster.getMotionProfileStatus()
 
+    '''
+    The processMotionProfileBuffer() moves trajectory points from the
+    "Top" level buffer into the "Bottom" level buffer.  This just means
+    they are moved from a buffer inside the roboRIO into a buffer inside
+    the Talon firmware itself.  The more sophisticated method is to call
+    this function on a seperate background thread which is running at a rate which
+    is twice as fast as the duration of the trajectory points.  Then in the main thread
+    check that the bottom buffer count is high enough to trigger the motion
+    profile execution to begin.  That allows the motion profile execution to
+    begin sooner.  For this test we can just wait until the top buffer has
+    been completely emptied into the bottom buffer.
+    '''
 
-    self.leftTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
-    self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
+    '''Let's time this to see if it's really worth doing it the more sophisticated way'''
+    if self.leftMPStatus.btmBufferCnt == 0 and self.rightMPStatus.btmBufferCnt == 0:
+      self.bufferProcessingStartTime = self.timer.getFPGATimestamp()
+
+    if self.leftMPStatus.topBufferCnt > 0:
+      self.leftTalonMaster.processMotionProfileBuffer()
+
+    if self.rightMPStatus.topBufferCnt > 0:
+      self.rightTalonMaster.processMotionProfileBuffer()
+
+    if not self.motionProfileEnabled and \
+       self.leftMPStatus.btmBufferCnt > 0 and self.leftMPStatus.topBufferCnt == 0 and \
+       self.rightMPStatus.btmBufferCnt > 0 and self.rightMPStatus.topBufferCnt == 0:
+      self.leftTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
+      self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
+      self.motionProfileEnabled = True
+      self.executionStartTime = self.timer.getFPGATimestamp()
 
     if self.leftMPStatus.isLast and self.leftMPStatus.outputEnable == SetValueMotionProfile.Enable and not self.leftDone:
       self.leftTalonMaster.neutralOutput()
