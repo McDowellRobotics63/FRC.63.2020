@@ -249,16 +249,34 @@ class MyRobot(wpilib.TimedRobot):
     may cause too much loading on the Talon firware or too much traffic on the
     CAN bus network... so maybe need to be careful with that.
     '''
-    if not self.leftDone or not self.rightDone:
+    if (not self.leftDone or not self.rightDone) and self.timer.hasPeriodPassed(0.25):
+      if not self.isSimulation:
+        lBufCount = self.leftMPStatus.btmBufferCnt
+        rBufCount = self.rightMPStatus.btmBufferCnt
+        lOutput = self.leftTalonMaster.getMotorOutputPercent()
+        rOutput = self.rightTalonMaster.getMotorOutputPercent()
+        lUnderrun = self.leftMPStatus.hasUnderrun
+        rUnderrun = self.rightMPStatus.hasUnderrun
+        lError = self.leftTalonMaster.getClosedLoopError(self.PRIMARY_PID_LOOP)
+        rError = self.rightTalonMaster.getClosedLoopError(self.PRIMARY_PID_LOOP)
+        hError = self.rightTalonMaster.getClosedLoopError(self.AUX_PID_LOOP)
+      else:
+        lBufCount = 0
+        rBufCount = 0
+        lOutput = 0
+        rOutput = 0
+        lUnderrun = 0
+        rUnderrun = 0
+        lError = 0
+        rError = 0
+        hError = 0
+
       print(f'\
         ****************************************\n\
-         Points Remaining <{self.leftMPStatus.btmBufferCnt}, {self.rightMPStatus.btmBufferCnt}>\n\
-         Motor Output <{self.leftTalonMaster.getMotorOutputPercent()}, {self.rightTalonMaster.getMotorOutputPercent()}>\n\
-         Underrun <{self.leftMPStatus.hasUnderrun}, {self.rightMPStatus.hasUnderrun}>\n\
-         Closed Loop Error <\
-{self.leftTalonMaster.getClosedLoopError(self.PRIMARY_PID_LOOP)}, \
-{self.rightTalonMaster.getClosedLoopError(self.PRIMARY_PID_LOOP)}, \
-{self.rightTalonMaster.getClosedLoopError(self.AUX_PID_LOOP)}>\n\
+         Points Remaining <{lBufCount}, {rBufCount}>\n\
+         Motor Output <{lOutput}, {rOutput}>\n\
+         Underrun <{lUnderrun}, {rUnderrun}>\n\
+         Closed Loop Error <{lError}, {rError}, {hError}>\n\
         ****************************************\n\
         ')
     else:
