@@ -181,3 +181,17 @@ class MyRobot(wpilib.TimedRobot):
       self.rightTalonMaster.neutralOutput()
       self.rightTalonMaster.set(ControlMode.PercentOutput, 0)
       self.rightDone = True
+
+  def teleopInit(self):
+      print("MODE: teleopInit")
+
+  def teleopPeriodic(self):
+    if self.timer.hasPeriodPassed(1.0):
+      print("MODE: teleopPeriodic")
+
+  def disabledInit(self):
+    print("MODE: teleopInit")
+
+  def disabledPeriodic(self):
+    if self.timer.hasPeriodPassed(1.0):
+      print("MODE: disabledPeriodic")
