@@ -16,6 +16,7 @@ from ctre._impl import *
 class MyRobot(wpilib.TimedRobot):
   
   WHEEL_DIAMETER = 0.5  # 6 inches
+  WHEEL_CIRCUMFERENCE = math.pi * WHEEL_DIAMETER
   
   # Pathfinder constants
   MAX_VELOCITY = 48  # in/s
@@ -43,6 +44,8 @@ class MyRobot(wpilib.TimedRobot):
   def robotInit(self):
     self.timer = wpilib.Timer()
     self.timer.start()
+
+    self.stick = wpilib.Joystick(0)
 
     self.leftTalonMaster = TalonSRX(self.LEFT_MASTER_CAN_ID)
     self.leftTalonSlave = TalonSRX(self.LEFT_SLAVE_CAN_ID)
@@ -247,8 +250,26 @@ class MyRobot(wpilib.TimedRobot):
       print("MODE: teleopInit")
 
   def teleopPeriodic(self):
-    if self.timer.hasPeriodPassed(1.0):
-      print("MODE: teleopPeriodic")
+    if self.timer.hasPeriodPassed(0.25):
+      ypr = self.pigeon.getYawPitchRoll()
+
+      print(f'\
+        *************teleopPeriodic*************\n\
+         Sticks <{self.stick.getRawAxis(1)}, {self.stick.getRawAxis(5)}>\n\
+         Motor Output % <{self.leftTalonMaster.getMotorOutputPercent()}, {self.rightTalonMaster.getMotorOutputPercent()}>\n\
+         Ticks per 100ms <{self.leftTalonMaster.getQuadratureVelocity()}, {self.rightTalonMaster.getQuadratureVelocity()}>\n\
+         Left/Right Speed (in/sec) <\
+{self.unitsToInches(self.leftTalonMaster.getQuadratureVelocity()) * 10}, \
+{self.unitsToInches(self.rightTalonMaster.getQuadratureVelocity()) * 10}>\n\
+         Primary/Aux Feedback<\
+{self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(0))}, \
+{self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(1))}>\n\
+         Yaw/Pitch/Roll <{ypr[0]}, {ypr[1]}, {ypr[2]}>\n\
+        ****************************************\n\
+        ')
+
+    self.leftTalonMaster.set(ControlMode.PercentOutput, -1.0 * self.stick.getRawAxis(1))
+    self.rightTalonMaster.set(ControlMode.PercentOutput, -1.0 * self.stick.getRawAxis(5))
 
   def disabledInit(self):
     print("MODE: teleopInit")
@@ -256,3 +277,9 @@ class MyRobot(wpilib.TimedRobot):
   def disabledPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
       print("MODE: disabledPeriodic")
+
+  def unitsToInches(self, units):
+    return units * self.WHEEL_CIRCUMFERENCE / self.ENCODER_COUNTS_PER_REV
+
+  def inchesToUnits(self, inches):
+    return inches * self.ENCODER_COUNTS_PER_REV / self.WHEEL_CIRCUMFERENCE
