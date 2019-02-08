@@ -94,7 +94,7 @@ class MyRobot(wpilib.TimedRobot):
         talon.setSensorPhase(False)
         talon.configAuxPIDPolarity(True, self.CAN_BUS_TIMEOUT_MS)
 
-    self.pigeon = PigeonIMU(3)
+    self.pigeon = PigeonIMU(self.PIGEON_IMU_CAN_ID)
     self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.CAN_BUS_TIMEOUT_MS)
 
   def autonomousInit(self):
@@ -168,6 +168,7 @@ class MyRobot(wpilib.TimedRobot):
   def autonomousPeriodic(self):
     self.leftMPStatus = self.leftTalonMaster.getMotionProfileStatus()
     self.rightMPStatus = self.rightTalonMaster.getMotionProfileStatus()
+
 
     self.leftTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
     self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
