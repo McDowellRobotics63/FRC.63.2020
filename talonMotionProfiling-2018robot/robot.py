@@ -65,11 +65,12 @@ class MyRobot(wpilib.TimedRobot):
     self.leftTalonSlave.set(ControlMode.Follower, self.LEFT_MASTER_CAN_ID)
     self.rightTalonSlave.set(ControlMode.Follower, self.RIGHT_MASTER_CAN_ID)
 
+    self.pigeon = PigeonIMU(self.PIGEON_IMU_CAN_ID)
+
     if not self.isSimulation():
-      self.pigeon = PigeonIMU(self.PIGEON_IMU_CAN_ID)
       self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.CAN_BUS_TIMEOUT_MS)
     else:
-      print("Creating pigeon object does not work correctly in pyfrc simulator")
+      print("setStatusFramePeriod() is not implmented in pyfrc simulator")
 
     self.masterTalons = [self.leftTalonMaster, self.rightTalonMaster]
     self.slaveTalons = [self.leftTalonSlave, self.rightTalonSlave]
@@ -96,7 +97,7 @@ class MyRobot(wpilib.TimedRobot):
     Left and right master talons must be setup for direct encoder input.
     Do left and right config separately instead of looping thru "master talons"
     in case we need to setSensorPhase differently for left and right.
-    '''
+    '''    
     self.leftTalonMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
     '''This sets the scale factor on the feedback sensor.  For the encoders it is 1.0, this is really used for the gyro (pigeon) feedback'''
     self.leftTalonMaster.configSelectedFeedbackCoefficient(1.0, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
@@ -116,11 +117,14 @@ class MyRobot(wpilib.TimedRobot):
     (I think)This means it will use the left and right encoder sensor which are connected
     to the master talons as remote sensors and it will sum (average?) their output.
     '''
+    if not self.isSimulation():
+      '''Set encoder connected to left master as remote sensor 0'''
+      self.leftTalonSlave.configRemoteFeedbackFilter(self.leftTalonMaster, RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
+      '''Set encoder connected to right master as remote sensor 1'''
+      self.leftTalonSlave.configRemoteFeedbackFilter(self.rightTalonMaster, RemoteSensorSource.TalonSRX_SelectedSensor, 1, self.CAN_BUS_TIMEOUT_MS)
+    else:
+      print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
 
-    '''Set encoder connected to left master as remote sensor 0'''
-    self.leftTalonSlave.configRemoteFeedbackFilter(self.leftTalonMaster, RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
-    '''Set encoder connected to right master as remote sensor 1'''
-    self.leftTalonSlave.configRemoteFeedbackFilter(self.rightTalonMaster, RemoteSensorSource.TalonSRX_SelectedSensor, 1, self.CAN_BUS_TIMEOUT_MS)
     '''Set remote sensor 0 as first term in sensor sum'''
     self.leftTalonSlave.configSensorTerm(0, FeedbackDevice.RemoteSensor0, self.CAN_BUS_TIMEOUT_MS) #SensorTerm.Sum0 is not defined??
     '''Set remote sensor 1 as second term in sensor sum'''
@@ -198,54 +202,67 @@ class MyRobot(wpilib.TimedRobot):
       print("configAuxPIDPolarity() is not implemented in pyfrc simulator")
 
   def autonomousInit(self):
-    self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
-    self.pigeon.setFusedHeading(0, self.CAN_BUS_TIMEOUT_MS)
-
-    self.leftTalonMaster.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
+    if not self.isSimulation():
+      self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
+      self.pigeon.setFusedHeading(0, self.CAN_BUS_TIMEOUT_MS)
+    else:
+      print("pigeon.setYaw() is not implemented in pyfrc simulator")
+    
+    if not self.isSimulation():
+      self.leftTalonMaster.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
     self.leftTalonMaster.getSensorCollection().setQuadraturePosition(0, self.CAN_BUS_TIMEOUT_MS)
-    self.leftTalonMaster.clearMotionProfileTrajectories()
-    self.leftTalonMaster.clearMotionProfileHasUnderrun(0)
+    if not self.isSimulation():
+      self.leftTalonMaster.clearMotionProfileTrajectories()
+      self.leftTalonMaster.clearMotionProfileHasUnderrun(0)
     self.leftTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Disable.value)
 
-    self.rightTalonMaster.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
+    if not self.isSimulation():
+      self.rightTalonMaster.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
     self.rightTalonMaster.getSensorCollection().setQuadraturePosition(0, self.CAN_BUS_TIMEOUT_MS)
-    self.rightTalonMaster.clearMotionProfileTrajectories()
-    self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
+    if not self.isSimulation():
+      self.rightTalonMaster.clearMotionProfileTrajectories()
+      self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
     self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Disable.value)
 
-    with open("/home/lvuser/traj", "rb") as fp:
-        trajectory = pickle.load(fp)
+    if not self.isSimulation():
+      with open("/home/lvuser/traj", "rb") as fp:
+          trajectory = pickle.load(fp)
+    else:
+      with open("/home/ubuntu/traj", "rb") as fp:
+          trajectory = pickle.load(fp)
 
     modifier = pf.modifiers.TankModifier(trajectory).modify(2.1) #Wheelbase in feet
 
     self.leftTrajectory = modifier.getLeftTrajectory()
     self.rightTrajectory = modifier.getRightTrajectory()
 
-    for i in range(len(trajectory.segments)):
-      leftSeg = self.leftTrajectory.segments[i]
-      rightSeg = self.rightTrajectory.segments[i]
+    for i in range(len(trajectory)):
+      leftSeg = self.leftTrajectory[i]
+      rightSeg = self.rightTrajectory[i]
 
       velCorrection = (rightSeg.velocity - leftSeg.velocity) * self.VELOCITY_MULTIPLIER
 
-      self.leftTrajectory[i] = TrajectoryPoint()
-      self.rightTrajectory[i] = TrajectoryPoint()
+      position = (((leftSeg.position + rightSeg.position) * 12) * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)
+      aux_position = 10 * math.degrees(leftSeg.heading)
+      slot0 = self.TALON_MOTIONPROFILE_SLOT
+      slot1 = self.TALON_GYRO_SLOT
+      timeDur = 0
+      zeroPos = i == 0
+      isLastPoint = i == len(trajectory) - 1
+      lvelocity = (((leftSeg.velocity - velCorrection) * 12) * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER) / 10
+      rvelocity = (((rightSeg.velocity + velCorrection) * 12) * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER) / 10
 
-      self.leftTrajectory[i].position = self.rightTrajectory[i].position = (((leftSeg.position + rightSeg.position) * 12) * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)
-      self.leftTrajectory[i].auxiliaryPos = self.rightTrajectory[i].auxiliaryPos = 10 * math.degrees(leftSeg.heading)
-      self.leftTrajectory[i].profileSlotSelect0 = self.rightTrajectory[i].profileSelect0 = self.TALON_MOTIONPROFILE_SLOT
-      self.leftTrajectory[i].profileSlotSelect1 = self.rightTrajectory[i].profileSelect1 = self.TALON_GYRO_SLOT
-      self.leftTrajectory[i].timeDur = self.rightTrajectory[i].timeDur = 0
-      self.leftTrajectory[i].zeroPos = self.rightTrajectory[i].zeroPos = i == 0
-      self.leftTrajectory[i].isLastPoint = self.rightTrajectory[i].isLastPoint = i == len(trajectory.segments) - 1
+      '''There was no empty constructor.'''
+      self.leftTrajectory[i] = TrajectoryPoint(position, lvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
+      self.rightTrajectory[i] = TrajectoryPoint(position, rvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
 
-      self.leftTrajectory[i].velocity = (((leftSeg.velocity - velCorrection) * 12) * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER) / 10
-      self.rightTrajectory[i].velocity = (((rightSeg.velocity + velCorrection) * 12) * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER) / 10
+    if not self.isSimulation():
+      for point in self.leftTrajectory:
+        self.leftTalonMaster.pushMotionProfileTrajectory(point)
 
-    for point in self.leftTrajectory:
-      self.leftTalonMaster.pushMotionProfileTrajectory(point)
-
-    for point in self.rightTrajectory:
-      self.rightTalonMaster.pushMotionProfileTrajectory(point)
+    if not self.isSimulation():
+      for point in self.rightTrajectory:
+        self.rightTalonMaster.pushMotionProfileTrajectory(point)
 
     self.leftDone = False
     self.rightDone = False
@@ -393,7 +410,7 @@ class MyRobot(wpilib.TimedRobot):
     self.rightTalonMaster.set(ControlMode.PercentOutput, -1.0 * self.stick.getRawAxis(5))
 
   def disabledInit(self):
-    print("MODE: teleopInit")
+    print("MODE: disabledInit")
 
   def disabledPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
