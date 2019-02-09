@@ -3,9 +3,10 @@ import wpilib
 
 import pathfinder as pf
 
+import pickle
+
 from ctre.pigeonimu import PigeonIMU
 from ctre.pigeonimu import PigeonIMU_StatusFrame
-
 
 from ctre import TalonSRX
 from ctre import ControlMode
@@ -212,17 +213,8 @@ class MyRobot(wpilib.TimedRobot):
     self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
     self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Disable.value)
 
-    points = [pf.Waypoint(0, 0, 0), pf.Waypoint(9, 5, 0)]
-
-    info, trajectory = pf.generate(
-      points,
-      pf.FIT_HERMITE_CUBIC,
-      pf.SAMPLES_HIGH,
-      dt=self.getPeriod(),
-      max_velocity=self.MAX_VELOCITY / 12, #converting from inches to feet
-      max_acceleration=self.MAX_ACCELERATION / 12,
-      max_jerk=self.MAX_JERK / 12
-    )
+    with open("/home/lvuser/traj", "rb") as fp:
+        trajectory = pickle.load(fp)
 
     modifier = pf.modifiers.TankModifier(trajectory).modify(2.1) #Wheelbase in feet
 
