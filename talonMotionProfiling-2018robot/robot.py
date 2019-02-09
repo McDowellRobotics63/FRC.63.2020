@@ -2,16 +2,18 @@ import math
 import wpilib
 
 import pathfinder as pf
-import navx
 
-#from ctre import TalonSRX
-#from ctre import TrajectoryPoint
-#from ctre import PigeonIMU
-#from ctre.pigeonimu import PigeonIMU_StatusFrame
-from ctre.pigeonimu import *
-from ctre import *
+from ctre.pigeonimu import PigeonIMU
+from ctre.pigeonimu import PigeonIMU_StatusFrame
+
+
+from ctre import TalonSRX
+from ctre import ControlMode
 from ctre import TrajectoryPoint
-from ctre._impl import *
+from ctre import FeedbackDevice
+from ctre import RemoteSensorSource
+from ctre import SetValueMotionProfile
+from ctre._impl import StatusFrame # why ctre._impl??
 
 class MyRobot(wpilib.TimedRobot):
   
@@ -37,6 +39,9 @@ class MyRobot(wpilib.TimedRobot):
   RIGHT_SLAVE_CAN_ID = 2
   PIGEON_IMU_CAN_ID = 6
 
+  PRIMARY_PID_LOOP_GAINS_SLOT = 0
+  AUX_PID_LOOP_GAINS_SLOT = 1
+
   PRIMARY_PID_LOOP = 0
   AUX_PID_LOOP = 1
 
@@ -59,6 +64,12 @@ class MyRobot(wpilib.TimedRobot):
     self.leftTalonSlave.set(ControlMode.Follower, self.LEFT_MASTER_CAN_ID)
     self.rightTalonSlave.set(ControlMode.Follower, self.RIGHT_MASTER_CAN_ID)
 
+    if not self.isSimulation():
+      self.pigeon = PigeonIMU(self.PIGEON_IMU_CAN_ID)
+      self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.CAN_BUS_TIMEOUT_MS)
+    else:
+      print("Creating pigeon object does not work correctly in pyfrc simulator")
+
     self.masterTalons = [self.leftTalonMaster, self.rightTalonMaster]
     self.slaveTalons = [self.leftTalonSlave, self.rightTalonSlave]
 
@@ -67,63 +78,127 @@ class MyRobot(wpilib.TimedRobot):
 
     self.talons = [self.leftTalonMaster, self.leftTalonSlave, self.rightTalonMaster, self.rightTalonSlave]
 
+    '''Common configuration items common for all talons'''
     for talon in self.talons:
       talon.configNominalOutputForward(0.0, self.CAN_BUS_TIMEOUT_MS)
       talon.configNominalOutputReverse(0.0, self.CAN_BUS_TIMEOUT_MS)
+
       talon.configPeakOutputForward(1.0, self.CAN_BUS_TIMEOUT_MS)
       talon.configPeakOutputReverse(-1.0, self.CAN_BUS_TIMEOUT_MS)
 
       talon.enableVoltageCompensation(True)
-      talon.configVoltageCompSaturation(11.5, self.CAN_BUS_TIMEOUT_MS) #Need nominal output voltage
-      talon.configOpenLoopRamp(0.125, self.CAN_BUS_TIMEOUT_MS) #Need ramp rate
+      talon.configVoltageCompSaturation(11.5, self.CAN_BUS_TIMEOUT_MS)
+      
+      talon.configOpenLoopRamp(0.125, self.CAN_BUS_TIMEOUT_MS)
 
-    for talon in self.leftTalons:
-      talon.setInverted(True)
-    
+    '''
+    Left and right master talons must be setup for direct encoder input.
+    Do left and right config separately instead of looping thru "master talons"
+    in case we need to setSensorPhase differently for left and right.
+    '''
+    self.leftTalonMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
+    '''This sets the scale factor on the feedback sensor.  For the encoders it is 1.0, this is really used for the gyro (pigeon) feedback'''
+    self.leftTalonMaster.configSelectedFeedbackCoefficient(1.0, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
+    self.leftTalonMaster.setSensorPhase(True)
+    '''This sets the rate at which this feedback gets updated to 10 ms'''
+    self.leftTalonMaster.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, self.CAN_BUS_TIMEOUT_MS)
+
+    self.rightTalonMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
+    '''This sets the scale factor on the feedback sensor.  For the encoders it is 1.0, this is really used for the gyro (pigeon) feedback'''
+    self.rightTalonMaster.configSelectedFeedbackCoefficient(1.0, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
+    self.rightTalonMaster.setSensorPhase(False) #Based on pathfinder-2018robot project
+    '''This sets the rate at which this feedback gets updated to 10 ms'''
+    self.rightTalonMaster.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, self.CAN_BUS_TIMEOUT_MS)
+
+    '''
+    We are going to use the left slave talon to own the "sum" feedback sensor.
+    (I think)This means it will use the left and right encoder sensor which are connected
+    to the master talons as remote sensors and it will sum (average?) their output.
+    '''
+
+    '''Set encoder connected to left master as remote sensor 0'''
+    self.leftTalonSlave.configRemoteFeedbackFilter(self.leftTalonMaster, RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
+    '''Set encoder connected to right master as remote sensor 1'''
+    self.leftTalonSlave.configRemoteFeedbackFilter(self.rightTalonMaster, RemoteSensorSource.TalonSRX_SelectedSensor, 1, self.CAN_BUS_TIMEOUT_MS)
+    '''Set remote sensor 0 as first term in sensor sum'''
+    self.leftTalonSlave.configSensorTerm(0, FeedbackDevice.RemoteSensor0, self.CAN_BUS_TIMEOUT_MS) #SensorTerm.Sum0 is not defined??
+    '''Set remote sensor 1 as second term in sensor sum'''
+    self.leftTalonSlave.configSensorTerm(1, FeedbackDevice.RemoteSensor1, self.CAN_BUS_TIMEOUT_MS) #SensorTerm.Sum1 is not defined??
+    '''This sets the sum we just setup as the selected sensor for this device.  So we can use it remotely.'''
+    self.leftTalonSlave.configSelectedFeedbackSensor(FeedbackDevice.SensorSum, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)   
+    '''This sets the scale factor on the feedback sensor.  For the encoders it is 1.0, this is really used for the gyro (pigeon) feedback'''
+    self.leftTalonSlave.configSelectedFeedbackCoefficient(1.0, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
+    '''This sets the rate at which this feedback gets updated to 10 ms'''
+    self.leftTalonSlave.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, self.CAN_BUS_TIMEOUT_MS)
+
+    '''Based on pathfinder-2018robot project I think none of the talon should be setInverted(True)'''
+    #for talon in self.leftTalons:
+      #talon.setInverted(True)
+
+    '''
+    Now that the sensor sum remote sensor is setup, we can setup the master talons close-loop configuration
+    '''
     for talon in self.masterTalons:
+      '''
+      This just loads the constants into "slots".
+      Later we will select the slots to use for the primary and aux PID loops.
+      '''
+      talon.config_kP(self.PRIMARY_PID_LOOP_GAINS_SLOT, 0.375, self.CAN_BUS_TIMEOUT_MS)
+      talon.config_kI(self.PRIMARY_PID_LOOP_GAINS_SLOT, 0.0, self.CAN_BUS_TIMEOUT_MS)
+      talon.config_kD(self.PRIMARY_PID_LOOP_GAINS_SLOT, 0.0, self.CAN_BUS_TIMEOUT_MS)
+      talon.config_kF(self.PRIMARY_PID_LOOP_GAINS_SLOT, 0.35, self.CAN_BUS_TIMEOUT_MS)
+
+      talon.config_kP(self.AUX_PID_LOOP_GAINS_SLOT, 7.0, self.CAN_BUS_TIMEOUT_MS)
+      talon.config_kI(self.AUX_PID_LOOP_GAINS_SLOT, 0.0, self.CAN_BUS_TIMEOUT_MS)
+      talon.config_kD(self.AUX_PID_LOOP_GAINS_SLOT, 8.0, self.CAN_BUS_TIMEOUT_MS)
+      talon.config_kF(self.AUX_PID_LOOP_GAINS_SLOT, 0.0, self.CAN_BUS_TIMEOUT_MS)
+
+      '''
+      Select the gains to use for the position control loop.
+      It probably doesn't matter what we select here since each individual trajectory point
+      has a setting for the primary and aux PID fains to use.
+      Selecting these gains here would be important if we were using motion magic control.
+      '''
+      talon.selectProfileSlot(self.PRIMARY_PID_LOOP_GAINS_SLOT, self.PRIMARY_PID_LOOP)
+      '''This says the position control loop is allowed to command full motor output'''
+      talon.configClosedLoopPeakOutput(self.PRIMARY_PID_LOOP, 1.0, self.CAN_BUS_TIMEOUT_MS)
+
+      '''
+      Select the gains to use for the heading control loop.
+      It probably doesn't matter what we select here since each individual trajectory point
+      has a setting for the primary and aux PID fains to use.
+      Selecting these gains here would be important if we were using motion magic control.
+      '''
+      talon.selectProfileSlot(self.AUX_PID_LOOP_GAINS_SLOT, self.AUX_PID_LOOP)
+      '''This says the heading control loop is allowed to command full motor output'''
+      talon.configClosedLoopPeakOutput(self.AUX_PID_LOOP, 1.0, self.CAN_BUS_TIMEOUT_MS)
+
       if not self.isSimulation():
-        talon.configRemoteFeedbackFilter(5, RemoteSensorSource.GadgeteerPigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
+        '''Setup the "sum" sensor as remote sensor 0'''
+        talon.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
+        '''Setup the pigeon as remote sensor 1'''
+        talon.configRemoteFeedbackFilter(self.pigeon.getDeviceID(), RemoteSensorSource.GadgeteerPigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
       else:
         print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
 
-      talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, 0, self.CAN_BUS_TIMEOUT_MS)
-      talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor1, 1, self.CAN_BUS_TIMEOUT_MS)
-      talon.configSelectedFeedbackCoefficient(1.0, 0, self.CAN_BUS_TIMEOUT_MS)
-      talon.configSelectedFeedbackCoefficient(3600 / self.PIGEON_UNITS_PER_ROTATION, 1, self.CAN_BUS_TIMEOUT_MS)
+      '''Select remote sensor 0 (the "sum" sensor) as the feedback for the primary PID loop (position control loop)'''
+      talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
+      '''Select remote sensor 1 (the pigeon) as the feedback for the aux PID loop (heading control loop)'''
+      talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor1, self.AUX_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
+      '''This sets the scale factor on the feedback sensor.  For the encoders it is 1.0, this is really used for the gyro (pigeon) feedback'''
+      talon.configSelectedFeedbackCoefficient(1.0, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
+      '''This sets the scale factor on the feedback sensor.  Finally we use something other than 1.0'''
+      talon.configSelectedFeedbackCoefficient(3600 / self.PIGEON_UNITS_PER_ROTATION, self.AUX_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
 
-      if not self.isSimulation():
-        talon.configMotionAcceleration(((self.MAX_ACCELERATION * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
-        talon.configMotionCruiseVelocity(((self.MAX_VELOCITY * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)) / 10, 10)
-        talon.configMotionProfileTrajectoryPeriod(self.BASE_TRAJECTORY_PERIOD_MS, self.CAN_BUS_TIMEOUT_MS)
-      else:
-        print("configMotionAcceleration() doesn't work in pyfrc simulator")
-        print("configMotionCruiseVelocity() doesn't work in pyfrc simulator")
-        print("configMotionProfileTrajectoryPeriod() doesn't work in pyfrc simulator")
-
-      if talon is self.rightTalonMaster:
-        talon.setSensorPhase(True)
-        if not self.isSimulation():
-          talon.configAuxPIDPolarity(False, self.CAN_BUS_TIMEOUT_MS)
-        else:
-          print("configAuxPIDPolarity() is not implemented in pyfrc simulator")
-
-      if talon is self.leftTalonMaster:
-        talon.setSensorPhase(False)
-        if not self.isSimulation():
-          talon.configAuxPIDPolarity(True, self.CAN_BUS_TIMEOUT_MS)
-        else:
-          print("configAuxPIDPolarity() is not implemented in pyfrc simulator")
-
-      if not self.isSimulation():
-        self.pigeon = PigeonIMU(self.PIGEON_IMU_CAN_ID)
-        self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.CAN_BUS_TIMEOUT_MS)
-      else:
-        print("Creating pigeon object does not work correctly in pyfrc simulator")
+    if not self.isSimulation():
+      self.leftTalonMaster.configAuxPIDPolarity(True, self.CAN_BUS_TIMEOUT_MS)
+      self.rightTalonMaster.configAuxPIDPolarity(False, self.CAN_BUS_TIMEOUT_MS)
+    else:
+      print("configAuxPIDPolarity() is not implemented in pyfrc simulator")
 
   def autonomousInit(self):
     self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
     self.pigeon.setFusedHeading(0, self.CAN_BUS_TIMEOUT_MS)
-    #self.pigeon.setCompassAngle(0, self.TIMEOUT_MS)
 
     self.leftTalonMaster.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
     self.leftTalonMaster.getSensorCollection().setQuadraturePosition(0, self.CAN_BUS_TIMEOUT_MS)
