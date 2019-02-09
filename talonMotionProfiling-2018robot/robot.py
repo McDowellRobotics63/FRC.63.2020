@@ -15,6 +15,7 @@ from ctre import FeedbackDevice
 from ctre import RemoteSensorSource
 from ctre import SetValueMotionProfile
 from ctre._impl import StatusFrame # why ctre._impl??
+from ctre._impl import BuffTrajPointStream
 
 class MyRobot(wpilib.TimedRobot):
   
@@ -190,7 +191,7 @@ class MyRobot(wpilib.TimedRobot):
     if not self.isSimulation():
       self.leftTalonMaster.clearMotionProfileTrajectories()
       self.leftTalonMaster.clearMotionProfileHasUnderrun(0)
-    self.leftTalonMaster.set(ControlMode.MotionProfile, 0)
+    self.leftTalonMaster.set(ControlMode.MotionProfileArc, 0)
 
     if not self.isSimulation():
       self.rightTalonSlave.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
@@ -198,7 +199,7 @@ class MyRobot(wpilib.TimedRobot):
     if not self.isSimulation():
       self.rightTalonMaster.clearMotionProfileTrajectories()
       self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
-    self.rightTalonMaster.set(ControlMode.MotionProfile, 0)
+    self.rightTalonMaster.set(ControlMode.MotionProfileArc, 0)
 
     if not self.isSimulation():
       with open("/home/lvuser/traj", "rb") as fp:
@@ -212,6 +213,8 @@ class MyRobot(wpilib.TimedRobot):
 
     self.leftTrajectory = modifier.getLeftTrajectory()
     self.rightTrajectory = modifier.getRightTrajectory()
+    self.lPtsBuffer = BuffTrajPointStream()
+    self.rPtsBuffer = BuffTrajPointStream()
 
     for i in range(len(trajectory)):
       leftSeg = self.leftTrajectory[i]
@@ -231,18 +234,8 @@ class MyRobot(wpilib.TimedRobot):
 
       '''There was no empty constructor.'''
       print(f'position: {position}, aux_position: {aux_position}, lvelcoity: {lvelocity}, rvelocity: {rvelocity}')
-      self.leftTrajectory[i] = TrajectoryPoint(position, lvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
-      self.rightTrajectory[i] = TrajectoryPoint(position, rvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
-
-    if not self.isSimulation():
-      for point in self.leftTrajectory:        
-        self.leftTalonMaster.pushMotionProfileTrajectory(point)
-        #print("Top buffer count left: " + str(self.leftTalonMaster.getMotionProfileStatus().topBufferCnt))
-
-    if not self.isSimulation():
-      for point in self.rightTrajectory:
-        self.rightTalonMaster.pushMotionProfileTrajectory(point)
-        #print("Top buffer count right: " + str(self.rightTalonMaster.getMotionProfileStatus().topBufferCnt))
+      self.lPtsBuffer._write(position, lvelocity, 0, aux_position, 5, 0, slot0, slot1, isLastPoint, zeroPos, timeDur, True)
+      self.rPtsBuffer._write(position, rvelocity, 0, aux_position, 5, 0, slot0, slot1, isLastPoint, zeroPos, timeDur, True)
 
     self.leftDone = False
     self.rightDone = False
@@ -251,58 +244,23 @@ class MyRobot(wpilib.TimedRobot):
     self.executionStartTime = 0
     self.executionFinishTime = 0
 
+    self.leftTalonMaster.startMotionProfile(self.lPtsBuffer, 5, ControlMode.MotionProfileArc)
+    self.rightTalonMaster.startMotionProfile(self.rPtsBuffer, 5, ControlMode.MotionProfileArc)
+
   def autonomousPeriodic(self):
     self.leftMPStatus = self.leftTalonMaster.getMotionProfileStatus()
     self.rightMPStatus = self.rightTalonMaster.getMotionProfileStatus()
 
-    '''
-    The processMotionProfileBuffer() moves trajectory points from the
-    "Top" level buffer into the "Bottom" level buffer.  This just means
-    they are moved from a buffer inside the roboRIO into a buffer inside
-    the Talon firmware itself.  The more sophisticated method is to call
-    this function on a seperate background thread which is running at a rate which
-    is twice as fast as the duration of the trajectory points.  Then in the main thread
-    check that the bottom buffer count is high enough to trigger the motion
-    profile execution to begin.  That allows the motion profile execution to
-    begin sooner.  For this test we can just wait until the top buffer has
-    been completely emptied into the bottom buffer.
-    '''
-
-    '''Let's time this to see if it's really worth doing it the more sophisticated way'''
-    if not self.motionProfileEnabled and self.leftMPStatus.btmBufferCnt == 0 and self.rightMPStatus.btmBufferCnt == 0:
-      print("Beginning to funnel trajectory points into the Talons")
-      self.bufferProcessingStartTime = self.timer.getFPGATimestamp()
-
-    '''
-    Don't print anything while funneling points into the Talons.
-    Printing will slow down execution and we want to measure time
-    that it took to do this operation.
-    '''
-    if self.leftMPStatus.topBufferCnt > 0 and self.leftMPStatus.btmBufferCnt < 75:
-      self.leftTalonMaster.processMotionProfileBuffer()
-
-    if self.rightMPStatus.topBufferCnt > 0 and self.rightMPStatus.btmBufferCnt < 75:
-      self.rightTalonMaster.processMotionProfileBuffer()
-
-    if not self.motionProfileEnabled and \
-       self.leftMPStatus.btmBufferCnt > 50 and \
-       self.rightMPStatus.btmBufferCnt > 50:
-      self.leftTalonMaster.set(ControlMode.MotionProfile, 1)
-      self.rightTalonMaster.set(ControlMode.MotionProfile, 1)
-      self.motionProfileEnabled = True
-      self.executionStartTime = self.timer.getFPGATimestamp()
-      print("Beginning motion profile execution")
-
-    if self.leftMPStatus.isLast and self.leftMPStatus.outputEnable == SetValueMotionProfile.Enable and not self.leftDone:
-      self.leftTalonMaster.neutralOutput()
+    if self.leftTalonMaster.isMotionProfileFinished():
+      '''self.leftTalonMaster.neutralOutput()
       self.leftTalonMaster.set(ControlMode.PercentOutput, 0)
-      self.leftDone = True
+      self.leftDone = True'''
       print("Left motion profile is finished executing")
 
-    if self.rightMPStatus.isLast and self.rightMPStatus.outputEnable == SetValueMotionProfile.Enable and not self.rightDone:
-      self.rightTalonMaster.neutralOutput()
+    if self.rightTalonMaster.isMotionProfileFinished():
+      '''self.rightTalonMaster.neutralOutput()
       self.rightTalonMaster.set(ControlMode.PercentOutput, 0)
-      self.rightDone = True
+      self.rightDone = True'''
       print("Right motion profile is finished executing")
 
 
