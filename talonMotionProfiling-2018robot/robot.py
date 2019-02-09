@@ -31,14 +31,11 @@ class MyRobot(wpilib.TimedRobot):
   ENCODER_COUNTS_PER_REV = 4096
   PIGEON_UNITS_PER_ROTATION = 8192
 
-  TALON_MOTIONPROFILE_SLOT = 2
-  TALON_GYRO_SLOT = 1
-
   LEFT_MASTER_CAN_ID = 3
   RIGHT_MASTER_CAN_ID = 1
   LEFT_SLAVE_CAN_ID = 4
   RIGHT_SLAVE_CAN_ID = 2
-  PIGEON_IMU_CAN_ID = 6
+  PIGEON_IMU_CAN_ID = 5
 
   PRIMARY_PID_LOOP_GAINS_SLOT = 0
   AUX_PID_LOOP_GAINS_SLOT = 1
@@ -101,7 +98,7 @@ class MyRobot(wpilib.TimedRobot):
     self.leftTalonMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
     '''This sets the scale factor on the feedback sensor.  For the encoders it is 1.0, this is really used for the gyro (pigeon) feedback'''
     self.leftTalonMaster.configSelectedFeedbackCoefficient(1.0, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
-    self.leftTalonMaster.setSensorPhase(True)
+    self.leftTalonMaster.setSensorPhase(False)
     '''This sets the rate at which this feedback gets updated to 10 ms'''
     self.leftTalonMaster.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, self.CAN_BUS_TIMEOUT_MS)
 
@@ -119,9 +116,9 @@ class MyRobot(wpilib.TimedRobot):
     '''
     if not self.isSimulation():
       '''Set encoder connected to left master as remote sensor 0'''
-      self.leftTalonSlave.configRemoteFeedbackFilter(self.leftTalonMaster, RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
+      self.leftTalonSlave.configRemoteFeedbackFilter(self.leftTalonMaster.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
       '''Set encoder connected to right master as remote sensor 1'''
-      self.leftTalonSlave.configRemoteFeedbackFilter(self.rightTalonMaster, RemoteSensorSource.TalonSRX_SelectedSensor, 1, self.CAN_BUS_TIMEOUT_MS)
+      self.leftTalonSlave.configRemoteFeedbackFilter(self.rightTalonMaster.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 1, self.CAN_BUS_TIMEOUT_MS)
     else:
       print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
 
@@ -137,13 +134,15 @@ class MyRobot(wpilib.TimedRobot):
     self.leftTalonSlave.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, self.CAN_BUS_TIMEOUT_MS)
 
     '''Based on pathfinder-2018robot project I think none of the talon should be setInverted(True)'''
-    #for talon in self.leftTalons:
-      #talon.setInverted(True)
+    for talon in self.leftTalons:
+      talon.setInverted(True)
 
     '''
     Now that the sensor sum remote sensor is setup, we can setup the master talons close-loop configuration
     '''
     for talon in self.masterTalons:
+      talon.configMotionProfileTrajectoryPeriod(self.BASE_TRAJECTORY_PERIOD_MS)
+
       '''
       This just loads the constants into "slots".
       Later we will select the slots to use for the primary and aux PID loops.
@@ -182,7 +181,7 @@ class MyRobot(wpilib.TimedRobot):
         '''Setup the "sum" sensor as remote sensor 0'''
         talon.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
         '''Setup the pigeon as remote sensor 1'''
-        talon.configRemoteFeedbackFilter(self.pigeon.getDeviceID(), RemoteSensorSource.GadgeteerPigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
+        talon.configRemoteFeedbackFilter(self.PIGEON_IMU_CAN_ID, RemoteSensorSource.GadgeteerPigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
       else:
         print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
 
@@ -200,7 +199,7 @@ class MyRobot(wpilib.TimedRobot):
       self.rightTalonMaster.configAuxPIDPolarity(False, self.CAN_BUS_TIMEOUT_MS)
     else:
       print("configAuxPIDPolarity() is not implemented in pyfrc simulator")
-
+    
   def autonomousInit(self):
     if not self.isSimulation():
       self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
@@ -214,7 +213,7 @@ class MyRobot(wpilib.TimedRobot):
     if not self.isSimulation():
       self.leftTalonMaster.clearMotionProfileTrajectories()
       self.leftTalonMaster.clearMotionProfileHasUnderrun(0)
-    self.leftTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Disable.value)
+    self.leftTalonMaster.set(ControlMode.MotionProfileArc, 0)
 
     if not self.isSimulation():
       self.rightTalonMaster.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
@@ -222,7 +221,7 @@ class MyRobot(wpilib.TimedRobot):
     if not self.isSimulation():
       self.rightTalonMaster.clearMotionProfileTrajectories()
       self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
-    self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Disable.value)
+    self.rightTalonMaster.set(ControlMode.MotionProfileArc, 0)
 
     if not self.isSimulation():
       with open("/home/lvuser/traj", "rb") as fp:
@@ -231,6 +230,7 @@ class MyRobot(wpilib.TimedRobot):
       with open("/home/ubuntu/traj", "rb") as fp:
           trajectory = pickle.load(fp)
 
+    print("Length of trajectory: " + str(len(trajectory)))  
     modifier = pf.modifiers.TankModifier(trajectory).modify(2.1) #Wheelbase in feet
 
     self.leftTrajectory = modifier.getLeftTrajectory()
@@ -244,8 +244,8 @@ class MyRobot(wpilib.TimedRobot):
 
       position = (((leftSeg.position + rightSeg.position) * 12) * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER)
       aux_position = 10 * math.degrees(leftSeg.heading)
-      slot0 = self.TALON_MOTIONPROFILE_SLOT
-      slot1 = self.TALON_GYRO_SLOT
+      slot0 = self.PRIMARY_PID_LOOP_GAINS_SLOT
+      slot1 = self.AUX_PID_LOOP_GAINS_SLOT
       timeDur = 0
       zeroPos = i == 0
       isLastPoint = i == len(trajectory) - 1
@@ -253,16 +253,19 @@ class MyRobot(wpilib.TimedRobot):
       rvelocity = (((rightSeg.velocity + velCorrection) * 12) * self.ENCODER_COUNTS_PER_REV) / (math.pi * self.WHEEL_DIAMETER) / 10
 
       '''There was no empty constructor.'''
+      print(f'position: {position}, lvelcoity: {lvelocity}, rvelocity: {rvelocity}')
       self.leftTrajectory[i] = TrajectoryPoint(position, lvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
       self.rightTrajectory[i] = TrajectoryPoint(position, rvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
 
     if not self.isSimulation():
-      for point in self.leftTrajectory:
+      for point in self.leftTrajectory:        
         self.leftTalonMaster.pushMotionProfileTrajectory(point)
+        #print("Top buffer count left: " + str(self.leftTalonMaster.getMotionProfileStatus().topBufferCnt))
 
     if not self.isSimulation():
       for point in self.rightTrajectory:
         self.rightTalonMaster.pushMotionProfileTrajectory(point)
+        #print("Top buffer count right: " + str(self.rightTalonMaster.getMotionProfileStatus().topBufferCnt))
 
     self.leftDone = False
     self.rightDone = False
@@ -289,7 +292,7 @@ class MyRobot(wpilib.TimedRobot):
     '''
 
     '''Let's time this to see if it's really worth doing it the more sophisticated way'''
-    if self.leftMPStatus.btmBufferCnt == 0 and self.rightMPStatus.btmBufferCnt == 0:
+    if not self.motionProfileEnabled and self.leftMPStatus.btmBufferCnt == 0 and self.rightMPStatus.btmBufferCnt == 0:
       print("Beginning to funnel trajectory points into the Talons")
       self.bufferProcessingStartTime = self.timer.getFPGATimestamp()
 
@@ -298,17 +301,17 @@ class MyRobot(wpilib.TimedRobot):
     Printing will slow down execution and we want to measure time
     that it took to do this operation.
     '''
-    if self.leftMPStatus.topBufferCnt > 0:
+    if self.leftMPStatus.topBufferCnt > 0 and self.leftMPStatus.btmBufferCnt < 75:
       self.leftTalonMaster.processMotionProfileBuffer()
 
-    if self.rightMPStatus.topBufferCnt > 0:
+    if self.rightMPStatus.topBufferCnt > 0 and self.rightMPStatus.btmBufferCnt < 75:
       self.rightTalonMaster.processMotionProfileBuffer()
 
     if not self.motionProfileEnabled and \
-       self.leftMPStatus.btmBufferCnt > 0 and self.leftMPStatus.topBufferCnt == 0 and \
-       self.rightMPStatus.btmBufferCnt > 0 and self.rightMPStatus.topBufferCnt == 0:
-      self.leftTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
-      self.rightTalonMaster.set(ControlMode.MotionProfileArc, SetValueMotionProfile.Enable.value)
+       self.leftMPStatus.btmBufferCnt > 50 and \
+       self.rightMPStatus.btmBufferCnt > 50:
+      self.leftTalonMaster.set(ControlMode.MotionProfileArc, 1)
+      self.rightTalonMaster.set(ControlMode.MotionProfileArc, 1)
       self.motionProfileEnabled = True
       self.executionStartTime = self.timer.getFPGATimestamp()
       print("Beginning motion profile execution")
@@ -333,8 +336,11 @@ class MyRobot(wpilib.TimedRobot):
     may cause too much loading on the Talon firware or too much traffic on the
     CAN bus network... so maybe need to be careful with that.
     '''
+    
     if (not self.leftDone or not self.rightDone) and self.timer.hasPeriodPassed(0.25):
-      if not self.isSimulation:
+      if not self.isSimulation():
+        lTopCount = self.leftMPStatus.topBufferCnt
+        rTopCount = self.rightMPStatus.topBufferCnt
         lBufCount = self.leftMPStatus.btmBufferCnt
         rBufCount = self.rightMPStatus.btmBufferCnt
         lOutput = self.leftTalonMaster.getMotorOutputPercent()
@@ -345,6 +351,8 @@ class MyRobot(wpilib.TimedRobot):
         rError = self.rightTalonMaster.getClosedLoopError(self.PRIMARY_PID_LOOP)
         hError = self.rightTalonMaster.getClosedLoopError(self.AUX_PID_LOOP)
       else:
+        lTopCount = 0
+        rTopCount = 0
         lBufCount = 0
         rBufCount = 0
         lOutput = 0
@@ -357,7 +365,8 @@ class MyRobot(wpilib.TimedRobot):
 
       print(f'\
         ****************************************\n\
-         Points Remaining <{lBufCount}, {rBufCount}>\n\
+         Top Count <{lTopCount}, {rTopCount}>\n\
+         Bottom Count <{lBufCount}, {rBufCount}>\n\
          Motor Output <{lOutput}, {rOutput}>\n\
          Underrun <{lUnderrun}, {rUnderrun}>\n\
          Closed Loop Error <{lError}, {rError}, {hError}>\n\
@@ -365,12 +374,17 @@ class MyRobot(wpilib.TimedRobot):
         ')
     else:
       self.executionFinishTime = self.timer.getFPGATimestamp()
-      print("Both Left and Right motion profiles are finished executing")
-      print(f'Buffer fill time: {self.executionStartTime - self.bufferProcessingStartTime}')
-      print(f'Profile exec time: {self.executionFinishTime - self.executionStartTime}')
-
+      #print("Both Left and Right motion profiles are finished executing")
+      #print(f'Buffer fill time: {self.executionStartTime - self.bufferProcessingStartTime}')
+      #print(f'Profile exec time: {self.executionFinishTime - self.executionStartTime}')
+    
   def teleopInit(self):
       print("MODE: teleopInit")
+      if not self.isSimulation():
+        self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
+        self.pigeon.setFusedHeading(0, self.CAN_BUS_TIMEOUT_MS)
+      else:
+        print("pigeon.setYaw() is not implemented in pyfrc simulator")
 
   def teleopPeriodic(self):
     if self.timer.hasPeriodPassed(0.25):
@@ -382,8 +396,8 @@ class MyRobot(wpilib.TimedRobot):
         rOutput = self.rightTalonMaster.getMotorOutputPercent()
         lTicks = self.leftTalonMaster.getQuadratureVelocity()
         rTicks = self.rightTalonMaster.getQuadratureVelocity()
-        lSpeed = self.unitsToInches(self.leftTalonMaster.getQuadratureVelocity()) * 10
-        rSpeed = self.unitsToInches(self.rightTalonMaster.getQuadratureVelocity()) * 10
+        lSpeed = self.unitsToInches(self.leftTalonMaster.getSelectedSensorVelocity(self.PRIMARY_PID_LOOP)) * 10
+        rSpeed = self.unitsToInches(self.rightTalonMaster.getSelectedSensorVelocity(self.PRIMARY_PID_LOOP)) * 10
       else:
         ypr = [0, 0, 0]
         primary_fdbk = 0
