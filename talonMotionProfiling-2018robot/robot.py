@@ -158,7 +158,7 @@ class MyRobot(wpilib.TimedRobot):
         '''Setup the "sum" sensor as remote sensor 0'''
         talon.configRemoteFeedbackFilter(self.dummyTalon.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
         '''Setup the pigeon as remote sensor 1'''
-        talon.configRemoteFeedbackFilter(self.PIGEON_IMU_CAN_ID, RemoteSensorSource.GadgeteerPigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
+        talon.configRemoteFeedbackFilter(self.PIGEON_IMU_CAN_ID, RemoteSensorSource.Pigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
       else:
         print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
 
@@ -190,7 +190,7 @@ class MyRobot(wpilib.TimedRobot):
     if not self.isSimulation():
       self.leftTalonMaster.clearMotionProfileTrajectories()
       self.leftTalonMaster.clearMotionProfileHasUnderrun(0)
-    self.leftTalonMaster.set(ControlMode.MotionProfileArc, 0)
+    self.leftTalonMaster.set(ControlMode.MotionProfile, 0)
 
     if not self.isSimulation():
       self.rightTalonSlave.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
@@ -198,7 +198,7 @@ class MyRobot(wpilib.TimedRobot):
     if not self.isSimulation():
       self.rightTalonMaster.clearMotionProfileTrajectories()
       self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
-    self.rightTalonMaster.set(ControlMode.MotionProfileArc, 0)
+    self.rightTalonMaster.set(ControlMode.MotionProfile, 0)
 
     if not self.isSimulation():
       with open("/home/lvuser/traj", "rb") as fp:
@@ -287,8 +287,8 @@ class MyRobot(wpilib.TimedRobot):
     if not self.motionProfileEnabled and \
        self.leftMPStatus.btmBufferCnt > 20 and \
        self.rightMPStatus.btmBufferCnt > 20:
-      self.leftTalonMaster.set(ControlMode.MotionProfileArc, 1)
-      self.rightTalonMaster.set(ControlMode.MotionProfileArc, 1)
+      self.leftTalonMaster.set(ControlMode.MotionProfile, 1)
+      self.rightTalonMaster.set(ControlMode.MotionProfile, 1)
       self.motionProfileEnabled = True
       self.executionStartTime = self.timer.getFPGATimestamp()
       print("Beginning motion profile execution")
@@ -380,7 +380,7 @@ class MyRobot(wpilib.TimedRobot):
       if not self.isSimulation():
         ypr = self.pigeon.getYawPitchRoll()
         primary_fdbk = self.rightTalonMaster.getSelectedSensorVelocity(self.PRIMARY_PID_LOOP)
-        aux_fdbk = self.rightTalonMaster.getSelectedSensorVelocity(self.AUX_PID_LOOP)
+        aux_fdbk = self.rightTalonMaster.getSelectedSensorPosition(self.AUX_PID_LOOP)
         lOutput = self.leftTalonMaster.getMotorOutputPercent()
         rOutput = self.rightTalonMaster.getMotorOutputPercent()
         lTicks = self.leftTalonMaster.getQuadratureVelocity()
