@@ -190,7 +190,7 @@ class MyRobot(wpilib.TimedRobot):
     if not self.isSimulation():
       self.leftTalonMaster.clearMotionProfileTrajectories()
       self.leftTalonMaster.clearMotionProfileHasUnderrun(0)
-    self.leftTalonMaster.set(ControlMode.MotionProfile, 0)
+    self.leftTalonMaster.set(ControlMode.MotionProfileArc, 0)
 
     if not self.isSimulation():
       self.rightTalonSlave.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
@@ -198,7 +198,7 @@ class MyRobot(wpilib.TimedRobot):
     if not self.isSimulation():
       self.rightTalonMaster.clearMotionProfileTrajectories()
       self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
-    self.rightTalonMaster.set(ControlMode.MotionProfile, 0)
+    self.rightTalonMaster.set(ControlMode.MotionProfileArc, 0)
 
     if not self.isSimulation():
       with open("/home/lvuser/traj", "rb") as fp:
@@ -278,17 +278,17 @@ class MyRobot(wpilib.TimedRobot):
     Printing will slow down execution and we want to measure time
     that it took to do this operation.
     '''
-    if self.leftMPStatus.topBufferCnt > 0 and self.leftMPStatus.btmBufferCnt < 75:
+    if self.leftMPStatus.topBufferCnt > 0 and self.leftMPStatus.btmBufferCnt < 50:
       self.leftTalonMaster.processMotionProfileBuffer()
 
-    if self.rightMPStatus.topBufferCnt > 0 and self.rightMPStatus.btmBufferCnt < 75:
+    if self.rightMPStatus.topBufferCnt > 0 and self.rightMPStatus.btmBufferCnt < 50:
       self.rightTalonMaster.processMotionProfileBuffer()
 
     if not self.motionProfileEnabled and \
-       self.leftMPStatus.btmBufferCnt > 50 and \
-       self.rightMPStatus.btmBufferCnt > 50:
-      self.leftTalonMaster.set(ControlMode.MotionProfile, 1)
-      self.rightTalonMaster.set(ControlMode.MotionProfile, 1)
+       self.leftMPStatus.btmBufferCnt > 20 and \
+       self.rightMPStatus.btmBufferCnt > 20:
+      self.leftTalonMaster.set(ControlMode.MotionProfileArc, 1)
+      self.rightTalonMaster.set(ControlMode.MotionProfileArc, 1)
       self.motionProfileEnabled = True
       self.executionStartTime = self.timer.getFPGATimestamp()
       print("Beginning motion profile execution")
