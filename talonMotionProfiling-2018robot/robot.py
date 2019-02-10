@@ -114,6 +114,22 @@ class MyRobot(wpilib.TimedRobot):
 
     self.leftTalonMaster.setSensorPhase(True)
 
+    if not self.isSimulation():
+      '''Setup the "sum" sensor as remote sensor 0'''
+      self.leftTalonMaster.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
+      '''Setup the pigeon as remote sensor 1'''
+      self.leftTalonMaster.configRemoteFeedbackFilter(self.PIGEON_IMU_CAN_ID, RemoteSensorSource.Pigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
+    else:
+      print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
+
+    if not self.isSimulation():
+      '''Setup the "sum" sensor as remote sensor 0'''
+      self.rightTalonMaster.configRemoteFeedbackFilter(self.rightTalonSlave.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
+      '''Setup the pigeon as remote sensor 1'''
+      self.rightTalonMaster.configRemoteFeedbackFilter(self.PIGEON_IMU_CAN_ID, RemoteSensorSource.Pigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
+    else:
+      print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
+
     '''
     Now that the sensor sum remote sensor is setup, we can setup the master talons close-loop configuration
     '''
@@ -153,14 +169,6 @@ class MyRobot(wpilib.TimedRobot):
       talon.selectProfileSlot(self.AUX_PID_LOOP_GAINS_SLOT, self.AUX_PID_LOOP)
       '''This says the heading control loop is allowed to command full motor output'''
       talon.configClosedLoopPeakOutput(self.AUX_PID_LOOP_GAINS_SLOT, 1.0, self.CAN_BUS_TIMEOUT_MS)
-
-      if not self.isSimulation():
-        '''Setup the "sum" sensor as remote sensor 0'''
-        talon.configRemoteFeedbackFilter(self.dummyTalon.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
-        '''Setup the pigeon as remote sensor 1'''
-        talon.configRemoteFeedbackFilter(self.PIGEON_IMU_CAN_ID, RemoteSensorSource.Pigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
-      else:
-        print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
 
       '''Select remote sensor 0 (the "sum" sensor) as the feedback for the primary PID loop (position control loop)'''
       talon.configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
@@ -219,20 +227,21 @@ class MyRobot(wpilib.TimedRobot):
 
       velCorrection = (rightSeg.velocity - leftSeg.velocity) * self.VELOCITY_MULTIPLIER
 
-      position = self.inchesToUnits((leftSeg.position + rightSeg.position) * 12)
-      aux_position = 10 * math.degrees(leftSeg.heading)
+      lposition = self.inchesToUnits((leftSeg.position) * 12)
+      rposition = self.inchesToUnits((rightSeg.position) * 12)
+      aux_position = 0
       slot0 = self.PRIMARY_PID_LOOP_GAINS_SLOT
       slot1 = self.AUX_PID_LOOP_GAINS_SLOT
       timeDur = 0
       zeroPos = i == 0
       isLastPoint = i == len(trajectory) - 1
-      lvelocity = self.inchesToUnits((leftSeg.velocity - velCorrection) * 12) / 10
-      rvelocity = self.inchesToUnits((rightSeg.velocity + velCorrection) * 12) / 10
+      lvelocity = self.inchesToUnits(leftSeg.velocity * 12) / 10
+      rvelocity = self.inchesToUnits(rightSeg.velocity * 12) / 10
 
       '''There was no empty constructor.'''
-      print(f'position: {position}, aux_position: {aux_position}, lvelcoity: {lvelocity}, rvelocity: {rvelocity}')
-      self.leftTrajectory[i] = TrajectoryPoint(position, lvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
-      self.rightTrajectory[i] = TrajectoryPoint(position, rvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
+      print(f'position: {lposition}, aux_position: {aux_position}, lvelcoity: {lvelocity}, rvelocity: {rvelocity}')
+      self.leftTrajectory[i] = TrajectoryPoint(lposition, lvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
+      self.rightTrajectory[i] = TrajectoryPoint(rposition, rvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
 
     if not self.isSimulation():
       for point in self.leftTrajectory:        
