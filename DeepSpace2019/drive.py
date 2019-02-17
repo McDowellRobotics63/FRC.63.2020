@@ -16,11 +16,11 @@ class DeepSpaceDrive():
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.leftTalonMaster = TalonSRX(2)
-    self.leftTalonSlave = TalonSRX(1)
+    self.leftTalonMaster = TalonSRX(3)
+    self.leftTalonSlave = TalonSRX(4)
 
-    self.rightTalonMaster = TalonSRX(3)
-    self.rightTalonSlave = TalonSRX(4)
+    self.rightTalonMaster = TalonSRX(2)
+    self.rightTalonSlave = TalonSRX(1)
 
   def config(self):
     self.logger.info("DeepSpaceDrive::config()")
@@ -32,7 +32,7 @@ class DeepSpaceDrive():
     self.leftTalonMaster.enableVoltageCompensation(True)
     self.leftTalonMaster.configVoltageCompSaturation(11.5, 10)
     self.leftTalonMaster.configOpenLoopRamp(0.125, 10)
-    self.leftTalonMaster.setInverted(True)
+    self.leftTalonMaster.setInverted(False)
 
     self.rightTalonMaster.configNominalOutputForward(0.0, 10)
     self.rightTalonMaster.configNominalOutputReverse(0.0, 10)
@@ -41,19 +41,21 @@ class DeepSpaceDrive():
     self.rightTalonMaster.enableVoltageCompensation(True)
     self.rightTalonMaster.configVoltageCompSaturation(11.5, 10)
     self.rightTalonMaster.configOpenLoopRamp(0.125, 10)
+    self.rightTalonMaster.setInverted(True)
 
     self.leftTalonSlave.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 10)
     self.leftTalonSlave.configSelectedFeedbackCoefficient(1.0, 0, 10)
     self.leftTalonSlave.setSensorPhase(True)
     self.leftTalonSlave.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, 10)
-    self.leftTalonSlave.set(ControlMode.Follower, 2)
-    self.leftTalonSlave.setInverted(True)
+    self.leftTalonSlave.set(ControlMode.Follower, 3)
+    self.leftTalonSlave.setInverted(False)
 
     self.rightTalonSlave.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 10)
     self.rightTalonSlave.configSelectedFeedbackCoefficient(1.0, 0, 10)
     self.rightTalonSlave.setSensorPhase(True)
     self.rightTalonSlave.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, 10)
-    self.rightTalonSlave.set(ControlMode.Follower, 3)
+    self.rightTalonSlave.set(ControlMode.Follower, 2)
+    self.rightTalonSlave.setInverted(True)
 
   def iterate(self, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
