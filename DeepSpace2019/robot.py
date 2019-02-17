@@ -1,5 +1,7 @@
 
 import wpilib
+
+from wpilib import Compressor
 from lift import DeepSpaceLift
 
 class MyRobot(wpilib.TimedRobot):
@@ -7,6 +9,8 @@ class MyRobot(wpilib.TimedRobot):
   def robotInit(self):
     self.timer = wpilib.Timer()
     self.timer.start()
+
+    self.compressor = Compressor(10)
 
     self.pilot_stick = wpilib.Joystick(0)
     self.copilot_stick = wpilib.Joystick(1)

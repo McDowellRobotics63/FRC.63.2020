@@ -1,6 +1,8 @@
 
 import wpilib
 
+from wpilib import Solenoid
+
 from ctre import TalonSRX
 from ctre import ControlMode
 from ctre import FeedbackDevice
@@ -16,6 +18,12 @@ class DeepSpaceLift():
     self.talon = TalonSRX(7)
     self.timer = wpilib.Timer()
     self.timer.start()
+    self.lift_pneumatic_extend = Solenoid(9, 0)
+    self.lift_pneumatic_retract = Solenoid(9, 1)
+    
+    self.lift_pneumatic_extend.set(False)
+    self.lift_pneumatic_retract.set(True)
+
 
   def config(self):
     self.logger.info("DeepSpaceLift::config()")
@@ -31,6 +39,13 @@ class DeepSpaceLift():
   def iterate(self, pilot_stick, copilot_stick):
     self.logger.info("DeepSpaceLift::iterate()")
     self.talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(1))
+
+    if pilot_stick.getRawButton(1):
+      self.lift_pneumatic_extend.set(True)
+      self.lift_pneumatic_retract.set(False)
+    elif pilot_stick.getRawButton(2):
+      self.lift_pneumatic_extend.set(False)
+      self.lift_pneumatic_retract.set(True)
 
   def disable(self):
     self.logger.info("DeepSpaceLift::disable()")
