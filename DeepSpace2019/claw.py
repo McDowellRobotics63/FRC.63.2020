@@ -34,6 +34,7 @@ class DeepSpaceClaw():
     self.left_grab = TalonSRX(5)
     self.right_grab = TalonSRX(6)
     self.wrist_talon = TalonSRX(8)
+    self.lift_talon = TalonSRX(7)
 
     self.claw_close.set(True)
     self.claw_open.set(False)
@@ -73,23 +74,40 @@ class DeepSpaceClaw():
     self.right_grab.configVoltageCompSaturation(11.5, 10)
     self.right_grab.configOpenLoopRamp(0.125, 10)
 
+    self.lift_talon.configNominalOutputForward(0.0, 10)
+    self.lift_talon.configNominalOutputReverse(0.0, 10)
+    self.lift_talon.configPeakOutputForward(1.0, 10)
+    self.lift_talon.configPeakOutputReverse(-1.0, 10)
+    self.lift_talon.enableVoltageCompensation(True)
+    self.lift_talon.configVoltageCompSaturation(11.5, 10)
+    self.lift_talon.configOpenLoopRamp(0.125, 10)
+    self.lift_talon.setInverted(False)
+
   def iterate(self, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceClaw::iterate()")
       self.logger.info("Claw current: " + str(self.wrist_talon.getOutputCurrent()))
       self.logger.info("Claw position: " + str(self.wrist_talon.getSelectedSensorPosition(0)))
       self.logger.info("Claw analog in: " + str(self.wrist_talon.getAnalogInRaw()))
-    self.wrist_talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(1))
+    
+    self.wrist_talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(5))
 
-    if pilot_stick.getRawButton(1):
+    if pilot_stick.getRawButton(5): #left bumper
       self.left_grab.set(ControlMode.PercentOutput, 0.5)
       self.right_grab.set(ControlMode.PercentOutput, -0.5)
-    elif pilot_stick.getRawButton(2):
+    elif pilot_stick.getRawButton(6): #right bumper
       self.left_grab.set(ControlMode.PercentOutput, -0.5)
       self.right_grab.set(ControlMode.PercentOutput, 0.5)
     else:
       self.left_grab.set(ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ControlMode.PercentOutput, 0.0)
+
+    if pilot_stick.getRawButton(1): #A
+      self.lift_pneumatic_extend.set(True) 
+      self.lift_pneumatic_retract.set(False)
+    elif pilot_stick.getRawButton(2): #B
+      self.lift_pneumatic_extend.set(False)
+      self.lift_pneumatic_retract.set(True)
 
     if pilot_stick.getRawButton(3):  #X
       self.claw_close.set(True)
@@ -97,6 +115,8 @@ class DeepSpaceClaw():
     elif pilot_stick.getRawButton(4): #Y
       self.claw_close.set(False)
       self.claw_open.set(True)
+
+    self.lift_talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(1))
 
 
 
