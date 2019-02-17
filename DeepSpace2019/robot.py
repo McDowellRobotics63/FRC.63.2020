@@ -1,5 +1,7 @@
 
 import wpilib
+
+from wpilib import Compressor
 from drive import DeepSpaceDrive
 
 class MyRobot(wpilib.TimedRobot):
@@ -13,6 +15,8 @@ class MyRobot(wpilib.TimedRobot):
 
     self.drive = DeepSpaceDrive(self.logger)
     self.drive.init()
+
+    self.compressor = Compressor(10) 
 
   def autonomousInit(self):
     self.drive.config()
