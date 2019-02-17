@@ -18,8 +18,13 @@ class DeepSpaceClaw():
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.claw_open = Solenoid(10, 0)
-    self.claw_close = Solenoid(10, 1)
+    self.drive_front_extend = Solenoid(9, 3)
+    self.drive_front_retract = Solenoid(9, 2)
+    self.drive_back_extend = Solenoid(9, 4)
+    self.drive_back_retract = Solenoid(9, 5)
+
+    self.claw_open = Solenoid(10, 2)
+    self.claw_close = Solenoid(10, 3)
 
     self.left_grab = TalonSRX(5)
     self.right_grab = TalonSRX(6)
@@ -27,6 +32,11 @@ class DeepSpaceClaw():
 
     self.claw_close.set(True)
     self.claw_open.set(False)
+
+    self.drive_front_extend.set(False)
+    self.drive_front_retract.set(True)
+    self.drive_back_extend.set(False)
+    self.drive_back_retract.set(True)
 
   def config(self):
     self.logger.info("DeepSpaceClaw::config()")
@@ -76,10 +86,10 @@ class DeepSpaceClaw():
       self.left_grab.set(ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ControlMode.PercentOutput, 0.0)
 
-    if pilot_stick.getRawButton(3):
+    if pilot_stick.getRawButton(3):  #X
       self.claw_close.set(True)
       self.claw_open.set(False)
-    elif pilot_stick.getRawButton(4):
+    elif pilot_stick.getRawButton(4): #Y
       self.claw_close.set(False)
       self.claw_open.set(True)
 
