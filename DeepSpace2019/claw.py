@@ -24,9 +24,21 @@ class DeepSpaceClaw():
     self.drive_back_retract = Solenoid(9, 5)
     self.lift_pneumatic_extend = Solenoid(9, 0)
     self.lift_pneumatic_retract = Solenoid(9, 1)
+
+    self.harpoon_center_extend = Solenoid(10, 0)
+    self.harpoon_center_retract = Solenoid(10, 1)
+
+    self.harpoon_outside_extend = Solenoid(10, 4)
+    self.harpoon_outside_retract = Solenoid(10, 5)
+
+    self.harpoon_center_extend.set(False)
+    self.harpoon_center_retract.set(True)
+
+    self.harpoon_outside_extend.set(False)
+    self.harpoon_outside_retract.set(True)
+
     self.lift_pneumatic_extend.set(False)
     self.lift_pneumatic_retract.set(True)
-
 
     self.claw_open = Solenoid(10, 2)
     self.claw_close = Solenoid(10, 3)
@@ -115,6 +127,20 @@ class DeepSpaceClaw():
     elif pilot_stick.getRawButton(4): #Y
       self.claw_close.set(False)
       self.claw_open.set(True)
+
+    if pilot_stick.getRawButton(7):  #Back
+      self.harpoon_center_extend.set(False)
+      self.harpoon_center_retract.set(True)
+    elif pilot_stick.getRawButton(8): #Start
+      self.harpoon_center_extend.set(True)
+      self.harpoon_center_retract.set(False)
+
+    if pilot_stick.getPOV() == 270:  #D-left
+      self.harpoon_outside_extend.set(False)
+      self.harpoon_outside_retract.set(True)
+    elif pilot_stick.getPOV() == 90: #D-right
+      self.harpoon_outside_extend.set(True)
+      self.harpoon_outside_retract.set(False)
 
     self.lift_talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(1))
 
