@@ -1,5 +1,6 @@
 
 import wpilib
+import math
 
 from wpilib import Solenoid
 
@@ -17,6 +18,8 @@ class DeepSpaceClaw():
     self.logger.info("DeepSpaceClaw::init()")
     self.timer = wpilib.Timer()
     self.timer.start()
+
+    self.wrist_setpoint = 0
 
     self.drive_front_extend = Solenoid(9, 3)
     self.drive_front_retract = Solenoid(9, 2)
@@ -57,11 +60,23 @@ class DeepSpaceClaw():
     self.drive_back_retract.set(True)
 
   def config(self):
-    self.logger.info("DeepSpaceClaw::config()")
+    self.logger.info("DeepSpaceClaw::config(): ")
+
     self.wrist_talon.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 10)
     self.wrist_talon.configSelectedFeedbackCoefficient(1.0, 0, 10)
+
+    self.wrist_talon.selectProfileSlot(0, 0)
+    self.wrist_talon.config_kF(0, 120, 10)
+    self.wrist_talon.config_kP(0, 30, 10)
+    self.wrist_talon.config_kI(0, 0, 10)
+    self.wrist_talon.config_kD(0, 0, 10)
+    self.wrist_talon.setSelectedSensorPosition(0, 0, 10)
+    self.wrist_talon.configMotionCruiseVelocity(3, 10)
+    self.wrist_talon.configMotionAcceleration(3, 10)
+
     self.wrist_talon.setSensorPhase(False)
     self.wrist_talon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, 10)
+    self.wrist_talon.setStatusFramePeriod(StatusFrame.Status_10_MotionMagic, 10, 10)    
     self.wrist_talon.configNominalOutputForward(0.0, 10)
     self.wrist_talon.configNominalOutputReverse(0.0, 10)
     self.wrist_talon.configPeakOutputForward(1.0, 10)
@@ -101,8 +116,6 @@ class DeepSpaceClaw():
       self.logger.info("Claw current: " + str(self.wrist_talon.getOutputCurrent()))
       self.logger.info("Claw position: " + str(self.wrist_talon.getSelectedSensorPosition(0)))
       self.logger.info("Claw analog in: " + str(self.wrist_talon.getAnalogInRaw()))
-    
-    self.wrist_talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(5))
 
     if pilot_stick.getRawButton(5): #left bumper
       self.left_grab.set(ControlMode.PercentOutput, 0.5)
@@ -142,6 +155,15 @@ class DeepSpaceClaw():
       self.harpoon_outside_extend.set(True)
       self.harpoon_outside_retract.set(False)
 
+    if copilot_stick.getRawButtonPressed(1):
+      self.wrist_setpoint = min(self.wrist_setpoint + 5, 30)
+      print("wrist_setpoint: " + str(self.wrist_setpoint))
+    elif copilot_stick.getRawButtonPressed(2):
+      self.wrist_setpoint = max(self.wrist_setpoint - 5, 0)
+      print("wrist_setpoint: " + str(self.wrist_setpoint))
+
+    #self.wrist_talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(5))
+    self.wrist_talon.set(ControlMode.MotionMagic, self.wrist_setpoint)
     self.lift_talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(1))
 
 
