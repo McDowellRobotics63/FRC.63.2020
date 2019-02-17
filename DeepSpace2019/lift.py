@@ -20,7 +20,7 @@ class DeepSpaceLift():
     self.timer.start()
     self.lift_pneumatic_extend = Solenoid(9, 0)
     self.lift_pneumatic_retract = Solenoid(9, 1)
-    
+
     self.lift_pneumatic_extend.set(False)
     self.lift_pneumatic_retract.set(True)
 
@@ -40,10 +40,10 @@ class DeepSpaceLift():
     self.logger.info("DeepSpaceLift::iterate()")
     self.talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(1))
 
-    if pilot_stick.getRawButton(1):
-      self.lift_pneumatic_extend.set(True)
+    if pilot_stick.getRawButton(1): #A
+      self.lift_pneumatic_extend.set(True) 
       self.lift_pneumatic_retract.set(False)
-    elif pilot_stick.getRawButton(2):
+    elif pilot_stick.getRawButton(2): #B
       self.lift_pneumatic_extend.set(False)
       self.lift_pneumatic_retract.set(True)
 
