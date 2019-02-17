@@ -1,6 +1,7 @@
 
 import wpilib
 from claw import DeepSpaceClaw
+from wpilib import Compressor
 
 class MyRobot(wpilib.TimedRobot):
 
@@ -13,6 +14,8 @@ class MyRobot(wpilib.TimedRobot):
 
     self.claw = DeepSpaceClaw(self.logger)
     self.claw.init()
+
+    self.compressor = Compressor(10)
 
   def autonomousInit(self):
     self.claw.config()
