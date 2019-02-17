@@ -22,6 +22,11 @@ class DeepSpaceClaw():
     self.drive_front_retract = Solenoid(9, 2)
     self.drive_back_extend = Solenoid(9, 4)
     self.drive_back_retract = Solenoid(9, 5)
+    self.lift_pneumatic_extend = Solenoid(9, 0)
+    self.lift_pneumatic_retract = Solenoid(9, 1)
+    self.lift_pneumatic_extend.set(False)
+    self.lift_pneumatic_retract.set(True)
+
 
     self.claw_open = Solenoid(10, 2)
     self.claw_close = Solenoid(10, 3)
