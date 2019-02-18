@@ -1,5 +1,8 @@
 
 import wpilib
+
+import robotmap
+
 from wpilib import Compressor
 
 from drive import DeepSpaceDrive
@@ -12,7 +15,10 @@ class MyRobot(wpilib.TimedRobot):
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.compressor = Compressor(10)
+    if self.isReal():
+      self.compressor = Compressor(robotmap.PCM2_CANID)
+    else:
+      self.compressor = Compressor(0)
 
     self.pilot_stick = wpilib.Joystick(0)
     self.copilot_stick = wpilib.Joystick(1)

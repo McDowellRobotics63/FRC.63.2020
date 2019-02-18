@@ -41,7 +41,9 @@ class DeepSpaceLift():
     self.talon.setInverted(False)
 
   def iterate(self, pilot_stick, copilot_stick):
-    self.logger.info("DeepSpaceLift::iterate()")
+    if self.timer.hasPeriodPassed(0.5):
+      self.logger.info("DeepSpaceLift::iterate()")
+
     self.talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS))
 
     if copilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER): #left bumper
