@@ -32,7 +32,7 @@ class DeepSpaceDrive():
     self.drive_back_extend = Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_REAR_EXTEND_SOLENOID)
     self.drive_back_retract = Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_REAR_RETRACT_SOLENOID)
 
-  def config(self):
+  def config(self, simulation):
     self.logger.info("DeepSpaceDrive::config()")
 
     '''Configuration items common for all talons'''
@@ -67,7 +67,7 @@ class DeepSpaceDrive():
     self.drive_back_extend.set(False)
     self.drive_back_retract.set(True)
 
-  def iterate(self, pilot_stick, copilot_stick):
+  def iterate(self, test_mode, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceDrive::iterate()")
       self.logger.info("vleft: " + str(self.leftTalonSlave.getSelectedSensorVelocity(0)) + ", vright: " + str(self.rightTalonSlave.getSelectedSensorVelocity(0)))

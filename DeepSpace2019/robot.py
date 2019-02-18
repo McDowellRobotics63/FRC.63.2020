@@ -34,9 +34,9 @@ class MyRobot(wpilib.TimedRobot):
 
   def autonomousInit(self):
     self.logger.info("MODE: autonomousInit")
-    self.drive.config()
-    self.lift.config()
-    self.claw.config()
+    self.drive.config(self.isSimulation())
+    self.lift.config(self.isSimulation())
+    self.claw.config(self.isSimulation())
 
   def autonomousPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
@@ -44,17 +44,17 @@ class MyRobot(wpilib.TimedRobot):
   
   def teleopInit(self):
     self.logger.info("MODE: teleopInit")
-    self.drive.config()
-    self.lift.config()
-    self.claw.config()
+    self.drive.config(self.isSimulation())
+    self.lift.config(self.isSimulation())
+    self.claw.config(self.isSimulation())
 
   def teleopPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
       self.logger.info("MODE: teleopPeriodic")
     
-    self.drive.iterate(self.pilot_stick, self.copilot_stick)
-    self.lift.iterate(self.pilot_stick, self.copilot_stick)
-    self.claw.iterate(self.pilot_stick, self.copilot_stick)
+    self.drive.iterate(False, self.pilot_stick, self.copilot_stick)
+    self.lift.iterate(False, self.pilot_stick, self.copilot_stick)
+    self.claw.iterate(False, self.pilot_stick, self.copilot_stick)
 
   def disabledInit(self):
     self.logger.info("MODE: disabledInit")
@@ -68,13 +68,17 @@ class MyRobot(wpilib.TimedRobot):
 
   def testInit(self):
     self.logger.info("MODE: testInit")
-    self.drive.config()
-    self.lift.config()
-    self.claw.config()
+    self.drive.config(self.isSimulation())
+    self.lift.config(self.isSimulation())
+    self.claw.config(self.isSimulation())
 
   def testPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
       self.logger.info("MODE: testPeriodic")
+
+    self.drive.iterate(True, self.pilot_stick, self.copilot_stick)
+    self.lift.iterate(True, self.pilot_stick, self.copilot_stick)
+    self.claw.iterate(True, self.pilot_stick, self.copilot_stick)
 
 if __name__ == "__main__":
     wpilib.run(MyRobot, physics_enabled=True)

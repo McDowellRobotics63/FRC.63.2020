@@ -51,7 +51,7 @@ class DeepSpaceClaw():
     self.claw_close.set(True)
     self.claw_open.set(False)
 
-  def config(self):
+  def config(self, simulation):
     self.logger.info("DeepSpaceClaw::config(): ")
 
     '''Configuration items common for all talons'''
@@ -72,14 +72,16 @@ class DeepSpaceClaw():
 
     '''Closed-loop gains config'''
     self.wrist_talon.selectProfileSlot(0, 0)
-    self.wrist_talon.config_kF(0, 120, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.config_kP(0, 30, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.config_kI(0, 0, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.config_kD(0, 0, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.configMotionCruiseVelocity(3, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.configMotionAcceleration(3, robotmap.CAN_TIMEOUT_MS)
+    self.wrist_talon.config_kF(0, robotmap.GAIN_F_WRIST, robotmap.CAN_TIMEOUT_MS)
+    self.wrist_talon.config_kP(0, robotmap.GAIN_P_WRIST, robotmap.CAN_TIMEOUT_MS)
+    self.wrist_talon.config_kI(0, robotmap.GAIN_I_WRIST, robotmap.CAN_TIMEOUT_MS)
+    self.wrist_talon.config_kD(0, robotmap.GAIN_D_WRIST, robotmap.CAN_TIMEOUT_MS)
+    self.wrist_talon.config_IntegralZone(0, robotmap.GAIN_IZONE_WRIST, robotmap.CAN_TIMEOUT_MS)
+    if not simulation:
+      self.wrist_talon.configMotionCruiseVelocity(robotmap.CRUISE_VELOCITY_WRIST, robotmap.CAN_TIMEOUT_MS)
+      self.wrist_talon.configMotionAcceleration(robotmap.ACCELERATION_WRIST, robotmap.CAN_TIMEOUT_MS)
 
-  def iterate(self, pilot_stick, copilot_stick):
+  def iterate(self, test_mode, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceClaw::iterate()")
       self.logger.info("Claw current: " + str(self.wrist_talon.getOutputCurrent()))
@@ -117,19 +119,26 @@ class DeepSpaceClaw():
       self.harpoon_outside_extend.set(True)
       self.harpoon_outside_retract.set(False)
 
-    if copilot_stick.getRawButtonPressed(robotmap.XBOX_A): #A
-      self.wrist_setpoint = min(self.wrist_setpoint + 5, 30)
+    if copilot_stick.getRawButtonPressed(robotmap.XBOX_BACK): #Back
+      self.wrist_setpoint = min(self.wrist_setpoint + 5, robotmap.MAX_POSITION_WRIST)
       print("wrist_setpoint: " + str(self.wrist_setpoint))
-    elif copilot_stick.getRawButtonPressed(robotmap.XBOX_B): #B
-      self.wrist_setpoint = max(self.wrist_setpoint - 5, 0)
+    elif copilot_stick.getRawButtonPressed(robotmap.XBOX_START): #Start
+      self.wrist_setpoint = max(self.wrist_setpoint - 5, robotmap.MIN_POSITION_WRIST)
       print("wrist_setpoint: " + str(self.wrist_setpoint))
-
-    #self.wrist_talon.set(ControlMode.MotionMagic, self.wrist_setpoint)
-    self.wrist_talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
+    
+    if test_mode == True:
+      self.wrist_talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
+    else:
+      self.wrist_talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
+      self.setWristSetpoint(self.wrist_setpoint)
 
   def disable(self):
     self.logger.info("DeepSpaceClaw::disable()")
     self.wrist_talon.set(ControlMode.PercentOutput, 0.0)
     self.left_grab.set(ControlMode.PercentOutput, 0.0)
     self.right_grab.set(ControlMode.PercentOutput, 0.0)
+
+  def setWristSetpoint(self, ticks):
+    ticks = max(min(ticks, robotmap.MAX_POSITION_WRIST), robotmap.MIN_POSITION_WRIST)
+    self.wrist_talon.set(ControlMode.MotionMagic, ticks)
 
