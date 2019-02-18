@@ -11,7 +11,7 @@ CLAW_RIGHT_WHEELS_CAN_ID = 6
 CLAW_WRIST_CAN_ID = 8
 LIFT_CAN_ID = 7
 
-CAN_TIMEOUT_MS = 10 #ms to wait for talon timeout, literally doesn't matter
+CAN_TIMEOUT_MS = 10
 
 #Solenoid Mappings
 PCM1_CANID = 9

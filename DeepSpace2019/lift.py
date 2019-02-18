@@ -31,13 +31,13 @@ class DeepSpaceLift():
 
   def config(self):
     self.logger.info("DeepSpaceLift::config()")
-    self.talon.configNominalOutputForward(0.0, 10)
-    self.talon.configNominalOutputReverse(0.0, 10)
-    self.talon.configPeakOutputForward(1.0, 10)
-    self.talon.configPeakOutputReverse(-1.0, 10)
+    self.talon.configNominalOutputForward(0.0, robotmap.CAN_TIMEOUT_MS)
+    self.talon.configNominalOutputReverse(0.0, robotmap.CAN_TIMEOUT_MS)
+    self.talon.configPeakOutputForward(1.0, robotmap.CAN_TIMEOUT_MS)
+    self.talon.configPeakOutputReverse(-1.0, robotmap.CAN_TIMEOUT_MS)
     self.talon.enableVoltageCompensation(True)
-    self.talon.configVoltageCompSaturation(11.5, 10)
-    self.talon.configOpenLoopRamp(0.125, 10)
+    self.talon.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
+    self.talon.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
     self.talon.setInverted(False)
 
   def iterate(self, pilot_stick, copilot_stick):
