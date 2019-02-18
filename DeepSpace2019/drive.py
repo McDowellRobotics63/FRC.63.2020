@@ -25,6 +25,8 @@ class DeepSpaceDrive():
     self.rightTalonMaster = TalonSRX(robotmap.DRIVE_RIGHT_MASTER_CAN_ID)
     self.rightTalonSlave = TalonSRX(robotmap.DRIVE_RIGHT_SLAVE_CAN_ID)
 
+    self.talons = [self.leftTalonMaster, self.leftTalonSlave, self.rightTalonMaster, self.rightTalonSlave]
+
     self.drive_front_extend = Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_FRONT_EXTEND_SOLENOID)
     self.drive_front_retract = Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_FRONT_RETRACT_SOLENOID)
     self.drive_back_extend = Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_REAR_EXTEND_SOLENOID)
@@ -32,38 +34,33 @@ class DeepSpaceDrive():
 
   def config(self):
     self.logger.info("DeepSpaceDrive::config()")
-    
-    self.leftTalonMaster.configNominalOutputForward(0.0, robotmap.CAN_TIMEOUT_MS)
-    self.leftTalonMaster.configNominalOutputReverse(0.0, robotmap.CAN_TIMEOUT_MS)
-    self.leftTalonMaster.configPeakOutputForward(1.0, robotmap.CAN_TIMEOUT_MS)
-    self.leftTalonMaster.configPeakOutputReverse(-1.0, robotmap.CAN_TIMEOUT_MS)
-    self.leftTalonMaster.enableVoltageCompensation(True)
-    self.leftTalonMaster.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
-    self.leftTalonMaster.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
-    self.leftTalonMaster.setInverted(False)
 
-    self.rightTalonMaster.configNominalOutputForward(0.0, robotmap.CAN_TIMEOUT_MS)
-    self.rightTalonMaster.configNominalOutputReverse(0.0, robotmap.CAN_TIMEOUT_MS)
-    self.rightTalonMaster.configPeakOutputForward(1.0, robotmap.CAN_TIMEOUT_MS)
-    self.rightTalonMaster.configPeakOutputReverse(-1.0, robotmap.CAN_TIMEOUT_MS)
-    self.rightTalonMaster.enableVoltageCompensation(True)
-    self.rightTalonMaster.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
-    self.rightTalonMaster.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
+    '''Common configuration items common for all talons'''
+    for talon in self.talons:
+      talon.configNominalOutputForward(0.0, robotmap.CAN_TIMEOUT_MS)
+      talon.configNominalOutputReverse(0.0, robotmap.CAN_TIMEOUT_MS)
+      talon.configPeakOutputForward(1.0, robotmap.CAN_TIMEOUT_MS)
+      talon.configPeakOutputReverse(-1.0, robotmap.CAN_TIMEOUT_MS)
+      talon.enableVoltageCompensation(True)
+      talon.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
+      talon.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
+
+    self.leftTalonMaster.setInverted(False)
+    self.leftTalonSlave.setInverted(False)
     self.rightTalonMaster.setInverted(True)
+    self.rightTalonSlave.setInverted(True)
 
     self.leftTalonSlave.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, robotmap.CAN_TIMEOUT_MS)
     self.leftTalonSlave.configSelectedFeedbackCoefficient(1.0, 0, robotmap.CAN_TIMEOUT_MS)
     self.leftTalonSlave.setSensorPhase(True)
     self.leftTalonSlave.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, robotmap.CAN_TIMEOUT_MS)
-    self.leftTalonSlave.set(ControlMode.Follower, 3)
-    self.leftTalonSlave.setInverted(False)
+    self.leftTalonSlave.set(ControlMode.Follower, robotmap.DRIVE_LEFT_MASTER_CAN_ID)    
 
     self.rightTalonSlave.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, robotmap.CAN_TIMEOUT_MS)
     self.rightTalonSlave.configSelectedFeedbackCoefficient(1.0, 0, robotmap.CAN_TIMEOUT_MS)
     self.rightTalonSlave.setSensorPhase(True)
     self.rightTalonSlave.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, robotmap.CAN_TIMEOUT_MS)
-    self.rightTalonSlave.set(ControlMode.Follower, 2)
-    self.rightTalonSlave.setInverted(True)
+    self.rightTalonSlave.set(ControlMode.Follower, robotmap.DRIVE_RIGHT_MASTER_CAN_ID)
 
     self.drive_front_extend.set(False)
     self.drive_front_retract.set(True)
