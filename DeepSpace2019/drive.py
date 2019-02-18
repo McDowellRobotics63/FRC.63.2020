@@ -35,7 +35,7 @@ class DeepSpaceDrive():
   def config(self):
     self.logger.info("DeepSpaceDrive::config()")
 
-    '''Common configuration items common for all talons'''
+    '''Configuration items common for all talons'''
     for talon in self.talons:
       talon.configNominalOutputForward(0.0, robotmap.CAN_TIMEOUT_MS)
       talon.configNominalOutputReverse(0.0, robotmap.CAN_TIMEOUT_MS)

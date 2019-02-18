@@ -27,6 +27,12 @@ class DeepSpaceClaw():
     self.right_grab = TalonSRX(robotmap.CLAW_RIGHT_WHEELS_CAN_ID)
     self.wrist_talon = TalonSRX(robotmap.CLAW_WRIST_CAN_ID)
 
+    self.talons = [self.left_grab, self.right_grab, self.wrist_talon]
+
+    '''Select and zero sensor in init() function.  That way the zero position doesn't get reset every time we enable/disable robot'''
+    self.wrist_talon.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, robotmap.CAN_TIMEOUT_MS)
+    self.wrist_talon.setSelectedSensorPosition(0, 0, robotmap.CAN_TIMEOUT_MS)
+
     self.harpoon_outside_extend = Solenoid(robotmap.PCM2_CANID, robotmap.HARPOON_OUTSIDE_EXTEND_SOLENOID)
     self.harpoon_outside_retract = Solenoid(robotmap.PCM2_CANID, robotmap.HARPOON_OUTSIDE_RETRACT_SOLENOID)
 
@@ -48,44 +54,30 @@ class DeepSpaceClaw():
   def config(self):
     self.logger.info("DeepSpaceClaw::config(): ")
 
-    self.wrist_talon.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.configSelectedFeedbackCoefficient(1.0, 0, robotmap.CAN_TIMEOUT_MS)
+    '''Configuration items common for all talons'''
+    for talon in self.talons:
+      talon.configNominalOutputForward(0.0, robotmap.CAN_TIMEOUT_MS)
+      talon.configNominalOutputReverse(0.0, robotmap.CAN_TIMEOUT_MS)
+      talon.configPeakOutputForward(1.0, robotmap.CAN_TIMEOUT_MS)
+      talon.configPeakOutputReverse(-1.0, robotmap.CAN_TIMEOUT_MS)
+      talon.enableVoltageCompensation(True)
+      talon.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
+      talon.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
 
+    '''Closed-loop feedback config'''
+    self.wrist_talon.configSelectedFeedbackCoefficient(1.0, 0, robotmap.CAN_TIMEOUT_MS)
+    self.wrist_talon.setSensorPhase(False)
+    self.wrist_talon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, robotmap.CAN_TIMEOUT_MS)
+    self.wrist_talon.setStatusFramePeriod(StatusFrame.Status_10_MotionMagic, 10, robotmap.CAN_TIMEOUT_MS)
+
+    '''Closed-loop gains config'''
     self.wrist_talon.selectProfileSlot(0, 0)
     self.wrist_talon.config_kF(0, 120, robotmap.CAN_TIMEOUT_MS)
     self.wrist_talon.config_kP(0, 30, robotmap.CAN_TIMEOUT_MS)
     self.wrist_talon.config_kI(0, 0, robotmap.CAN_TIMEOUT_MS)
     self.wrist_talon.config_kD(0, 0, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.setSelectedSensorPosition(0, 0, robotmap.CAN_TIMEOUT_MS)
     self.wrist_talon.configMotionCruiseVelocity(3, robotmap.CAN_TIMEOUT_MS)
     self.wrist_talon.configMotionAcceleration(3, robotmap.CAN_TIMEOUT_MS)
-
-    self.wrist_talon.setSensorPhase(False)
-    self.wrist_talon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.setStatusFramePeriod(StatusFrame.Status_10_MotionMagic, 10, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.configNominalOutputForward(0.0, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.configNominalOutputReverse(0.0, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.configPeakOutputForward(1.0, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.configPeakOutputReverse(-1.0, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.enableVoltageCompensation(True)
-    self.wrist_talon.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
-
-    self.left_grab.configNominalOutputForward(0.0, robotmap.CAN_TIMEOUT_MS)
-    self.left_grab.configNominalOutputReverse(0.0, robotmap.CAN_TIMEOUT_MS)
-    self.left_grab.configPeakOutputForward(1.0, robotmap.CAN_TIMEOUT_MS)
-    self.left_grab.configPeakOutputReverse(-1.0, robotmap.CAN_TIMEOUT_MS)
-    self.left_grab.enableVoltageCompensation(True)
-    self.left_grab.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
-    self.left_grab.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
-
-    self.right_grab.configNominalOutputForward(0.0, robotmap.CAN_TIMEOUT_MS)
-    self.right_grab.configNominalOutputReverse(0.0, robotmap.CAN_TIMEOUT_MS)
-    self.right_grab.configPeakOutputForward(1.0, robotmap.CAN_TIMEOUT_MS)
-    self.right_grab.configPeakOutputReverse(-1.0, robotmap.CAN_TIMEOUT_MS)
-    self.right_grab.enableVoltageCompensation(True)
-    self.right_grab.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
-    self.right_grab.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
 
   def iterate(self, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
@@ -137,6 +129,7 @@ class DeepSpaceClaw():
 
   def disable(self):
     self.logger.info("DeepSpaceClaw::disable()")
+    self.wrist_talon.set(ControlMode.PercentOutput, 0.0)
     self.left_grab.set(ControlMode.PercentOutput, 0.0)
     self.right_grab.set(ControlMode.PercentOutput, 0.0)
 
