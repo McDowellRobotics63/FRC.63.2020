@@ -21,18 +21,18 @@ class DeepSpaceClaw():
 
     self.wrist_setpoint = 0
 
-    self.drive_front_extend = Solenoid(9, 3)
-    self.drive_front_retract = Solenoid(9, 2)
-    self.drive_back_extend = Solenoid(9, 4)
-    self.drive_back_retract = Solenoid(9, 5)
-    self.lift_pneumatic_extend = Solenoid(9, 0)
-    self.lift_pneumatic_retract = Solenoid(9, 1)
+    self.left_grab = TalonSRX(5)
+    self.right_grab = TalonSRX(6)
+    self.wrist_talon = TalonSRX(8)
 
     self.harpoon_center_extend = Solenoid(10, 0)
     self.harpoon_center_retract = Solenoid(10, 1)
 
-    self.harpoon_outside_extend = Solenoid(10, 4)
-    self.harpoon_outside_retract = Solenoid(10, 5)
+    self.claw_open = Solenoid(10, 2)
+    self.claw_close = Solenoid(10, 3)
+
+    self.harpoon_outside_extend = Solenoid(10, 5)
+    self.harpoon_outside_retract = Solenoid(10, 4)
 
     self.harpoon_center_extend.set(False)
     self.harpoon_center_retract.set(True)
@@ -40,24 +40,8 @@ class DeepSpaceClaw():
     self.harpoon_outside_extend.set(False)
     self.harpoon_outside_retract.set(True)
 
-    self.lift_pneumatic_extend.set(False)
-    self.lift_pneumatic_retract.set(True)
-
-    self.claw_open = Solenoid(10, 2)
-    self.claw_close = Solenoid(10, 3)
-
-    self.left_grab = TalonSRX(5)
-    self.right_grab = TalonSRX(6)
-    self.wrist_talon = TalonSRX(8)
-    self.lift_talon = TalonSRX(7)
-
     self.claw_close.set(True)
     self.claw_open.set(False)
-
-    self.drive_front_extend.set(False)
-    self.drive_front_retract.set(True)
-    self.drive_back_extend.set(False)
-    self.drive_back_retract.set(True)
 
   def config(self):
     self.logger.info("DeepSpaceClaw::config(): ")
@@ -101,15 +85,6 @@ class DeepSpaceClaw():
     self.right_grab.configVoltageCompSaturation(11.5, 10)
     self.right_grab.configOpenLoopRamp(0.125, 10)
 
-    self.lift_talon.configNominalOutputForward(0.0, 10)
-    self.lift_talon.configNominalOutputReverse(0.0, 10)
-    self.lift_talon.configPeakOutputForward(1.0, 10)
-    self.lift_talon.configPeakOutputReverse(-1.0, 10)
-    self.lift_talon.enableVoltageCompensation(True)
-    self.lift_talon.configVoltageCompSaturation(11.5, 10)
-    self.lift_talon.configOpenLoopRamp(0.125, 10)
-    self.lift_talon.setInverted(False)
-
   def iterate(self, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceClaw::iterate()")
@@ -127,31 +102,24 @@ class DeepSpaceClaw():
       self.left_grab.set(ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ControlMode.PercentOutput, 0.0)
 
-    if pilot_stick.getRawButton(1): #A
-      self.lift_pneumatic_extend.set(True) 
-      self.lift_pneumatic_retract.set(False)
-    elif pilot_stick.getRawButton(2): #B
-      self.lift_pneumatic_extend.set(False)
-      self.lift_pneumatic_retract.set(True)
-
-    if pilot_stick.getRawButton(3):  #X
+    if pilot_stick.getRawButton(7):  #Back
       self.claw_close.set(True)
       self.claw_open.set(False)
-    elif pilot_stick.getRawButton(4): #Y
+    elif pilot_stick.getRawButton(8): #Start
       self.claw_close.set(False)
       self.claw_open.set(True)
 
-    if pilot_stick.getRawButton(7):  #Back
+    if pilot_stick.getRawButton(3):  #X
       self.harpoon_center_extend.set(False)
       self.harpoon_center_retract.set(True)
-    elif pilot_stick.getRawButton(8): #Start
+    elif pilot_stick.getRawButton(4): #Y
       self.harpoon_center_extend.set(True)
       self.harpoon_center_retract.set(False)
 
-    if pilot_stick.getPOV() == 270:  #D-left
+    if pilot_stick.getRawButton(1):  #A
       self.harpoon_outside_extend.set(False)
       self.harpoon_outside_retract.set(True)
-    elif pilot_stick.getPOV() == 90: #D-right
+    elif pilot_stick.getRawButton(2):  #B
       self.harpoon_outside_extend.set(True)
       self.harpoon_outside_retract.set(False)
 
@@ -162,13 +130,11 @@ class DeepSpaceClaw():
       self.wrist_setpoint = max(self.wrist_setpoint - 5, 0)
       print("wrist_setpoint: " + str(self.wrist_setpoint))
 
-    #self.wrist_talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(5))
-    self.wrist_talon.set(ControlMode.MotionMagic, self.wrist_setpoint)
-    self.lift_talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(1))
-
-
-
+    #self.wrist_talon.set(ControlMode.MotionMagic, self.wrist_setpoint)
+    self.wrist_talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(5))
 
   def disable(self):
     self.logger.info("DeepSpaceClaw::disable()")
+    self.left_grab.set(ControlMode.PercentOutput, 0.0)
+    self.right_grab.set(ControlMode.PercentOutput, 0.0)
 

@@ -15,9 +15,11 @@ class DeepSpaceLift():
 
   def init(self):
     self.logger.info("DeepSpaceLift::init()")
-    self.talon = TalonSRX(7)
     self.timer = wpilib.Timer()
     self.timer.start()
+
+    self.talon = TalonSRX(7)
+
     self.lift_pneumatic_extend = Solenoid(9, 0)
     self.lift_pneumatic_retract = Solenoid(9, 1)
 
@@ -38,12 +40,12 @@ class DeepSpaceLift():
 
   def iterate(self, pilot_stick, copilot_stick):
     self.logger.info("DeepSpaceLift::iterate()")
-    self.talon.set(ControlMode.PercentOutput, pilot_stick.getRawAxis(1))
+    self.talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(1))
 
-    if pilot_stick.getRawButton(1): #A
+    if copilot_stick.getRawButton(5): #left bumper
       self.lift_pneumatic_extend.set(True) 
       self.lift_pneumatic_retract.set(False)
-    elif pilot_stick.getRawButton(2): #B
+    elif copilot_stick.getRawButton(6): #right bumper
       self.lift_pneumatic_extend.set(False)
       self.lift_pneumatic_retract.set(True)
 

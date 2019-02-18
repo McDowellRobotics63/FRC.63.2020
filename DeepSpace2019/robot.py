@@ -2,9 +2,9 @@
 import wpilib
 from wpilib import Compressor
 
-from claw import DeepSpaceClaw
 from drive import DeepSpaceDrive
 from lift import DeepSpaceLift
+from claw import DeepSpaceClaw
 
 class MyRobot(wpilib.TimedRobot):
 
@@ -27,10 +27,10 @@ class MyRobot(wpilib.TimedRobot):
     self.claw.init()
 
   def autonomousInit(self):
+    self.logger.info("MODE: autonomousInit")
     self.drive.config()
     self.lift.config()
     self.claw.config()
-    self.logger.info("MODE: autonomousInit")
 
   def autonomousPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
@@ -61,8 +61,7 @@ class MyRobot(wpilib.TimedRobot):
       self.logger.info("MODE: disabledPeriodic")
 
   def testInit(self):
-    if self.timer.hasPeriodPassed(1.0):
-      self.logger.info("MODE: testInit")
+    self.logger.info("MODE: testInit")
     self.drive.config()
     self.lift.config()
     self.claw.config()
