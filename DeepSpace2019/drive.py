@@ -1,6 +1,8 @@
 
 import wpilib
 
+import robotmap
+
 from wpilib import Solenoid
 from ctre import TalonSRX
 from ctre import ControlMode
@@ -17,16 +19,16 @@ class DeepSpaceDrive():
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.leftTalonMaster = TalonSRX(3)
-    self.leftTalonSlave = TalonSRX(4)
+    self.leftTalonMaster = TalonSRX(robotmap.DRIVE_LEFT_MASTER_CAN_ID)
+    self.leftTalonSlave = TalonSRX(robotmap.DRIVE_LEFT_SLAVE_CAN_ID)
 
-    self.rightTalonMaster = TalonSRX(2)
-    self.rightTalonSlave = TalonSRX(1)
+    self.rightTalonMaster = TalonSRX(robotmap.DRIVE_RIGHT_MASTER_CAN_ID)
+    self.rightTalonSlave = TalonSRX(robotmap.DRIVE_RIGHT_SLAVE_CAN_ID)
 
-    self.drive_front_extend = Solenoid(9, 3)
-    self.drive_front_retract = Solenoid(9, 2)
-    self.drive_back_extend = Solenoid(9, 4)
-    self.drive_back_retract = Solenoid(9, 5)
+    self.drive_front_extend = Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_FRONT_EXTEND_SOLENOID)
+    self.drive_front_retract = Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_FRONT_RETRACT_SOLENOID)
+    self.drive_back_extend = Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_REAR_EXTEND_SOLENOID)
+    self.drive_back_retract = Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_REAR_RETRACT_SOLENOID)
 
   def config(self):
     self.logger.info("DeepSpaceDrive::config()")
@@ -75,20 +77,20 @@ class DeepSpaceDrive():
       self.logger.info("amps_left: " + str(self.leftTalonMaster.getOutputCurrent()) + ", amps_right: " + str(self.rightTalonMaster.getOutputCurrent()))
       self.logger.info("output_left: " + str(self.leftTalonMaster.getMotorOutputPercent()) + ", output_right: " + str(self.rightTalonMaster.getMotorOutputPercent()))
     
-    self.leftTalonMaster.set(ControlMode.PercentOutput, -1.0 * pilot_stick.getRawAxis(1))
-    self.rightTalonMaster.set(ControlMode.PercentOutput, -1.0 * pilot_stick.getRawAxis(5))
+    self.leftTalonMaster.set(ControlMode.PercentOutput, -1.0 * pilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS))
+    self.rightTalonMaster.set(ControlMode.PercentOutput, -1.0 * pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
 
-    if copilot_stick.getRawButton(3): #X
+    if copilot_stick.getRawButton(robotmap.XBOX_X): #X
       self.drive_front_extend.set(False)
       self.drive_front_retract.set(True)
-    elif copilot_stick.getRawButton(4): #Y
+    elif copilot_stick.getRawButton(robotmap.XBOX_Y): #Y
       self.drive_front_extend.set(True)
       self.drive_front_retract.set(False)
 
-    if copilot_stick.getRawButton(1):  #A
+    if copilot_stick.getRawButton(robotmap.XBOX_A):  #A
       self.drive_back_extend.set(False)
       self.drive_back_retract.set(True)
-    elif copilot_stick.getRawButton(2): #B
+    elif copilot_stick.getRawButton(robotmap.XBOX_B): #B
       self.drive_back_extend.set(True)
       self.drive_back_retract.set(False)
 

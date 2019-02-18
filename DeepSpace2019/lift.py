@@ -3,6 +3,8 @@ import wpilib
 
 from wpilib import Solenoid
 
+import robotmap
+
 from ctre import TalonSRX
 from ctre import ControlMode
 from ctre import FeedbackDevice
@@ -18,10 +20,10 @@ class DeepSpaceLift():
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.talon = TalonSRX(7)
+    self.talon = TalonSRX(robotmap.LIFT_CAN_ID)
 
-    self.lift_pneumatic_extend = Solenoid(9, 0)
-    self.lift_pneumatic_retract = Solenoid(9, 1)
+    self.lift_pneumatic_extend = Solenoid(robotmap.PCM1_CANID, robotmap.LIFT_RAISE_SOLENOID)
+    self.lift_pneumatic_retract = Solenoid(robotmap.PCM1_CANID, robotmap.LIFT_LOWER_SOLENOID)
 
     self.lift_pneumatic_extend.set(False)
     self.lift_pneumatic_retract.set(True)
@@ -40,12 +42,12 @@ class DeepSpaceLift():
 
   def iterate(self, pilot_stick, copilot_stick):
     self.logger.info("DeepSpaceLift::iterate()")
-    self.talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(1))
+    self.talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS))
 
-    if copilot_stick.getRawButton(5): #left bumper
+    if copilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER): #left bumper
       self.lift_pneumatic_extend.set(True) 
       self.lift_pneumatic_retract.set(False)
-    elif copilot_stick.getRawButton(6): #right bumper
+    elif copilot_stick.getRawButton(robotmap.XBOX_RIGHT_BUMPER): #right bumper
       self.lift_pneumatic_extend.set(False)
       self.lift_pneumatic_retract.set(True)
 

@@ -2,6 +2,8 @@
 import wpilib
 import math
 
+import robotmap
+
 from wpilib import Solenoid
 
 from ctre import TalonSRX
@@ -21,18 +23,18 @@ class DeepSpaceClaw():
 
     self.wrist_setpoint = 0
 
-    self.left_grab = TalonSRX(5)
-    self.right_grab = TalonSRX(6)
-    self.wrist_talon = TalonSRX(8)
+    self.left_grab = TalonSRX(robotmap.CLAW_LEFT_WHEELS_CAN_ID)
+    self.right_grab = TalonSRX(robotmap.CLAW_RIGHT_WHEELS_CAN_ID)
+    self.wrist_talon = TalonSRX(robotmap.CLAW_WRIST_CAN_ID)
 
-    self.harpoon_center_extend = Solenoid(10, 0)
-    self.harpoon_center_retract = Solenoid(10, 1)
+    self.harpoon_outside_extend = Solenoid(robotmap.PCM2_CANID, robotmap.HARPOON_OUTSIDE_EXTEND_SOLENOID)
+    self.harpoon_outside_retract = Solenoid(robotmap.PCM2_CANID, robotmap.HARPOON_OUTSIDE_RETRACT_SOLENOID)
 
-    self.claw_open = Solenoid(10, 2)
-    self.claw_close = Solenoid(10, 3)
+    self.harpoon_center_extend = Solenoid(robotmap.PCM2_CANID, robotmap.HARPOON_CENTER_EXTEND_SOLENOID)
+    self.harpoon_center_retract = Solenoid(robotmap.PCM2_CANID, robotmap.HARPOON_CENTER_RETRACT_SOLENOID)
 
-    self.harpoon_outside_extend = Solenoid(10, 5)
-    self.harpoon_outside_retract = Solenoid(10, 4)
+    self.claw_open = Solenoid(robotmap.PCM2_CANID, robotmap.CLAW_OPEN_SOLENOID)
+    self.claw_close = Solenoid(robotmap.PCM2_CANID, robotmap.CLAW_CLOSE_SOLENOID)
 
     self.harpoon_center_extend.set(False)
     self.harpoon_center_retract.set(True)
@@ -92,46 +94,46 @@ class DeepSpaceClaw():
       self.logger.info("Claw position: " + str(self.wrist_talon.getSelectedSensorPosition(0)))
       self.logger.info("Claw analog in: " + str(self.wrist_talon.getAnalogInRaw()))
 
-    if pilot_stick.getRawButton(5): #left bumper
+    if pilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER): #left bumper
       self.left_grab.set(ControlMode.PercentOutput, 0.5)
       self.right_grab.set(ControlMode.PercentOutput, -0.5)
-    elif pilot_stick.getRawButton(6): #right bumper
+    elif pilot_stick.getRawButton(robotmap.XBOX_RIGHT_BUMPER): #right bumper
       self.left_grab.set(ControlMode.PercentOutput, -0.5)
       self.right_grab.set(ControlMode.PercentOutput, 0.5)
     else:
       self.left_grab.set(ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ControlMode.PercentOutput, 0.0)
 
-    if pilot_stick.getRawButton(7):  #Back
+    if pilot_stick.getRawButton(robotmap.XBOX_BACK):  #Back
       self.claw_close.set(True)
       self.claw_open.set(False)
-    elif pilot_stick.getRawButton(8): #Start
+    elif pilot_stick.getRawButton(robotmap.XBOX_START): #Start
       self.claw_close.set(False)
       self.claw_open.set(True)
 
-    if pilot_stick.getRawButton(3):  #X
+    if pilot_stick.getRawButton(robotmap.XBOX_X):  #X
       self.harpoon_center_extend.set(False)
       self.harpoon_center_retract.set(True)
-    elif pilot_stick.getRawButton(4): #Y
+    elif pilot_stick.getRawButton(robotmap.XBOX_Y): #Y
       self.harpoon_center_extend.set(True)
       self.harpoon_center_retract.set(False)
 
-    if pilot_stick.getRawButton(1):  #A
+    if pilot_stick.getRawButton(robotmap.XBOX_A):  #A
       self.harpoon_outside_extend.set(False)
       self.harpoon_outside_retract.set(True)
-    elif pilot_stick.getRawButton(2):  #B
+    elif pilot_stick.getRawButton(robotmap.XBOX_B):  #B
       self.harpoon_outside_extend.set(True)
       self.harpoon_outside_retract.set(False)
 
-    if copilot_stick.getRawButtonPressed(1):
+    if copilot_stick.getRawButtonPressed(robotmap.XBOX_A): #A
       self.wrist_setpoint = min(self.wrist_setpoint + 5, 30)
       print("wrist_setpoint: " + str(self.wrist_setpoint))
-    elif copilot_stick.getRawButtonPressed(2):
+    elif copilot_stick.getRawButtonPressed(robotmap.XBOX_B): #B
       self.wrist_setpoint = max(self.wrist_setpoint - 5, 0)
       print("wrist_setpoint: " + str(self.wrist_setpoint))
 
     #self.wrist_talon.set(ControlMode.MotionMagic, self.wrist_setpoint)
-    self.wrist_talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(5))
+    self.wrist_talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
 
   def disable(self):
     self.logger.info("DeepSpaceClaw::disable()")
