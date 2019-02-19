@@ -5,6 +5,28 @@ import robotmap
 
 class DeepSpaceHarpoon():
 
+  HARPOON_STOW_RETRACT_CENTER = 3
+  HARPOON_STOW_WAIT1 = 4
+  HARPOON_STOW_RETRACT_OUTSIDE = 5
+  HARPOON_STOW_WAIT2 = 6
+
+  '''
+  7, 8, 9 and 10 were if we need to extend center piston at end of stow
+  and retract center piston at beginning of deploy
+  '''
+
+  HARPOON_DEPLOY_EXTEND_OUTSIDE = 11
+  HARPOON_DEPLOY_WAIT1 = 12
+  HARPOON_DEPLOY_EXTEND_CENTER = 13
+  HARPOON_DEPLOY_WAIT2 = 14
+
+  HARPOON_DEPLOYED = 1
+  HARPOON_STOWED = 2
+  HARPOON_DEPLOY_BEGIN = HARPOON_DEPLOY_EXTEND_OUTSIDE
+  HARPOON_STOW_BEGIN = HARPOON_STOW_RETRACT_CENTER
+
+  HARPOON_PNUEMATIC_WAIT_TIME = 0.25
+
   def __init__(self, logger):
     self.logger = logger
 
@@ -12,6 +34,9 @@ class DeepSpaceHarpoon():
     self.logger.info("DeepSpaceHarpoon::init()")
     self.timer = wpilib.Timer()
     self.timer.start()
+    
+    self.state_timer = wpilib.Timer()
+    self.current_state = self.HARPOON_STOWED
 
     self.harpoon_outside_extend = wpilib.Solenoid(robotmap.PCM2_CANID, robotmap.HARPOON_OUTSIDE_EXTEND_SOLENOID)
     self.harpoon_outside_retract = wpilib.Solenoid(robotmap.PCM2_CANID, robotmap.HARPOON_OUTSIDE_RETRACT_SOLENOID)
@@ -28,23 +53,65 @@ class DeepSpaceHarpoon():
   def config(self, simulation):
     self.logger.info("DeepSpaceHarpoon::config(): ")
 
+  def deploy_harpoon(self):
+    #Should we confirm currently in compatible state or allow interruption of sequence?
+    self.current_state = self.HARPOON_DEPLOY_BEGIN
+    
+  def stow_harpoon(self):
+    #Should we confirm currently in compatible state or allow interruption of sequence?
+    self.current_state = self.HARPOON_STOW_BEGIN
+
   def iterate(self, test_mode, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceHarpoon::iterate()")
 
-    if pilot_stick.getRawButton(robotmap.XBOX_X):  #X
+    #****************DEPLOY SEQUENCE****************************
+    if self.current_state == self.HARPOON_DEPLOY_EXTEND_OUTSIDE:
+        self.harpoon_outside_extend.set(True)
+        self.harpoon_outside_retract.set(False)
+        self.current_state = self.HARPOON_DEPLOY_WAIT1
+        self.state_timer.reset()
+        self.state_timer.start()
+
+    elif self.current_state == self.HARPOON_DEPLOY_WAIT1:
+      if self.state_timer.hasPeriodPassed(self.HARPOON_PNUEMATIC_WAIT_TIME):
+        self.current_state = self.HARPOON_DEPLOY_EXTEND_CENTER
+
+    elif self.current_state == self.HARPOON_DEPLOY_EXTEND_CENTER:
+        self.harpoon_center_extend.set(True)
+        self.harpoon_center_retract.set(False)
+        self.current_state = self.HARPOON_DEPLOY_WAIT2
+        self.state_timer.reset()
+        self.state_timer.start()
+
+    elif self.current_state == self.HARPOON_DEPLOY_WAIT2:
+      if self.state_timer.hasPeriodPassed(self.HARPOON_PNUEMATIC_WAIT_TIME):
+        self.current_state = self.HARPOON_DEPLOYED
+    #****************DEPLOY SEQUENCE****************************
+    
+    #*****************STOW SEQUENCE*****************************
+    elif self.current_state == self.HARPOON_STOW_RETRACT_CENTER:
       self.harpoon_center_extend.set(False)
       self.harpoon_center_retract.set(True)
-    elif pilot_stick.getRawButton(robotmap.XBOX_Y): #Y
-      self.harpoon_center_extend.set(True)
-      self.harpoon_center_retract.set(False)
+      self.current_state = self.HARPOON_STOW_WAIT1
+      self.state_timer.reset()
+      self.state_timer.start()
 
-    if pilot_stick.getRawButton(robotmap.XBOX_A):  #A
+    elif self.current_state == self.HARPOON_STOW_WAIT1:
+      if self.state_timer.hasPeriodPassed(self.HARPOON_PNUEMATIC_WAIT_TIME):
+        self.current_state = self.HARPOON_STOW_RETRACT_OUTSIDE
+
+    elif self.current_state == self.HARPOON_STOW_RETRACT_OUTSIDE:
       self.harpoon_outside_extend.set(False)
       self.harpoon_outside_retract.set(True)
-    elif pilot_stick.getRawButton(robotmap.XBOX_B):  #B
-      self.harpoon_outside_extend.set(True)
-      self.harpoon_outside_retract.set(False)
+      self.current_state = self.HARPOON_STOW_WAIT2
+      self.state_timer.reset()
+      self.state_timer.start()
+
+    elif self.current_state == self.HARPOON_STOW_WAIT2:
+      if self.state_timer.hasPeriodPassed(self.HARPOON_PNUEMATIC_WAIT_TIME):
+        self.current_state = self.HARPOON_STOWED
+    #*****************STOW SEQUENCE*****************************
 
   def disable(self):
     self.logger.info("DeepSpaceHarpoon::disable()")

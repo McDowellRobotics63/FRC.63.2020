@@ -8,6 +8,7 @@ from wpilib import Compressor
 from drive import DeepSpaceDrive
 from lift import DeepSpaceLift
 from claw import DeepSpaceClaw
+from harpoon import DeepSpaceHarpoon
 
 class MyRobot(wpilib.TimedRobot):
 
@@ -32,11 +33,15 @@ class MyRobot(wpilib.TimedRobot):
     self.claw = DeepSpaceClaw(self.logger)
     self.claw.init()
 
+    self.harpoon = DeepSpaceHarpoon(self.logger)
+    self.harpoon.init()
+
   def autonomousInit(self):
     self.logger.info("MODE: autonomousInit")
     self.drive.config(self.isSimulation())
     self.lift.config(self.isSimulation())
     self.claw.config(self.isSimulation())
+    self.harpoon.config(self.isSimulation())
 
   def autonomousPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
@@ -47,20 +52,29 @@ class MyRobot(wpilib.TimedRobot):
     self.drive.config(self.isSimulation())
     self.lift.config(self.isSimulation())
     self.claw.config(self.isSimulation())
+    self.harpoon.config(self.isSimulation())
 
   def teleopPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
       self.logger.info("MODE: teleopPeriodic")
+
+    if self.pilot_stick.getRawButtonPressed(robotmap.XBOX_BACK):
+      self.harpoon.stow_harpoon()
+
+    if self.pilot_stick.getRawButtonPressed(robotmap.XBOX_START):
+      self.harpoon.deploy_harpoon()
     
     self.drive.iterate(False, self.pilot_stick, self.copilot_stick)
     self.lift.iterate(False, self.pilot_stick, self.copilot_stick)
     self.claw.iterate(False, self.pilot_stick, self.copilot_stick)
+    self.harpoon.iterate(False, self.pilot_stick, self.copilot_stick)
 
   def disabledInit(self):
     self.logger.info("MODE: disabledInit")
     self.drive.disable()
     self.lift.disable()
     self.claw.disable()
+    self.harpoon.disable()
 
   def disabledPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
@@ -71,6 +85,7 @@ class MyRobot(wpilib.TimedRobot):
     self.drive.config(self.isSimulation())
     self.lift.config(self.isSimulation())
     self.claw.config(self.isSimulation())
+    self.harpoon.config(self.isSimulation())
 
   def testPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
@@ -79,6 +94,7 @@ class MyRobot(wpilib.TimedRobot):
     self.drive.iterate(True, self.pilot_stick, self.copilot_stick)
     self.lift.iterate(True, self.pilot_stick, self.copilot_stick)
     self.claw.iterate(True, self.pilot_stick, self.copilot_stick)
+    self.harpoon.iterate(True, self.pilot_stick, self.copilot_stick)
 
 if __name__ == "__main__":
     wpilib.run(MyRobot, physics_enabled=True)
