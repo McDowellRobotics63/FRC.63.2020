@@ -72,19 +72,21 @@ class DeepSpaceDrive():
     
     self.drive.arcadeDrive(-1.0 * pilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), pilot_stick.getRawAxis(robotmap.XBOX_LEFT_X_AXIS))
 
-    if copilot_stick.getRawButton(robotmap.XBOX_X): #X
-      self.drive_front_extend.set(False)
-      self.drive_front_retract.set(True)
-    elif copilot_stick.getRawButton(robotmap.XBOX_Y): #Y
+    if pilot_stick.getRawButton(robotmap.XBOX_X):
       self.drive_front_extend.set(True)
       self.drive_front_retract.set(False)
-
-    if copilot_stick.getRawButton(robotmap.XBOX_A):  #A
       self.drive_back_extend.set(False)
       self.drive_back_retract.set(True)
-    elif copilot_stick.getRawButton(robotmap.XBOX_B): #B
+    elif pilot_stick.getRawButton(robotmap.XBOX_Y):
+      self.drive_front_extend.set(False)
+      self.drive_front_retract.set(True)
       self.drive_back_extend.set(True)
       self.drive_back_retract.set(False)
+    elif pilot_stick.getRawButton(robotmap.XBOX_B):
+      self.drive_front_extend.set(False)
+      self.drive_front_retract.set(True)
+      self.drive_back_extend.set(False)
+      self.drive_back_retract.set(True)
 
   def disable(self):
     self.logger.info("DeepSpaceDrive::disable()")

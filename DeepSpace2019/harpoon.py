@@ -67,22 +67,22 @@ class DeepSpaceHarpoon():
 
     #****************DEPLOY SEQUENCE****************************
     if self.current_state == self.HARPOON_DEPLOY_EXTEND_OUTSIDE:
-        self.harpoon_outside_extend.set(True)
-        self.harpoon_outside_retract.set(False)
-        self.current_state = self.HARPOON_DEPLOY_WAIT1
-        self.state_timer.reset()
-        self.state_timer.start()
+      self.harpoon_outside_extend.set(True)
+      self.harpoon_outside_retract.set(False)
+      self.current_state = self.HARPOON_DEPLOY_WAIT1
+      self.state_timer.reset()
+      self.state_timer.start()
 
     elif self.current_state == self.HARPOON_DEPLOY_WAIT1:
       if self.state_timer.hasPeriodPassed(self.HARPOON_PNUEMATIC_WAIT_TIME):
         self.current_state = self.HARPOON_DEPLOY_EXTEND_CENTER
 
     elif self.current_state == self.HARPOON_DEPLOY_EXTEND_CENTER:
-        self.harpoon_center_extend.set(True)
-        self.harpoon_center_retract.set(False)
-        self.current_state = self.HARPOON_DEPLOY_WAIT2
-        self.state_timer.reset()
-        self.state_timer.start()
+      self.harpoon_center_extend.set(True)
+      self.harpoon_center_retract.set(False)
+      self.current_state = self.HARPOON_DEPLOY_WAIT2
+      self.state_timer.reset()
+      self.state_timer.start()
 
     elif self.current_state == self.HARPOON_DEPLOY_WAIT2:
       if self.state_timer.hasPeriodPassed(self.HARPOON_PNUEMATIC_WAIT_TIME):

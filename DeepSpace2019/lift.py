@@ -52,32 +52,35 @@ class DeepSpaceLift():
     self.lift_talon.setSensorPhase(False)
     self.lift_talon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, robotmap.CAN_TIMEOUT_MS)
 
-  def iterate(self, test_mode, pilot_stick, copilot_stick):
+  def iterate(self, manual_mode, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceLift::iterate()")
 
     if copilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER): #left bumper
-      self.lift_pneumatic_extend.set(True) 
-      self.lift_pneumatic_retract.set(False)
-    elif copilot_stick.getRawButton(robotmap.XBOX_RIGHT_BUMPER): #right bumper
       self.lift_pneumatic_extend.set(False)
       self.lift_pneumatic_retract.set(True)
+    elif copilot_stick.getRawButton(robotmap.XBOX_RIGHT_BUMPER): #right bumper
+      self.lift_pneumatic_extend.set(True) 
+      self.lift_pneumatic_retract.set(False)
 
-    if pilot_stick.getRawButtonPressed(robotmap.XBOX_LEFT_BUMPER): #left bumper
-      self.setLiftSetpoint(self.lift_setpoint + 5)
-      print("lift_setpoint: " + str(self.lift_setpoint))
-    elif pilot_stick.getRawButtonPressed(robotmap.XBOX_RIGHT_BUMPER): #right bumper
-      self.setLiftSetpoint(self.lift_setpoint - 5)
-      print("lift_setpoint: " + str(self.lift_setpoint))
+    lift_position = self.lift_talon.getSelectedSensorPosition(0)
 
-    if test_mode == True:
-      self.lift_talon.set(ControlMode.PercentOutput, -1.0 * copilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS))
+    if manual_mode == True:
+      #need to check these separately so we don't disable the mechanism completely if we end up one tick outside our allowable range
+      if lift_position > robotmap.MIN_POSITION_LIFT:
+        #allow downward motion
+        self.lift_talon.set(ControlMode.PercentOutput, min(-1.0 * copilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), 0))
+      elif lift_position < robotmap.MAX_POSITION_LIFT:
+        #allow upward motion
+        self.lift_talon.set(ControlMode.PercentOutput, max(-1.0 * copilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), 0))
+      else:
+        self.lift_talon.set(ControlMode.PercentOutput, 0.0)
     else:
-      err = abs(self.lift_talon.getSelectedSensorPosition(0) - self.lift_setpoint)
+      err = abs(lift_position - self.lift_setpoint)
       if  err > 1:
-        if self.lift_talon.getSelectedSensorPosition(0) < self.lift_setpoint:
+        if lift_position < self.lift_setpoint:
           self.lift_talon.set(ControlMode.PercentOutput, 1.0)
-        elif self.lift_talon.getSelectedSensorPosition(0) > self.lift_setpoint:
+        elif lift_position > self.lift_setpoint:
           self.lift_talon.set(ControlMode.PercentOutput, -1.0)
       else:
         self.lift_talon.set(ControlMode.PercentOutput, 0.0)

@@ -63,9 +63,20 @@ class MyRobot(wpilib.TimedRobot):
 
     if self.pilot_stick.getRawButtonPressed(robotmap.XBOX_START):
       self.harpoon.deploy_harpoon()
-    
+
+    if self.pilot_stick.getRawButtonPressed(robotmap.XBOX_A):
+      self.claw.shoot_ball()
+
+    #Do we need a boolean to look for pressed edge?
+    if self.pilot_stick.getPOV() == 0: #Dpad Up
+      self.claw.stow_claw()
+
+    #Do we need a boolean to look for pressed edge?
+    if self.pilot_stick.getPOV() == 180: #Dpad Down
+      self.claw.deploy_claw()
+
     self.drive.iterate(False, self.pilot_stick, self.copilot_stick)
-    self.lift.iterate(False, self.pilot_stick, self.copilot_stick)
+    self.lift.iterate(True, self.pilot_stick, self.copilot_stick)
     self.claw.iterate(False, self.pilot_stick, self.copilot_stick)
     self.harpoon.iterate(False, self.pilot_stick, self.copilot_stick)
 

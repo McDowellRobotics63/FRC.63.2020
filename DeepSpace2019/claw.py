@@ -6,6 +6,19 @@ import robotmap
 
 class DeepSpaceClaw():
 
+  CLAW_STOW_RELEASE_BALL = 1
+  CLAW_STOW_WAIT1 = 2
+  CLAW_STOW_MOVE_TO_STOW = 3
+  CLAW_STOW_HOLD = 4
+  CLAW_DEPLOY_MOVE_TO_ACTIVE = 5
+  CLAW_DEPLOY_ACTIVE = 6
+  CLAW_SHOOT_BALL = 7
+  CLAW_SHOOT_BALL_WAIT1 = 8
+
+
+  CLAW_STOW_BEGIN = CLAW_STOW_RELEASE_BALL
+  CLAW_DEPLOY_BEGIN = CLAW_DEPLOY_MOVE_TO_ACTIVE
+
   def __init__(self, logger):
     self.logger = logger
 
@@ -14,7 +27,8 @@ class DeepSpaceClaw():
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.stow = True
+    self.state_timer = wpilib.Timer()
+    self.current_state = self.CLAW_STOW_HOLD
 
     self.ball_infrared = wpilib.DigitalInput(robotmap.BALL_IR_SENSOR)
     
@@ -52,43 +66,88 @@ class DeepSpaceClaw():
     self.wrist_talon.setSensorPhase(True)
     self.wrist_talon.setStatusFramePeriod(ctre._impl.StatusFrame.Status_2_Feedback0, 10, robotmap.CAN_TIMEOUT_MS)
 
-  def iterate(self, test_mode, pilot_stick, copilot_stick):
+  def deploy_claw(self):
+    #Should we confirm currently in compatible state or allow interruption of sequence?
+    self.current_state = self.CLAW_DEPLOY_BEGIN
+    
+  def stow_claw(self):
+    #Should we confirm currently in compatible state or allow interruption of sequence?
+    self.current_state = self.CLAW_STOW_BEGIN
+
+  def shoot_ball(self):
+    #Should we confirm currently in compatible state or allow interruption of sequence?
+    self.current_state = self.CLAW_SHOOT_BALL
+
+  def iterate(self, manual_mode, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceClaw::iterate()")
 
-    if pilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER): #left bumper
-      self.left_grab.set(ctre.ControlMode.PercentOutput, 0.5)
-      self.right_grab.set(ctre.ControlMode.PercentOutput, -0.5)
-    elif pilot_stick.getRawButton(robotmap.XBOX_RIGHT_BUMPER): #right bumper
+    wrist_position = self.wrist_talon.getSelectedSensorPosition(0)
+
+    #****************STOW SEQUENCE****************************
+    if self.current_state == self.CLAW_STOW_RELEASE_BALL:
       self.left_grab.set(ctre.ControlMode.PercentOutput, -0.5)
       self.right_grab.set(ctre.ControlMode.PercentOutput, 0.5)
-    else:
+      self.current_state = self.CLAW_STOW_WAIT1
+      self.state_timer.reset()
+      self.state_timer.start()
+
+    elif self.current_state == self.CLAW_STOW_WAIT1:
+      if self.state_timer.hasPeriodPassed(0.25):
+        self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
+        self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
+        self.current_state = self.CLAW_STOW_MOVE_TO_STOW
+
+    elif self.current_state == self.CLAW_STOW_MOVE_TO_STOW:
       self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
+      self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.3)
+      if wrist_position < 5:
+        self.current_state = self.CLAW_STOW_HOLD
+    
+    elif self.current_state == self.CLAW_STOW_HOLD:
+      self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
+      self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
+      self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.1)
+    #****************STOW SEQUENCE****************************
+    
+    #****************DEPLOY SEQUENCE****************************
+    elif self.current_state == self.CLAW_DEPLOY_MOVE_TO_ACTIVE:
+      self.wrist_talon.set(ctre.ControlMode.PercentOutput, -0.1)
+      if wrist_position > 25:
+        self.current_state = self.CLAW_DEPLOY_ACTIVE
+    
+    elif self.current_state == self.CLAW_DEPLOY_ACTIVE:
+      self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.0)
+      if self.ball_infrared.get():
+        self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
+        self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
+      else:
+        self.left_grab.set(ctre.ControlMode.PercentOutput, 0.5)
+        self.right_grab.set(ctre.ControlMode.PercentOutput, -0.5)
+    #****************DEPLOY SEQUENCE****************************
 
-    if pilot_stick.getRawButton(robotmap.XBOX_BACK):  #Back
+    #****************SHOOT SEQUENCE****************************
+    elif self.current_state == self.CLAW_SHOOT_BALL:
+      self.left_grab.set(ctre.ControlMode.PercentOutput, -0.5)
+      self.right_grab.set(ctre.ControlMode.PercentOutput, 0.5)
+      self.current_state = self.CLAW_SHOOT_BALL_WAIT1
+      self.state_timer.reset()
+      self.state_timer.start()
+
+    elif self.current_state == self.CLAW_SHOOT_BALL_WAIT1:
+      if self.state_timer.hasPeriodPassed(0.25):
+        self.current_state = self.CLAW_DEPLOY_ACTIVE
+    #****************SHOOT SEQUENCE****************************
+
+    if pilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER):
       self.claw_close.set(True)
       self.claw_open.set(False)
-    elif pilot_stick.getRawButton(robotmap.XBOX_START): #Start
+    elif pilot_stick.getRawButton(robotmap.XBOX_RIGHT_BUMPER):
       self.claw_close.set(False)
       self.claw_open.set(True)
-
-    if copilot_stick.getRawButtonPressed(robotmap.XBOX_BACK): #Back
-      self.stow = True
-    elif copilot_stick.getRawButtonPressed(robotmap.XBOX_START): #Start
-      self.stow = False
-
-    wrist_position = self.wrist_talon.getSelectedSensorPosition(0)
-    if self.stow and wrist_position > 5:
-      self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.3)
-    elif self.stow and wrist_position < 5:
-      self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.1)
-    elif not self.stow and wrist_position < 25:
-      self.wrist_talon.set(ctre.ControlMode.PercentOutput, -0.1)
-    else:
-      self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.0)
     
-    if test_mode == True:
+    if manual_mode == True:
       self.wrist_talon.set(ctre.ControlMode.PercentOutput, copilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
 
   def disable(self):
