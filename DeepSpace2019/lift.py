@@ -45,7 +45,7 @@ class DeepSpaceLift():
     self.lift_talon.enableVoltageCompensation(True)
     self.lift_talon.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
     self.lift_talon.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
-    self.lift_talon.setInverted(False)
+    self.lift_talon.setInverted(True)
 
     '''Closed-loop feedback config'''
     self.lift_talon.configSelectedFeedbackCoefficient(1.0, 0, robotmap.CAN_TIMEOUT_MS)
@@ -60,9 +60,8 @@ class DeepSpaceLift():
     self.lift_talon.config_kI(0, robotmap.GAIN_I_LIFT, robotmap.CAN_TIMEOUT_MS)
     self.lift_talon.config_kD(0, robotmap.GAIN_D_LIFT, robotmap.CAN_TIMEOUT_MS)
     self.lift_talon.config_IntegralZone(0, robotmap.GAIN_IZONE_LIFT, robotmap.CAN_TIMEOUT_MS)
-    if not simulation:
-      self.lift_talon.configMotionCruiseVelocity(robotmap.CRUISE_VELOCITY_LIFT, robotmap.CAN_TIMEOUT_MS)
-      self.lift_talon.configMotionAcceleration(robotmap.ACCELERATION_LIFT, robotmap.CAN_TIMEOUT_MS)
+    self.lift_talon.configMotionCruiseVelocity(robotmap.CRUISE_VELOCITY_LIFT, robotmap.CAN_TIMEOUT_MS)
+    self.lift_talon.configMotionAcceleration(robotmap.ACCELERATION_LIFT, robotmap.CAN_TIMEOUT_MS)
 
   def iterate(self, test_mode, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
@@ -83,9 +82,20 @@ class DeepSpaceLift():
       print("lift_setpoint: " + str(self.lift_setpoint))
 
     if test_mode == True:
-      self.lift_talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS))
+      self.lift_talon.set(ControlMode.PercentOutput, -1.0 * copilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS))
+      #self.logger.info("lift velocity: " + str(self.lift_talon.getSelectedSensorVelocity(0)) + ", lift position" + str(self.lift_talon.getSelectedSensorPosition(0)))
     else:
-      self.setLiftSetpoint(self.lift_setpoint)
+      #self.setLiftSetpoint(self.lift_setpoint)
+      err = abs(self.lift_talon.getSelectedSensorPosition(0) - self.lift_setpoint)
+      #self.logger.info("err" + str(err))
+      if  err > 1:
+        if self.lift_talon.getSelectedSensorPosition(0) < self.lift_setpoint:
+          self.lift_talon.set(ControlMode.PercentOutput, 1.0)
+        elif self.lift_talon.getSelectedSensorPosition(0) > self.lift_setpoint:
+          self.lift_talon.set(ControlMode.PercentOutput, -1.0)
+      else:
+        self.lift_talon.set(ControlMode.PercentOutput, 0.0)
+      
 
   def disable(self):
     self.logger.info("DeepSpaceLift::disable()")
