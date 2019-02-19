@@ -18,17 +18,17 @@ from ctre._impl import StatusFrame # why ctre._impl??
 
 class MyRobot(wpilib.TimedRobot):
   
-  WHEEL_DIAMETER = 6  # 6 inches
+  WHEEL_DIAMETER = 3  # 6 inches
   WHEEL_CIRCUMFERENCE = math.pi * WHEEL_DIAMETER
 
   CAN_BUS_TIMEOUT_MS = 10
 
-  ENCODER_COUNTS_PER_REV = 4096
+  ENCODER_COUNTS_PER_REV = 1440
   PIGEON_UNITS_PER_ROTATION = 8192
 
-  LEFT_MASTER_CAN_ID = 4
+  LEFT_MASTER_CAN_ID = 3
   RIGHT_MASTER_CAN_ID = 2
-  LEFT_SLAVE_CAN_ID = 3
+  LEFT_SLAVE_CAN_ID = 4
   RIGHT_SLAVE_CAN_ID = 1
   PIGEON_IMU_CAN_ID = 6
   ENCODER_SUM_CAN_ID = 5
@@ -90,12 +90,12 @@ class MyRobot(wpilib.TimedRobot):
 
     self.leftTalonSlave.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
     self.leftTalonSlave.configSelectedFeedbackCoefficient(1.0, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
-    self.leftTalonSlave.setSensorPhase(False)
+    self.leftTalonSlave.setSensorPhase(True)
     self.leftTalonSlave.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, self.CAN_BUS_TIMEOUT_MS)
 
     self.rightTalonSlave.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
     self.rightTalonSlave.configSelectedFeedbackCoefficient(1.0, self.PRIMARY_PID_LOOP, self.CAN_BUS_TIMEOUT_MS)
-    self.rightTalonSlave.setSensorPhase(False)
+    self.rightTalonSlave.setSensorPhase(True)
     self.rightTalonSlave.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, self.CAN_BUS_TIMEOUT_MS)
 
     self.dummyTalon.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
@@ -107,12 +107,13 @@ class MyRobot(wpilib.TimedRobot):
     self.dummyTalon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, self.CAN_BUS_TIMEOUT_MS)
 
     for talon in self.leftTalons:
-      talon.setInverted(True)
-
-    for talon in self.rightTalons:
       talon.setInverted(False)
 
-    self.leftTalonMaster.setSensorPhase(True)
+    for talon in self.rightTalons:
+      talon.setInverted(True)
+
+    self.leftTalonMaster.setSensorPhase(False)
+    self.rightTalonMaster.setSensorPhase(True)
 
     if not self.isSimulation():
       '''Setup the "sum" sensor as remote sensor 0'''
