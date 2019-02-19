@@ -23,6 +23,8 @@ class DeepSpaceClaw():
 
     self.stow = True
 
+    self.ball_infrared = wpilib.DigitalInput(robotmap.BALL_IR_SENSOR)
+    
     self.left_grab = TalonSRX(robotmap.CLAW_LEFT_WHEELS_CAN_ID)
     self.right_grab = TalonSRX(robotmap.CLAW_RIGHT_WHEELS_CAN_ID)
     self.wrist_talon = TalonSRX(robotmap.CLAW_WRIST_CAN_ID)
