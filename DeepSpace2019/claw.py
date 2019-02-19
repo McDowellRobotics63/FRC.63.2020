@@ -21,7 +21,7 @@ class DeepSpaceClaw():
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.wrist_setpoint = 0
+    self.stow = True
 
     self.left_grab = TalonSRX(robotmap.CLAW_LEFT_WHEELS_CAN_ID)
     self.right_grab = TalonSRX(robotmap.CLAW_RIGHT_WHEELS_CAN_ID)
@@ -64,29 +64,14 @@ class DeepSpaceClaw():
       talon.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
       talon.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
 
-    '''Closed-loop feedback config'''
+    '''sensor config'''
     self.wrist_talon.configSelectedFeedbackCoefficient(1.0, 0, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.setSensorPhase(False)
+    self.wrist_talon.setSensorPhase(True)
     self.wrist_talon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.setStatusFramePeriod(StatusFrame.Status_10_MotionMagic, 10, robotmap.CAN_TIMEOUT_MS)
-
-    '''Closed-loop gains config'''
-    self.wrist_talon.selectProfileSlot(0, 0)
-    self.wrist_talon.config_kF(0, robotmap.GAIN_F_WRIST, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.config_kP(0, robotmap.GAIN_P_WRIST, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.config_kI(0, robotmap.GAIN_I_WRIST, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.config_kD(0, robotmap.GAIN_D_WRIST, robotmap.CAN_TIMEOUT_MS)
-    self.wrist_talon.config_IntegralZone(0, robotmap.GAIN_IZONE_WRIST, robotmap.CAN_TIMEOUT_MS)
-    if not simulation:
-      self.wrist_talon.configMotionCruiseVelocity(robotmap.CRUISE_VELOCITY_WRIST, robotmap.CAN_TIMEOUT_MS)
-      self.wrist_talon.configMotionAcceleration(robotmap.ACCELERATION_WRIST, robotmap.CAN_TIMEOUT_MS)
 
   def iterate(self, test_mode, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceClaw::iterate()")
-      self.logger.info("Claw current: " + str(self.wrist_talon.getOutputCurrent()))
-      self.logger.info("Claw position: " + str(self.wrist_talon.getSelectedSensorPosition(0)))
-      self.logger.info("Claw analog in: " + str(self.wrist_talon.getAnalogInRaw()))
 
     if pilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER): #left bumper
       self.left_grab.set(ControlMode.PercentOutput, 0.5)
@@ -120,25 +105,26 @@ class DeepSpaceClaw():
       self.harpoon_outside_retract.set(False)
 
     if copilot_stick.getRawButtonPressed(robotmap.XBOX_BACK): #Back
-      self.wrist_setpoint = min(self.wrist_setpoint + 5, robotmap.MAX_POSITION_WRIST)
-      print("wrist_setpoint: " + str(self.wrist_setpoint))
+      self.stow = True
     elif copilot_stick.getRawButtonPressed(robotmap.XBOX_START): #Start
-      self.wrist_setpoint = max(self.wrist_setpoint - 5, robotmap.MIN_POSITION_WRIST)
-      print("wrist_setpoint: " + str(self.wrist_setpoint))
+      self.stow = False
+
+    wrist_position = self.wrist_talon.getSelectedSensorPosition(0)
+    if self.stow and wrist_position > 5:
+      self.wrist_talon.set(ControlMode.PercentOutput, 0.3)
+    elif self.stow and wrist_position < 5:
+      self.wrist_talon.set(ControlMode.PercentOutput, 0.1)
+    elif not self.stow and wrist_position < 25:
+      self.wrist_talon.set(ControlMode.PercentOutput, -0.1)
+    else:
+      self.wrist_talon.set(ControlMode.PercentOutput, 0.0)
     
     if test_mode == True:
       self.wrist_talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
-    else:
-      self.wrist_talon.set(ControlMode.PercentOutput, copilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
-      self.setWristSetpoint(self.wrist_setpoint)
 
   def disable(self):
     self.logger.info("DeepSpaceClaw::disable()")
     self.wrist_talon.set(ControlMode.PercentOutput, 0.0)
     self.left_grab.set(ControlMode.PercentOutput, 0.0)
     self.right_grab.set(ControlMode.PercentOutput, 0.0)
-
-  def setWristSetpoint(self, ticks):
-    ticks = max(min(ticks, robotmap.MAX_POSITION_WRIST), robotmap.MIN_POSITION_WRIST)
-    self.wrist_talon.set(ControlMode.MotionMagic, ticks)
 
