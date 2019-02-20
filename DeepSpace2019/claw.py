@@ -6,8 +6,6 @@ import robotmap
 
 class DeepSpaceClaw():
 
-  CLAW_STOW_RELEASE_BALL = 1
-  CLAW_STOW_WAIT1 = 2
   CLAW_STOW_MOVE_TO_STOW = 3
   CLAW_STOW_WAIT2 = 4
   CLAW_STOW_HOLD = 5
@@ -17,7 +15,7 @@ class DeepSpaceClaw():
   CLAW_SHOOT_BALL = 9
   CLAW_SHOOT_BALL_WAIT1 = 10
 
-  CLAW_STOW_BEGIN = CLAW_STOW_RELEASE_BALL
+  CLAW_STOW_BEGIN = CLAW_STOW_MOVE_TO_STOW
   CLAW_DEPLOY_BEGIN = CLAW_DEPLOY
 
   def __init__(self, logger):
@@ -82,20 +80,7 @@ class DeepSpaceClaw():
       self.logger.info("current state: " + str(self.current_state))
 
     #****************STOW SEQUENCE****************************
-    if self.current_state == self.CLAW_STOW_RELEASE_BALL:
-      self.left_grab.set(ctre.ControlMode.PercentOutput, -0.5)
-      self.right_grab.set(ctre.ControlMode.PercentOutput, 0.5)
-      self.current_state = self.CLAW_STOW_WAIT1
-      self.state_timer.reset()
-      self.state_timer.start()
-
-    elif self.current_state == self.CLAW_STOW_WAIT1:
-      if self.state_timer.hasPeriodPassed(0.25):
-        self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
-        self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
-        self.current_state = self.CLAW_STOW_MOVE_TO_STOW
-
-    elif self.current_state == self.CLAW_STOW_MOVE_TO_STOW:
+    if self.current_state == self.CLAW_STOW_MOVE_TO_STOW:
       self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
       self.wrist_down.set(False)
@@ -117,6 +102,8 @@ class DeepSpaceClaw():
     elif self.current_state == self.CLAW_DEPLOY:
       self.wrist_down.set(True)
       self.wrist_up.set(False)
+      self.state_timer.reset()
+      self.state_timer.start()
       self.current_state = self.CLAW_DEPLOY_WAIT1
 
     elif self.current_state == self.CLAW_DEPLOY_WAIT1:
@@ -142,7 +129,7 @@ class DeepSpaceClaw():
 
     elif self.current_state == self.CLAW_SHOOT_BALL_WAIT1:
       if self.state_timer.hasPeriodPassed(0.25):
-        self.current_state = self.CLAW_DEPLOY_ACTIVE
+        self.current_state = self.CLAW_DEPLOY
     #****************SHOOT SEQUENCE****************************
 
     if pilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER):
