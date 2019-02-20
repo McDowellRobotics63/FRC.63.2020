@@ -75,7 +75,7 @@ class MyRobot(wpilib.TimedRobot):
     if self.pilot_stick.getPOV() == 180: #Dpad Down
       self.claw.deploy_claw()
 
-    self.drive.iterate(False, self.pilot_stick, self.copilot_stick)
+    self.drive.iterate(True, self.pilot_stick, self.copilot_stick)
     self.lift.iterate(True, self.pilot_stick, self.copilot_stick)
     self.claw.iterate(False, self.pilot_stick, self.copilot_stick)
     self.harpoon.iterate(False, self.pilot_stick, self.copilot_stick)
