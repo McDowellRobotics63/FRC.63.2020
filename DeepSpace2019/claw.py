@@ -79,10 +79,14 @@ class DeepSpaceClaw():
     self.current_state = self.CLAW_SHOOT_BALL
 
   def iterate(self, manual_mode, pilot_stick, copilot_stick):
+    wrist_position = self.wrist_talon.getSelectedSensorPosition(0)
+
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceClaw::iterate()")
+      self.logger.info("current state: " + str(self.current_state))
+      self.logger.info("wrist position: " + str(wrist_position))
 
-    wrist_position = self.wrist_talon.getSelectedSensorPosition(0)
+    
 
     #****************STOW SEQUENCE****************************
     if self.current_state == self.CLAW_STOW_RELEASE_BALL:
@@ -101,14 +105,14 @@ class DeepSpaceClaw():
     elif self.current_state == self.CLAW_STOW_MOVE_TO_STOW:
       self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
-      self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.3)
+      self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.0)
       if wrist_position < 5:
         self.current_state = self.CLAW_STOW_HOLD
     
     elif self.current_state == self.CLAW_STOW_HOLD:
       self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
-      self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.1)
+      self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.0)
     #****************STOW SEQUENCE****************************
     
     #****************DEPLOY SEQUENCE****************************
@@ -119,7 +123,7 @@ class DeepSpaceClaw():
     
     elif self.current_state == self.CLAW_DEPLOY_ACTIVE:
       self.wrist_talon.set(ctre.ControlMode.PercentOutput, 0.0)
-      if self.ball_infrared.get():
+      if not self.ball_infrared.get():
         self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
         self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
       else:

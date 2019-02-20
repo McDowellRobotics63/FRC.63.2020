@@ -70,7 +70,7 @@ class DeepSpaceDrive():
       self.logger.info("amps_left: " + str(self.leftTalonMaster.getOutputCurrent()) + ", amps_right: " + str(self.rightTalonMaster.getOutputCurrent()))
       self.logger.info("output_left: " + str(self.leftTalonMaster.getMotorOutputPercent()) + ", output_right: " + str(self.rightTalonMaster.getMotorOutputPercent()))
     
-    self.drive.arcadeDrive(-1.0 * pilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), pilot_stick.getRawAxis(robotmap.XBOX_LEFT_X_AXIS))
+    self.drive.arcadeDrive(pilot_stick.getRawAxis(robotmap.XBOX_LEFT_X_AXIS), pilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS))
 
     if pilot_stick.getRawButton(robotmap.XBOX_X):
       self.drive_front_extend.set(True)

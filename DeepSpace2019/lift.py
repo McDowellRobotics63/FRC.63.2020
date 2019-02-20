@@ -64,18 +64,25 @@ class DeepSpaceLift():
       self.lift_pneumatic_retract.set(False)
 
     lift_position = self.lift_talon.getSelectedSensorPosition(0)
+    #print("lift pos: " + str(lift_position))
 
     if manual_mode == True:
       #need to check these separately so we don't disable the mechanism completely if we end up one tick outside our allowable range
-      if lift_position > robotmap.MIN_POSITION_LIFT:
-        #allow downward motion
-        self.lift_talon.set(ControlMode.PercentOutput, min(-1.0 * copilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), 0))
-      elif lift_position < robotmap.MAX_POSITION_LIFT:
+      if lift_position > robotmap.MIN_POSITION_LIFT or lift_position < robotmap.MAX_POSITION_LIFT:
+        self.lift_talon.set(ControlMode.PercentOutput, -1.0 * pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
+        #self.lift_talon.set(ControlMode.PercentOutput, min(-1.0 * pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS), 0))
+      elif lift_position < robotmap.MIN_POSITION_LIFT:
         #allow upward motion
-        self.lift_talon.set(ControlMode.PercentOutput, max(-1.0 * copilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), 0))
+        self.lift_talon.set(ControlMode.PercentOutput, max(-1.0 * pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS), 0))
+      elif lift_position > robotmap.MAX_POSITION_LIFT:
+        #allow downward motion
+        self.lift_talon.set(ControlMode.PercentOutput, min(-1.0 * pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS), 0))
       else:
         self.lift_talon.set(ControlMode.PercentOutput, 0.0)
+        #self.lift_talon.set(ControlMode.PercentOutput, -1.0 * pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS), 0)
     else:
+      self.lift_talon.set(ControlMode.PercentOutput, -1.0 * pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
+      '''
       err = abs(lift_position - self.lift_setpoint)
       if  err > 1:
         if lift_position < self.lift_setpoint:
@@ -84,6 +91,7 @@ class DeepSpaceLift():
           self.lift_talon.set(ControlMode.PercentOutput, -1.0)
       else:
         self.lift_talon.set(ControlMode.PercentOutput, 0.0)
+      '''
 
   def disable(self):
     self.logger.info("DeepSpaceLift::disable()")
