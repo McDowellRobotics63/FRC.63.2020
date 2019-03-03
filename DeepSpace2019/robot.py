@@ -4,6 +4,7 @@ import wpilib
 import robotmap
 
 from wpilib import Compressor
+from wpilib import SmartDashboard
 
 from drive import DeepSpaceDrive
 from lift import DeepSpaceLift
@@ -35,6 +36,7 @@ class MyRobot(wpilib.TimedRobot):
 
     self.harpoon = DeepSpaceHarpoon(self.logger)
     self.harpoon.init()
+
 
   def autonomousInit(self):
     self.logger.info("MODE: autonomousInit")

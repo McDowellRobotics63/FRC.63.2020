@@ -5,16 +5,18 @@ import pathfinder as pf
 
 import pickle
 
-from ctre.pigeonimu import PigeonIMU
-from ctre.pigeonimu import PigeonIMU_StatusFrame
+#from ctre.pigeonimu import PigeonIMU
+#from ctre.pigeonimu import PigeonIMU_StatusFrame
 
-from ctre import TalonSRX
+from ctre import WPI_TalonSRX
 from ctre import ControlMode
 from ctre import TrajectoryPoint
 from ctre import FeedbackDevice
 from ctre import RemoteSensorSource
 from ctre import SetValueMotionProfile
-from ctre._impl import StatusFrame # why ctre._impl??
+from ctre._impl import StatusFrame # why ctre._impl??from
+from xboxcontroller import XboxController
+from wpilib.smartdashboard import SmartDashboard
 
 class MyRobot(wpilib.TimedRobot):
   
@@ -47,25 +49,27 @@ class MyRobot(wpilib.TimedRobot):
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.stick = wpilib.Joystick(0)
+    self.stick = XboxController(0)
 
-    self.dummyTalon = TalonSRX(self.ENCODER_SUM_CAN_ID)
+    self.dummyTalon = WPI_TalonSRX(self.ENCODER_SUM_CAN_ID)
 
-    self.leftTalonMaster = TalonSRX(self.LEFT_MASTER_CAN_ID)
-    self.leftTalonSlave = TalonSRX(self.LEFT_SLAVE_CAN_ID)
+    self.leftTalonMaster = WPI_TalonSRX(self.LEFT_MASTER_CAN_ID)
+    self.leftTalonSlave = WPI_TalonSRX(self.LEFT_SLAVE_CAN_ID)
 
-    self.rightTalonMaster = TalonSRX(self.RIGHT_MASTER_CAN_ID)
-    self.rightTalonSlave = TalonSRX(self.RIGHT_SLAVE_CAN_ID)
+    self.rightTalonMaster = WPI_TalonSRX(self.RIGHT_MASTER_CAN_ID)
+    self.rightTalonSlave = WPI_TalonSRX(self.RIGHT_SLAVE_CAN_ID)
     
     self.leftTalonSlave.set(ControlMode.Follower, self.LEFT_MASTER_CAN_ID)
     self.rightTalonSlave.set(ControlMode.Follower, self.RIGHT_MASTER_CAN_ID)
 
-    self.pigeon = PigeonIMU(self.PIGEON_IMU_CAN_ID)
+    self.drive = wpilib.RobotDrive(self.leftTalonMaster, self.rightTalonMaster)
 
-    if not self.isSimulation():
-      self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.CAN_BUS_TIMEOUT_MS)
-    else:
-      print("setStatusFramePeriod() is not implmented in pyfrc simulator")
+    #self.pigeon = PigeonIMU(self.PIGEON_IMU_CAN_ID)
+
+    #if not self.isSimulation():
+      #self.pigeon.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR, 5, self.CAN_BUS_TIMEOUT_MS)
+    #else:
+    #  print("setStatusFramePeriod() is not implmented in pyfrc simulator")
 
     self.masterTalons = [self.leftTalonMaster, self.rightTalonMaster]
     self.slaveTalons = [self.leftTalonSlave, self.rightTalonSlave]
@@ -118,7 +122,7 @@ class MyRobot(wpilib.TimedRobot):
       '''Setup the "sum" sensor as remote sensor 0'''
       self.leftTalonMaster.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
       '''Setup the pigeon as remote sensor 1'''
-      self.leftTalonMaster.configRemoteFeedbackFilter(self.PIGEON_IMU_CAN_ID, RemoteSensorSource.Pigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
+      #self.leftTalonMaster.configRemoteFeedbackFilter(self.PIGEON_IMU_CAN_ID, RemoteSensorSource.Pigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
     else:
       print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
 
@@ -126,7 +130,7 @@ class MyRobot(wpilib.TimedRobot):
       '''Setup the "sum" sensor as remote sensor 0'''
       self.rightTalonMaster.configRemoteFeedbackFilter(self.rightTalonSlave.getDeviceID(), RemoteSensorSource.TalonSRX_SelectedSensor, 0, self.CAN_BUS_TIMEOUT_MS)
       '''Setup the pigeon as remote sensor 1'''
-      self.rightTalonMaster.configRemoteFeedbackFilter(self.PIGEON_IMU_CAN_ID, RemoteSensorSource.Pigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
+      #self.rightTalonMaster.configRemoteFeedbackFilter(self.PIGEON_IMU_CAN_ID, RemoteSensorSource.Pigeon_Yaw, 1, self.CAN_BUS_TIMEOUT_MS)
     else:
       print("configRemoteFeedbackFilter() is not implemented in pyfrc simulator")
 
@@ -184,13 +188,47 @@ class MyRobot(wpilib.TimedRobot):
       self.rightTalonMaster.configAuxPIDPolarity(False, self.CAN_BUS_TIMEOUT_MS)
     else:
       print("configAuxPIDPolarity() is not implemented in pyfrc simulator")
+
+    #SmartDashboard.putString("DRIVE_VALUE", "DRIVE_VALUES")
+
+    SmartDashboard.putString("LEFT_Y_VALUES", "LEFT_Y_VALUES")
+    SmartDashboard.putNumber("left_y_rate", 0.6)
+    SmartDashboard.putNumber("left_y_expo", 1.0)
+    SmartDashboard.putNumber("left_y_deadband", 0.1)
+    SmartDashboard.putNumber("left_y_power", 1.5)
+    SmartDashboard.putNumber("left_y_min", -0.5)
+    SmartDashboard.putNumber("left_y_max", 0.5)
+
+    SmartDashboard.putString("LEFT_X_VALUES", "LEFT_X_VALUES")
+    SmartDashboard.putNumber("left_x_rate", 0.5)
+    SmartDashboard.putNumber("left_x_expo", 1.0)
+    SmartDashboard.putNumber("left_x_deadband", 0.1)
+    SmartDashboard.putNumber("left_x_power", 1.5)
+    SmartDashboard.putNumber("left_x_min", -0.5)
+    SmartDashboard.putNumber("left_x_max", 0.5)
+
+    SmartDashboard.putString("RIGHT_Y_VALUES", "RIGHT_Y_VALUES")
+    SmartDashboard.putNumber("right_y_rate", 1.0)
+    SmartDashboard.putNumber("right_y_expo", 0.0)
+    SmartDashboard.putNumber("right_y_deadband", 0.1)
+    SmartDashboard.putNumber("right_y_power", 1.0)
+    SmartDashboard.putNumber("right_y_min", -1.0)
+    SmartDashboard.putNumber("right_y_max", 1.0)
+		
+    SmartDashboard.putString("RIGHT_X_VALUES", "RIGHT_X_VALUES")
+    SmartDashboard.putNumber("right_x_rate", 0.5)
+    SmartDashboard.putNumber("right_x_expo", 1.0)
+    SmartDashboard.putNumber("right_x_deadband", 0.1)
+    SmartDashboard.putNumber("right_x_power", 1.5)
+    SmartDashboard.putNumber("right_x_min", -0.5)
+    SmartDashboard.putNumber("right_x_max", 0.5)
     
   def autonomousInit(self):
-    if not self.isSimulation():
-      self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
-      self.pigeon.setFusedHeading(0, self.CAN_BUS_TIMEOUT_MS)
-    else:
-      print("pigeon.setYaw() is not implemented in pyfrc simulator")
+    #if not self.isSimulation():
+    #  self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
+    #  self.pigeon.setFusedHeading(0, self.CAN_BUS_TIMEOUT_MS)
+    #else:
+    #  print("pigeon.setYaw() is not implemented in pyfrc simulator")
     
     if not self.isSimulation():
       self.leftTalonSlave.setSelectedSensorPosition(0, 0, self.CAN_BUS_TIMEOUT_MS)
@@ -378,16 +416,17 @@ class MyRobot(wpilib.TimedRobot):
     
   def teleopInit(self):
       print("MODE: teleopInit")
-      if not self.isSimulation():
-        self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
-        self.pigeon.setFusedHeading(0, self.CAN_BUS_TIMEOUT_MS)
-      else:
-        print("pigeon.setYaw() is not implemented in pyfrc simulator")
+      #if not self.isSimulation():
+        #self.pigeon.setYaw(0, self.CAN_BUS_TIMEOUT_MS)
+        #self.pigeon.setFusedHeading(0, self.CAN_BUS_TIMEOUT_MS)
+      #else:
+      #  print("pigeon.setYaw() is not implemented in pyfrc simulator")
 
   def teleopPeriodic(self):
     if self.timer.hasPeriodPassed(0.25):
       if not self.isSimulation():
-        ypr = self.pigeon.getYawPitchRoll()
+        ypr = [0, 0, 0]
+        #ypr = self.pigeon.getYawPitchRoll()
         primary_fdbk = self.rightTalonMaster.getSelectedSensorVelocity(self.PRIMARY_PID_LOOP)
         aux_fdbk = self.rightTalonMaster.getSelectedSensorPosition(self.AUX_PID_LOOP)
         lOutput = self.leftTalonMaster.getMotorOutputPercent()
@@ -409,7 +448,7 @@ class MyRobot(wpilib.TimedRobot):
 
       print(f'\
         *************teleopPeriodic*************\n\
-         Sticks <{self.stick.getRawAxis(1)}, {self.stick.getRawAxis(5)}>\n\
+         Sticks <{self.stick.LeftStickX()}, {-self.stick.LeftStickY()}>\n\
          Motor Output % <{lOutput}, {rOutput}>\n\
          Ticks per 100ms <{lTicks}, {rTicks}>\n\
          Left/Right Speed (in/sec) <{lSpeed},{rSpeed}>\n\
@@ -418,8 +457,11 @@ class MyRobot(wpilib.TimedRobot):
         ****************************************\n\
         ')
 
-    self.leftTalonMaster.set(ControlMode.PercentOutput, -1.0 * self.stick.getRawAxis(1))
-    self.rightTalonMaster.set(ControlMode.PercentOutput, -1.0 * self.stick.getRawAxis(5))
+    #self.leftTalonMaster.set(ControlMode.PercentOutput, -1.0 * self.stick.getRawAxis(1))
+    #self.rightTalonMaster.set(ControlMode.PercentOutput, -1.0 * self.stick.getRawAxis(5))
+
+    self.drive.arcadeDrive(self.stick.LeftStickX(), -self.stick.LeftStickY())
+
 
   def disabledInit(self):
     print("MODE: disabledInit")
@@ -427,6 +469,7 @@ class MyRobot(wpilib.TimedRobot):
   def disabledPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
       print("MODE: disabledPeriodic")
+    self.stick.pulseRumble(5)
 
   def unitsToInches(self, units):
     return units * self.WHEEL_CIRCUMFERENCE / self.ENCODER_COUNTS_PER_REV
