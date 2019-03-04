@@ -31,6 +31,8 @@ class DeepSpaceDrive():
     self.rightTalonMaster = ctre.WPI_TalonSRX(robotmap.DRIVE_RIGHT_MASTER_CAN_ID)
     self.rightTalonSlave = ctre.WPI_TalonSRX(robotmap.DRIVE_RIGHT_SLAVE_CAN_ID)
 
+    self.dummyTalon = ctre.TalonSRX(robotmap.CLAW_LEFT_WHEELS_CAN_ID)
+
     self.talons = [self.leftTalonMaster, self.leftTalonSlave, self.rightTalonMaster, self.rightTalonSlave]
     self.masterTalons = [self.leftTalonMaster, self.rightTalonMaster]
 
@@ -43,6 +45,14 @@ class DeepSpaceDrive():
 
   def config(self, simulation):
     self.logger.info("DeepSpaceDrive::config()")
+
+    self.dummyTalon.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
+    self.dummyTalon.configRemoteFeedbackFilter(self.rightTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 1, robotmap.CAN_TIMEOUT_MS)
+    self.dummyTalon.configSensorTerm(0, ctre.FeedbackDevice.RemoteSensor0, robotmap.CAN_TIMEOUT_MS)
+    self.dummyTalon.configSensorTerm(1, ctre.FeedbackDevice.RemoteSensor1, robotmap.CAN_TIMEOUT_MS)
+    self.dummyTalon.configSelectedFeedbackSensor(ctre.FeedbackDevice.SensorSum, 0, robotmap.CAN_TIMEOUT_MS)   
+    self.dummyTalon.configSelectedFeedbackCoefficient(1.0, 0, robotmap.CAN_TIMEOUT_MS)
+    self.dummyTalon.setStatusFramePeriod(ctre._impl.StatusFrame.Status_2_Feedback0, 10, robotmap.CAN_TIMEOUT_MS)
 
     '''Configuration items common for all talons'''
     for talon in self.talons:
@@ -99,8 +109,7 @@ class DeepSpaceDrive():
       talon.configSelectedFeedbackSensor(ctre.FeedbackDevice.RemoteSensor0, 0, robotmap.CAN_TIMEOUT_MS)
       talon.configSelectedFeedbackSensor(ctre.FeedbackDevice.RemoteSensor1, 1, robotmap.CAN_TIMEOUT_MS)
       talon.configSelectedFeedbackCoefficient(1.0, 0, robotmap.CAN_TIMEOUT_MS)
-      #talon.configSelectedFeedbackCoefficient(3600 / self.PIGEON_UNITS_PER_ROTATION, 1, robotmap.CAN_TIMEOUT_MS)
-
+      talon.configSelectedFeedbackCoefficient(3600 / robotmap.PIGEON_UNITS_PER_ROTATION, 1, robotmap.CAN_TIMEOUT_MS)
 
     self.drive_front_extend.set(False)
     self.drive_front_retract.set(True)
