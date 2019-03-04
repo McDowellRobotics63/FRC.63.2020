@@ -1,4 +1,5 @@
 
+import math
 import wpilib
 import ctre
 import robotmap
@@ -12,6 +13,8 @@ class DeepSpaceDrive():
 
   FOLLOW_PATH_STATE = 1
   OPERATOR_CONTROL_STATE = 2
+
+  USING_MOTION_ARC = False
 
   def __init__(self, logger):
     self.logger = logger
@@ -81,10 +84,16 @@ class DeepSpaceDrive():
     self.rightTalonSlave.setStatusFramePeriod(ctre._impl.StatusFrame.Status_2_Feedback0, 10, robotmap.CAN_TIMEOUT_MS)
     self.rightTalonSlave.set(ctre.ControlMode.Follower, robotmap.DRIVE_RIGHT_MASTER_CAN_ID)
 
-    self.leftTalonMaster.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
+    if self.USING_MOTION_ARC:
+      self.leftTalonMaster.configRemoteFeedbackFilter(self.dummyTalon.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
+    else:
+      self.leftTalonMaster.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
     self.leftTalonMaster.configRemoteFeedbackFilter(robotmap.PIGEON_IMU_CAN_ID, ctre.RemoteSensorSource.Pigeon_Yaw, 1, robotmap.CAN_TIMEOUT_MS)
 
-    self.rightTalonMaster.configRemoteFeedbackFilter(self.rightTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
+    if self.USING_MOTION_ARC:
+      self.rightTalonMaster.configRemoteFeedbackFilter(self.dummyTalon.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
+    else:
+      self.rightTalonMaster.configRemoteFeedbackFilter(self.rightTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
     self.rightTalonMaster.configRemoteFeedbackFilter(robotmap.PIGEON_IMU_CAN_ID, ctre.RemoteSensorSource.Pigeon_Yaw, 1, robotmap.CAN_TIMEOUT_MS)
 
     for talon in self.masterTalons:
@@ -156,13 +165,19 @@ class DeepSpaceDrive():
     self.leftTalonSlave.getSensorCollection().setQuadraturePosition(0, robotmap.CAN_TIMEOUT_MS)
     self.leftTalonMaster.clearMotionProfileTrajectories()
     self.leftTalonMaster.clearMotionProfileHasUnderrun(0)
-    self.leftTalonMaster.set(ctre.ControlMode.MotionProfile, 0)
+    if self.USING_MOTION_ARC:
+      self.leftTalonMaster.set(ctre.ControlMode.MotionProfileArc, 0)
+    else:
+      self.leftTalonMaster.set(ctre.ControlMode.MotionProfile, 0)
 
     self.rightTalonSlave.setSelectedSensorPosition(0, 0, robotmap.CAN_TIMEOUT_MS)
     self.rightTalonSlave.getSensorCollection().setQuadraturePosition(0, robotmap.CAN_TIMEOUT_MS)
     self.rightTalonMaster.clearMotionProfileTrajectories()
     self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
-    self.rightTalonMaster.set(ctre.ControlMode.MotionProfile, 0)
+    if self.USING_MOTION_ARC:
+      self.rightTalonMaster.set(ctre.ControlMode.MotionProfileArc, 0)
+    else:
+      self.rightTalonMaster.set(ctre.ControlMode.MotionProfile, 0)
 
     print("Length of trajectory: " + str(len(trajectory)))  
     modifier = pf.modifiers.TankModifier(trajectory).modify(2.1) #Wheelbase in feet
@@ -174,9 +189,23 @@ class DeepSpaceDrive():
       leftSeg = self.leftTrajectory[i]
       rightSeg = self.rightTrajectory[i]
 
-      lposition = self.inchesToUnits((leftSeg.position) * 12)
-      rposition = self.inchesToUnits((rightSeg.position) * 12)
-      aux_position = 0
+      if self.USING_MOTION_ARC:
+        lposition = self.inchesToUnits((leftSeg.position + rightSeg.position) * 12)
+        rposition = self.inchesToUnits((leftSeg.position + rightSeg.position) * 12)
+      else:
+        lposition = self.inchesToUnits((leftSeg.position) * 12)
+        rposition = self.inchesToUnits((rightSeg.position) * 12)
+      
+      if self.USING_MOTION_ARC:
+        aux_position = 10 * math.degrees(leftSeg.heading)
+      else:
+        aux_position = 0
+
+      if self.USING_MOTION_ARC:
+        aux_velocity = 0 #What should this be?
+      else:
+        aux_velocity = 0
+      
       slot0 = 0
       slot1 = 1
       timeDur = 0
@@ -185,10 +214,13 @@ class DeepSpaceDrive():
       lvelocity = self.inchesToUnits(leftSeg.velocity * 12) / 10
       rvelocity = self.inchesToUnits(rightSeg.velocity * 12) / 10
 
+      larbitrary_feed_forward = 0
+      rarbitrary_feed_forward = 0
+
       '''There was no empty constructor.'''
       print(f'position: {lposition}, aux_position: {aux_position}, lvelcoity: {lvelocity}, rvelocity: {rvelocity}')
-      self.leftTrajectory[i] = ctre.TrajectoryPoint(lposition, lvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
-      self.rightTrajectory[i] = ctre.TrajectoryPoint(rposition, rvelocity, aux_position, slot0, slot1, isLastPoint, zeroPos, timeDur)
+      self.leftTrajectory[i] = ctre.BTrajectoryPoint(lposition, lvelocity, larbitrary_feed_forward, aux_position, aux_velocity, slot0, slot1, isLastPoint, zeroPos, timeDur, self.USING_MOTION_ARC)
+      self.rightTrajectory[i] = ctre.BTrajectoryPoint(rposition, rvelocity, rarbitrary_feed_forward, aux_position, aux_velocity, slot0, slot1, isLastPoint, zeroPos, timeDur, self.USING_MOTION_ARC)
 
     for point in self.leftTrajectory:
       self.leftTalonMaster.pushMotionProfileTrajectory(point)
@@ -243,8 +275,12 @@ class DeepSpaceDrive():
     if not self.motionProfileEnabled and \
        self.leftMPStatus.btmBufferCnt > 20 and \
        self.rightMPStatus.btmBufferCnt > 20:
-      self.leftTalonMaster.set(ctre.ControlMode.MotionProfile, 1)
-      self.rightTalonMaster.set(ctre.ControlMode.MotionProfile, 1)
+      if self.USING_MOTION_ARC:
+        self.leftTalonMaster.set(ctre.ControlMode.MotionProfileArc, 1)
+        self.rightTalonMaster.set(ctre.ControlMode.MotionProfileArc, 1)
+      else:
+        self.leftTalonMaster.set(ctre.ControlMode.MotionProfile, 1)
+        self.rightTalonMaster.set(ctre.ControlMode.MotionProfile, 1)
       self.motionProfileEnabled = True
       self.executionStartTime = self.timer.getFPGATimestamp()
       print("Beginning motion profile execution")
