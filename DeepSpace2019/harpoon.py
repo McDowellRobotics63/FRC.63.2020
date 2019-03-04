@@ -27,8 +27,9 @@ class DeepSpaceHarpoon():
 
   HARPOON_PNUEMATIC_WAIT_TIME = 0.25
 
-  def __init__(self, logger):
+  def __init__(self, logger, settings):
     self.logger = logger
+    self.settings = settings
 
   def init(self):
     self.logger.info("DeepSpaceHarpoon::init()")

@@ -6,6 +6,8 @@ import robotmap
 from wpilib import Compressor
 from wpilib import SmartDashboard
 
+from robotsettings import DeepSpaceSettings
+from xboxcontroller import XboxController
 from drive import DeepSpaceDrive
 from lift import DeepSpaceLift
 from claw import DeepSpaceClaw
@@ -17,29 +19,33 @@ class MyRobot(wpilib.TimedRobot):
     self.timer = wpilib.Timer()
     self.timer.start()
 
+    self.settings = DeepSpaceSettings()
+
     if self.isReal():
       self.compressor = Compressor(robotmap.PCM2_CANID)
     else:
       self.compressor = Compressor(0)
 
-    self.pilot_stick = wpilib.Joystick(0)
-    self.copilot_stick = wpilib.Joystick(1)
+    self.pilot_stick = XboxController(0, self.settings)
+    self.copilot_stick = XboxController(1, self.settings)
 
-    self.drive = DeepSpaceDrive(self.logger)
+    self.drive = DeepSpaceDrive(self.logger, self.settings)
     self.drive.init()
 
-    self.lift = DeepSpaceLift(self.logger)
+    self.lift = DeepSpaceLift(self.logger, self.settings)
     self.lift.init()
 
-    self.claw = DeepSpaceClaw(self.logger)
+    self.claw = DeepSpaceClaw(self.logger, self.settings)
     self.claw.init()
 
-    self.harpoon = DeepSpaceHarpoon(self.logger)
+    self.harpoon = DeepSpaceHarpoon(self.logger, self.settings)
     self.harpoon.init()
 
 
   def autonomousInit(self):
     self.logger.info("MODE: autonomousInit")
+    self.pilot_stick.config()
+    self.copilot_stick.config()
     self.drive.config(self.isSimulation())
     self.lift.config(self.isSimulation())
     self.claw.config(self.isSimulation())
@@ -51,6 +57,8 @@ class MyRobot(wpilib.TimedRobot):
   
   def teleopInit(self):
     self.logger.info("MODE: teleopInit")
+    self.pilot_stick.config()
+    self.copilot_stick.config()
     self.drive.config(self.isSimulation())
     self.lift.config(self.isSimulation())
     self.claw.config(self.isSimulation())
@@ -95,6 +103,8 @@ class MyRobot(wpilib.TimedRobot):
 
   def testInit(self):
     self.logger.info("MODE: testInit")
+    self.pilot_stick.config()
+    self.copilot_stick.config()
     self.drive.config(self.isSimulation())
     self.lift.config(self.isSimulation())
     self.claw.config(self.isSimulation())

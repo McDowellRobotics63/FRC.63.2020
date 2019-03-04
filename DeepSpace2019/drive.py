@@ -5,8 +5,9 @@ import robotmap
 
 class DeepSpaceDrive():
 
-  def __init__(self, logger):
+  def __init__(self, logger, settings):
     self.logger = logger
+    self.settings = settings
 
   def init(self):
     self.logger.info("DeepSpaceDrive::init()")

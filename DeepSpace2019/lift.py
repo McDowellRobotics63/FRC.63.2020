@@ -12,15 +12,19 @@ from ctre._impl import StatusFrame
 
 class DeepSpaceLift():
 
-  def __init__(self, logger):
+  def __init__(self, logger, settings):
     self.logger = logger
+    self.settings = settings
 
   def init(self):
     self.logger.info("DeepSpaceLift::init()")
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.lift_setpoint = 0
+    self.min_lift_position = self.settings.min_lift_position.getEntry().getDouble(1.0)
+    self.max_lift_position = self.settings.max_lift_position.getEntry().getDouble(1.0)
+
+    self.lift_setpoint = self.min_lift_position
 
     self.lift_talon = TalonSRX(robotmap.LIFT_CAN_ID)
 

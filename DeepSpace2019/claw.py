@@ -18,8 +18,9 @@ class DeepSpaceClaw():
   CLAW_STOW_BEGIN = CLAW_STOW_MOVE_TO_STOW
   CLAW_DEPLOY_BEGIN = CLAW_DEPLOY
 
-  def __init__(self, logger):
+  def __init__(self, logger, settings):
     self.logger = logger
+    self.settings = settings
 
   def init(self):
     self.logger.info("DeepSpaceClaw::init()")
