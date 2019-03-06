@@ -4,6 +4,7 @@ import wpilib
 import robotmap
 
 from wpilib import Compressor
+from wpilib import sendablechooser
 from wpilib import SmartDashboard
 
 from robotsettings import DeepSpaceSettings
@@ -13,6 +14,10 @@ from lift import DeepSpaceLift
 from claw import DeepSpaceClaw
 from harpoon import DeepSpaceHarpoon
 
+from auto1 import Auto1
+from auto2 import Auto2
+from auto3 import Auto3
+
 class MyRobot(wpilib.TimedRobot):
 
   def robotInit(self):
@@ -21,6 +26,17 @@ class MyRobot(wpilib.TimedRobot):
 
     self.settings = DeepSpaceSettings()
 
+    self.auto1 = Auto1(self, self.logger)
+    self.auto2 = Auto2(self, self.logger)
+    self.auto3 = Auto3(self, self.logger)
+
+    self.auto_chooser = sendablechooser.SendableChooser()
+    self.auto_chooser.setDefaultOption('Auto1', self.auto1)
+    self.auto_chooser.addOption('Auto2', self.auto2)
+    self.auto_chooser.addOption('Auto3', self.auto3)
+
+    SmartDashboard.putData("AutoChooser", self.auto_chooser)
+    
     if self.isReal():
       self.compressor = Compressor(robotmap.PCM2_CANID)
     else:
@@ -44,6 +60,8 @@ class MyRobot(wpilib.TimedRobot):
 
   def autonomousInit(self):
     self.logger.info("MODE: autonomousInit")
+
+    self.auto_selected = self.auto_chooser.getSelected()
     self.pilot_stick.config()
     self.copilot_stick.config()
     self.drive.config(self.isSimulation())
@@ -51,9 +69,13 @@ class MyRobot(wpilib.TimedRobot):
     self.claw.config(self.isSimulation())
     self.harpoon.config(self.isSimulation())
 
+    self.auto_selected.init()
+
   def autonomousPeriodic(self):
     if self.timer.hasPeriodPassed(1.0):
       self.logger.info("MODE: autonomousPeriodic")
+
+    self.auto_selected.iterate()
   
   def teleopInit(self):
     self.logger.info("MODE: teleopInit")
@@ -85,7 +107,7 @@ class MyRobot(wpilib.TimedRobot):
     if self.pilot_stick.getPOV() == 180: #Dpad Down
       self.claw.deploy_claw()
 
-    self.drive.iterate(False, self.pilot_stick, self.copilot_stick)
+    self.drive.iterate(True, self.pilot_stick, self.copilot_stick)
     self.lift.iterate(True, self.pilot_stick, self.copilot_stick)
     self.claw.iterate(False, self.pilot_stick, self.copilot_stick)
     self.harpoon.iterate(False, self.pilot_stick, self.copilot_stick)
