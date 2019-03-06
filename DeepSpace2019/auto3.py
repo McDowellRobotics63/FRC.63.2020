@@ -3,7 +3,7 @@ import wpilib
 
 from wpilib import Timer
 
-class Auto1():
+class Auto3():
 
     CLAW_DEPLOY = 1
     DRIVE_OFF_PLATFORM = 2
@@ -14,7 +14,7 @@ class Auto1():
         self.timer = Timer()
 
     def init(self):
-        self.logger.info("Initializing auto 1")
+        self.logger.info("Initializing auto 3")
         self.state = 0
         self.timer.start()
 

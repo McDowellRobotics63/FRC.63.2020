@@ -49,8 +49,9 @@ class DeepSpaceDrive():
   def config(self, simulation):
     self.logger.info("DeepSpaceDrive::config()")
 
-    self.dummyTalon.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
-    self.dummyTalon.configRemoteFeedbackFilter(self.rightTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 1, robotmap.CAN_TIMEOUT_MS)
+    if not simulation:
+      self.dummyTalon.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
+      self.dummyTalon.configRemoteFeedbackFilter(self.rightTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 1, robotmap.CAN_TIMEOUT_MS)
     self.dummyTalon.configSensorTerm(0, ctre.FeedbackDevice.RemoteSensor0, robotmap.CAN_TIMEOUT_MS)
     self.dummyTalon.configSensorTerm(1, ctre.FeedbackDevice.RemoteSensor1, robotmap.CAN_TIMEOUT_MS)
     self.dummyTalon.configSelectedFeedbackSensor(ctre.FeedbackDevice.SensorSum, 0, robotmap.CAN_TIMEOUT_MS)   
@@ -87,17 +88,20 @@ class DeepSpaceDrive():
     if self.USING_MOTION_ARC:
       self.leftTalonMaster.configRemoteFeedbackFilter(self.dummyTalon.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
     else:
-      self.leftTalonMaster.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
-    self.leftTalonMaster.configRemoteFeedbackFilter(robotmap.PIGEON_IMU_CAN_ID, ctre.RemoteSensorSource.Pigeon_Yaw, 1, robotmap.CAN_TIMEOUT_MS)
+      if not simulation:
+        self.leftTalonMaster.configRemoteFeedbackFilter(self.leftTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
+        self.leftTalonMaster.configRemoteFeedbackFilter(robotmap.PIGEON_IMU_CAN_ID, ctre.RemoteSensorSource.Pigeon_Yaw, 1, robotmap.CAN_TIMEOUT_MS)
 
     if self.USING_MOTION_ARC:
       self.rightTalonMaster.configRemoteFeedbackFilter(self.dummyTalon.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
     else:
-      self.rightTalonMaster.configRemoteFeedbackFilter(self.rightTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
-    self.rightTalonMaster.configRemoteFeedbackFilter(robotmap.PIGEON_IMU_CAN_ID, ctre.RemoteSensorSource.Pigeon_Yaw, 1, robotmap.CAN_TIMEOUT_MS)
+      if not simulation:
+        self.rightTalonMaster.configRemoteFeedbackFilter(self.rightTalonSlave.getDeviceID(), ctre.RemoteSensorSource.TalonSRX_SelectedSensor, 0, robotmap.CAN_TIMEOUT_MS)
+        self.rightTalonMaster.configRemoteFeedbackFilter(robotmap.PIGEON_IMU_CAN_ID, ctre.RemoteSensorSource.Pigeon_Yaw, 1, robotmap.CAN_TIMEOUT_MS)
 
     for talon in self.masterTalons:
-      talon.configMotionProfileTrajectoryPeriod(robotmap.BASE_TRAJECTORY_PERIOD_MS)
+      if not simulation:
+        talon.configMotionProfileTrajectoryPeriod(robotmap.BASE_TRAJECTORY_PERIOD_MS)
 
       talon.config_kP(0, 0.375, robotmap.CAN_TIMEOUT_MS)
       talon.config_kI(0, 0.0, robotmap.CAN_TIMEOUT_MS)
