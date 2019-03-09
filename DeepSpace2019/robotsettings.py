@@ -7,6 +7,14 @@ class DeepSpaceSettings():
     self.min_lift_position = Shuffleboard.getTab("RobotSettings").addPersistent("MinLiftPosition", 75)
     self.max_lift_position = Shuffleboard.getTab("RobotSettings").addPersistent("MaxLiftPosition", 225)
 
+    self.lift_front_port_low = Shuffleboard.getTab("RobotSettings").addPersistent("LiftFrontPortLow", 150)
+    self.lift_front_port_middle = Shuffleboard.getTab("RobotSettings").addPersistent("LiftFrontPortMiddle", 175)
+    self.lift_front_port_high = Shuffleboard.getTab("RobotSettings").addPersistent("LiftFrontPortHigh", 200)
+    
+    self.lift_side_hatch_low = Shuffleboard.getTab("RobotSettings").addPersistent("LiftSideHatchLow", 135)
+    self.lift_side_hatch_middle = Shuffleboard.getTab("RobotSettings").addPersistent("LiftSideHatchMiddle", 160)
+    self.lift_side_hatch_high = Shuffleboard.getTab("RobotSettings").addPersistent("LiftSideHatchHigh", 185)
+
     #Left Y
     self.left_y_rate = Shuffleboard.getTab("DriveSettings").addPersistent("left_y_rate", 0.85)
     self.left_y_expo = Shuffleboard.getTab("DriveSettings").addPersistent("left_y_expo", 0.6)

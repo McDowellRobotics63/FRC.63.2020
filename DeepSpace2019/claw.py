@@ -62,20 +62,25 @@ class DeepSpaceClaw():
       talon.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
       talon.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
 
-  def deploy_claw(self):
-    #Should we confirm currently in compatible state or allow interruption of sequence?
-    self.current_state = self.CLAW_DEPLOY_BEGIN
+  def iterate(self, robot_mode, pilot_stick, copilot_stick):
+    if pilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER):
+      self.claw_close.set(True)
+      self.claw_open.set(False)
+    elif pilot_stick.getRawButton(robotmap.XBOX_RIGHT_BUMPER):
+      self.claw_close.set(False)
+      self.claw_open.set(True)
+
+    if pilot_stick.getRawButtonPressed(robotmap.XBOX_A):
+      self.current_state = self.CLAW_SHOOT_BALL
+
+    #Do we need a boolean to look for pressed edge?
+    if pilot_stick.getPOV() == 0: #Dpad Up
+      self.current_state = self.CLAW_STOW_BEGIN
+
+    #Do we need a boolean to look for pressed edge?
+    if pilot_stick.getPOV() == 180: #Dpad Down
+      self.current_state = self.CLAW_DEPLOY_BEGIN
     
-  def stow_claw(self):
-    #Should we confirm currently in compatible state or allow interruption of sequence?
-    self.current_state = self.CLAW_STOW_BEGIN
-
-  def shoot_ball(self):
-    #Should we confirm currently in compatible state or allow interruption of sequence?
-    self.current_state = self.CLAW_SHOOT_BALL
-
-  def iterate(self, manual_mode, pilot_stick, copilot_stick):
-
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceClaw::iterate()")
       self.logger.info("current state: " + str(self.current_state))
@@ -133,13 +138,6 @@ class DeepSpaceClaw():
         self.current_state = self.CLAW_DEPLOY
     #****************SHOOT SEQUENCE****************************
 
-    if pilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER):
-      self.claw_close.set(True)
-      self.claw_open.set(False)
-    elif pilot_stick.getRawButton(robotmap.XBOX_RIGHT_BUMPER):
-      self.claw_close.set(False)
-      self.claw_open.set(True)
-    
   def disable(self):
     self.logger.info("DeepSpaceClaw::disable()")
     self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)

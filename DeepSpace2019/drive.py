@@ -41,6 +41,7 @@ class DeepSpaceDrive():
     self.masterTalons = [self.leftTalonMaster, self.rightTalonMaster]
 
     self.drive = wpilib.RobotDrive(self.leftTalonMaster, self.rightTalonMaster)
+    self.drive.setSafetyEnabled(False)
 
     self.drive_front_extend = wpilib.Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_FRONT_EXTEND_SOLENOID)
     self.drive_front_retract = wpilib.Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_FRONT_RETRACT_SOLENOID)
@@ -130,15 +131,19 @@ class DeepSpaceDrive():
     self.drive_back_extend.set(False)
     self.drive_back_retract.set(True)
 
-  def iterate(self, manual_mode, pilot_stick, copilot_stick):
+  def iterate(self, robot_mode, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceDrive::iterate()")
       self.logger.info("vleft: " + str(self.leftTalonSlave.getSelectedSensorVelocity(0)) + ", vright: " + str(self.rightTalonSlave.getSelectedSensorVelocity(0)))
       self.logger.info("amps_left: " + str(self.leftTalonMaster.getOutputCurrent()) + ", amps_right: " + str(self.rightTalonMaster.getOutputCurrent()))
       self.logger.info("output_left: " + str(self.leftTalonMaster.getMotorOutputPercent()) + ", output_right: " + str(self.rightTalonMaster.getMotorOutputPercent()))
     
-    if manual_mode == True:
-      self.drive.arcadeDrive(pilot_stick.getRawAxis(robotmap.XBOX_LEFT_X_AXIS), pilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS))
+    pilot_x = pilot_stick.getRawAxis(robotmap.XBOX_LEFT_X_AXIS)
+    pilot_y = pilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS)
+
+    if abs(pilot_x) > 0 or abs(pilot_y) > 0:
+      self.current_state = self.OPERATOR_CONTROL_STATE
+      self.drive.arcadeDrive(pilot_x, pilot_y)
     else:
       if self.current_state == self.FOLLOW_PATH_STATE:
         self.process_auto_path()

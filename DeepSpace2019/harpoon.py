@@ -54,15 +54,13 @@ class DeepSpaceHarpoon():
   def config(self, simulation):
     self.logger.info("DeepSpaceHarpoon::config(): ")
 
-  def deploy_harpoon(self):
-    #Should we confirm currently in compatible state or allow interruption of sequence?
-    self.current_state = self.HARPOON_DEPLOY_BEGIN
-    
-  def stow_harpoon(self):
-    #Should we confirm currently in compatible state or allow interruption of sequence?
-    self.current_state = self.HARPOON_STOW_BEGIN
+  def iterate(self, robot_mode, pilot_stick, copilot_stick):
+    if pilot_stick.getRawButtonPressed(robotmap.XBOX_BACK):
+      self.current_state = self.HARPOON_STOW_BEGIN
 
-  def iterate(self, test_mode, pilot_stick, copilot_stick):
+    if pilot_stick.getRawButtonPressed(robotmap.XBOX_START):
+      self.current_state = self.HARPOON_DEPLOY_BEGIN
+
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceHarpoon::iterate()")
 

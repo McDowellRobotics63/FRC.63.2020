@@ -18,7 +18,11 @@ from auto1 import Auto1
 from auto2 import Auto2
 from auto3 import Auto3
 
+from robotmode import RobotMode
+
 class MyRobot(wpilib.TimedRobot):
+
+  robot_mode = RobotMode.AUTO
 
   def robotInit(self):
     self.timer = wpilib.Timer()
@@ -59,6 +63,7 @@ class MyRobot(wpilib.TimedRobot):
 
 
   def autonomousInit(self):
+    self.robot_mode = RobotMode.AUTO
     self.logger.info("MODE: autonomousInit")
 
     self.auto_selected = self.auto_chooser.getSelected()
@@ -72,12 +77,14 @@ class MyRobot(wpilib.TimedRobot):
     self.auto_selected.init()
 
   def autonomousPeriodic(self):
+    self.robot_mode = RobotMode.AUTO
     if self.timer.hasPeriodPassed(1.0):
-      self.logger.info("MODE: autonomousPeriodic")
+      self.logger.info("MODE: autonomousPeriodic")    
 
     self.auto_selected.iterate()
   
   def teleopInit(self):
+    self.robot_mode = RobotMode.TELE
     self.logger.info("MODE: teleopInit")
     self.pilot_stick.config()
     self.copilot_stick.config()
@@ -87,32 +94,17 @@ class MyRobot(wpilib.TimedRobot):
     self.harpoon.config(self.isSimulation())
 
   def teleopPeriodic(self):
+    self.robot_mode = RobotMode.TELE
     if self.timer.hasPeriodPassed(1.0):
       self.logger.info("MODE: teleopPeriodic")
 
-    if self.pilot_stick.getRawButtonPressed(robotmap.XBOX_BACK):
-      self.harpoon.stow_harpoon()
-
-    if self.pilot_stick.getRawButtonPressed(robotmap.XBOX_START):
-      self.harpoon.deploy_harpoon()
-
-    if self.pilot_stick.getRawButtonPressed(robotmap.XBOX_A):
-      self.claw.shoot_ball()
-
-    #Do we need a boolean to look for pressed edge?
-    if self.pilot_stick.getPOV() == 0: #Dpad Up
-      self.claw.stow_claw()
-
-    #Do we need a boolean to look for pressed edge?
-    if self.pilot_stick.getPOV() == 180: #Dpad Down
-      self.claw.deploy_claw()
-
-    self.drive.iterate(True, self.pilot_stick, self.copilot_stick)
-    self.lift.iterate(True, self.pilot_stick, self.copilot_stick)
-    self.claw.iterate(False, self.pilot_stick, self.copilot_stick)
-    self.harpoon.iterate(False, self.pilot_stick, self.copilot_stick)
+    self.drive.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.lift.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.claw.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.harpoon.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
 
   def disabledInit(self):
+    self.robot_mode = RobotMode.DISABLED
     self.logger.info("MODE: disabledInit")
     self.drive.disable()
     self.lift.disable()
@@ -120,10 +112,12 @@ class MyRobot(wpilib.TimedRobot):
     self.harpoon.disable()
 
   def disabledPeriodic(self):
+    self.robot_mode = RobotMode.DISABLED
     if self.timer.hasPeriodPassed(1.0):
       self.logger.info("MODE: disabledPeriodic")
 
   def testInit(self):
+    self.robot_mode = RobotMode.TEST
     self.logger.info("MODE: testInit")
     self.pilot_stick.config()
     self.copilot_stick.config()
@@ -133,13 +127,14 @@ class MyRobot(wpilib.TimedRobot):
     self.harpoon.config(self.isSimulation())
 
   def testPeriodic(self):
+    self.robot_mode = RobotMode.TEST
     if self.timer.hasPeriodPassed(1.0):
       self.logger.info("MODE: testPeriodic")
 
-    self.drive.iterate(True, self.pilot_stick, self.copilot_stick)
-    self.lift.iterate(True, self.pilot_stick, self.copilot_stick)
-    self.claw.iterate(True, self.pilot_stick, self.copilot_stick)
-    self.harpoon.iterate(True, self.pilot_stick, self.copilot_stick)
+    self.drive.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.lift.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.claw.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.harpoon.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
 
 if __name__ == "__main__":
     wpilib.run(MyRobot, physics_enabled=True)
