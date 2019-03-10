@@ -54,12 +54,18 @@ class DeepSpaceHarpoon():
   def config(self, simulation):
     self.logger.info("DeepSpaceHarpoon::config(): ")
 
+  def deploy_harpoon(self):
+    self.current_state = self.HARPOON_DEPLOY_BEGIN
+
+  def stow_harpoon(self):
+    self.current_state = self.HARPOON_STOW_BEGIN
+
   def iterate(self, robot_mode, pilot_stick, copilot_stick):
     if pilot_stick.getRawButtonPressed(robotmap.XBOX_BACK):
-      self.current_state = self.HARPOON_STOW_BEGIN
+      self.stow_harpoon()
 
     if pilot_stick.getRawButtonPressed(robotmap.XBOX_START):
-      self.current_state = self.HARPOON_DEPLOY_BEGIN
+      self.deploy_harpoon()
 
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceHarpoon::iterate()")

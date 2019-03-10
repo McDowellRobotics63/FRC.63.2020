@@ -20,6 +20,7 @@ class Auto1():
 
     def iterate(self):
         if self.state == 0:
+            self.robot.lift.deploy_lift()
             self.state = 1
         elif self.state == 1:
             self.state = 2

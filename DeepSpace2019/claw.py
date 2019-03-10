@@ -61,6 +61,15 @@ class DeepSpaceClaw():
       talon.enableVoltageCompensation(True)
       talon.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
       talon.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
+  
+  def deploy_claw(self):
+    self.current_state = self.CLAW_DEPLOY_BEGIN
+
+  def stow_claw(self):
+    self.current_state = self.CLAW_STOW_BEGIN
+
+  def shoot_ball(self):
+    self.current_state = self.CLAW_SHOOT_BALL
 
   def iterate(self, robot_mode, pilot_stick, copilot_stick):
     if pilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER):
@@ -71,15 +80,15 @@ class DeepSpaceClaw():
       self.claw_open.set(True)
 
     if pilot_stick.getRawButtonPressed(robotmap.XBOX_A):
-      self.current_state = self.CLAW_SHOOT_BALL
+      self.shoot_ball()
 
     #Do we need a boolean to look for pressed edge?
     if pilot_stick.getPOV() == 0: #Dpad Up
-      self.current_state = self.CLAW_STOW_BEGIN
+      self.stow_claw()
 
     #Do we need a boolean to look for pressed edge?
     if pilot_stick.getPOV() == 180: #Dpad Down
-      self.current_state = self.CLAW_DEPLOY_BEGIN
+      self.deploy_claw()
     
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceClaw::iterate()")

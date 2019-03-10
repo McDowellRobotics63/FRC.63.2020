@@ -18,7 +18,7 @@ from auto1 import Auto1
 from auto2 import Auto2
 from auto3 import Auto3
 
-from robotmode import RobotMode
+from robotenums import RobotMode
 
 class MyRobot(wpilib.TimedRobot):
 
@@ -79,9 +79,14 @@ class MyRobot(wpilib.TimedRobot):
   def autonomousPeriodic(self):
     self.robot_mode = RobotMode.AUTO
     if self.timer.hasPeriodPassed(1.0):
-      self.logger.info("MODE: autonomousPeriodic")    
+      self.logger.info("MODE: autonomousPeriodic")
 
     self.auto_selected.iterate()
+
+    self.drive.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.lift.iterate(self.robot_mode, self.isSimulation(), self.pilot_stick, self.copilot_stick)
+    self.claw.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.harpoon.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
   
   def teleopInit(self):
     self.robot_mode = RobotMode.TELE
@@ -99,7 +104,7 @@ class MyRobot(wpilib.TimedRobot):
       self.logger.info("MODE: teleopPeriodic")
 
     self.drive.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
-    self.lift.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.lift.iterate(self.robot_mode, self.isSimulation(), self.pilot_stick, self.copilot_stick)
     self.claw.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
     self.harpoon.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
 
@@ -132,7 +137,7 @@ class MyRobot(wpilib.TimedRobot):
       self.logger.info("MODE: testPeriodic")
 
     self.drive.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
-    self.lift.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.lift.iterate(self.robot_mode, self.isSimulation(), self.pilot_stick, self.copilot_stick)
     self.claw.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
     self.harpoon.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
 
