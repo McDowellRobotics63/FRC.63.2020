@@ -73,5 +73,9 @@ class PhysicsEngine(object):
         hal_data["dio"][2]["value"] = False #bool(random.getrandbits(1))
         hal_data["dio"][3]["value"] = True #bool(random.getrandbits(1))
 
+        try:
+            hal_data["CAN"][7]["analog_position"] += int(hal_data["CAN"][7]["value"] * 2)
+        except KeyError:
+            pass
 
         hal_data["analog_in"][2]["voltage"] = self.position

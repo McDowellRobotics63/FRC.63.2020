@@ -82,9 +82,6 @@ class DeepSpaceLift():
     if self.timer.hasPeriodPassed(0.5):
       self.logger.info("DeepSpaceLift::iterate()")
 
-    if simulation:
-      self.lift_talon.setAnalogPosition(self.lift_setpoint)
-
     lift_position = self.lift_talon.getSelectedSensorPosition(0)
 
     if robot_mode == RobotMode.TEST:
@@ -143,51 +140,54 @@ class DeepSpaceLift():
     #****************DEPLOY SEQUENCE**************************
 
     #****************DEPLOYED*********************************
-    if self.state_timer.get() > 1.0:
-      self.lift_setpoint = self.lift_stow_position
-      self.state_timer.stop()
-      self.state_timer.reset()
-    elif copilot_stick.LeftBumper().get() and copilot_stick.X().get():
-      if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_LOW:
-        self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_LOW
-        self.lift_setpoint = self.lift_front_port_low
+    elif self.current_state == LiftState.LIFT_DEPLOYED:
+      if self.state_timer.get() > 1.0:
+        self.lift_setpoint = self.lift_stow_position
         self.state_timer.stop()
         self.state_timer.reset()
-    elif copilot_stick.LeftBumper().get() and copilot_stick.Y().get():
-      if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_MIDDLE:
-        self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_MIDDLE
-        self.lift_setpoint = self.lift_front_port_middle
-        self.state_timer.stop()
-        self.state_timer.reset()
-    elif copilot_stick.LeftBumper().get() and copilot_stick.B().get():
-      if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_HIGH:
-        self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_HIGH
-        self.lift_setpoint = self.lift_front_port_high
-        self.state_timer.stop()
-        self.state_timer.reset()
-    elif copilot_stick.RightBumper().get() and copilot_stick.X().get():
-      if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_LOW:
-        self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_LOW
-        self.lift_setpoint = self.lift_side_hatch_low
-        self.state_timer.stop()
-        self.state_timer.reset()
-    elif copilot_stick.RightBumper().get() and copilot_stick.Y().get():
-      if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_MIDDLE:
-        self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_MIDDLE
-        self.lift_setpoint = self.lift_side_hatch_middle
-        self.state_timer.stop()
-        self.state_timer.reset()
-    elif copilot_stick.RightBumper().get() and copilot_stick.B().get():
-      if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_HIGH:
-        self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_HIGH
-        self.lift_setpoint = self.lift_side_hatch_high
-        self.state_timer.stop()
-        self.state_timer.reset()
-    else:
-      if not self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW:
-        self.current_lift_preset = LiftPreset.LIFT_PRESET_STOW
-        self.state_timer.reset()
-        self.state_timer.start()
+      elif copilot_stick.LeftBumper().get() and copilot_stick.X().get():
+        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_LOW:
+          self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_LOW
+          self.lift_setpoint = self.lift_front_port_low
+          self.state_timer.stop()
+          self.state_timer.reset()
+      elif copilot_stick.LeftBumper().get() and copilot_stick.Y().get():
+        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_MIDDLE:
+          self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_MIDDLE
+          self.lift_setpoint = self.lift_front_port_middle
+          self.state_timer.stop()
+          self.state_timer.reset()
+      elif copilot_stick.LeftBumper().get() and copilot_stick.B().get():
+        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_HIGH:
+          self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_HIGH
+          self.lift_setpoint = self.lift_front_port_high
+          self.state_timer.stop()
+          self.state_timer.reset()
+      elif copilot_stick.RightBumper().get() and copilot_stick.X().get():
+        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_LOW:
+          self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_LOW
+          self.lift_setpoint = self.lift_side_hatch_low
+          self.state_timer.stop()
+          self.state_timer.reset()
+      elif copilot_stick.RightBumper().get() and copilot_stick.Y().get():
+        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_MIDDLE:
+          self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_MIDDLE
+          self.lift_setpoint = self.lift_side_hatch_middle
+          self.state_timer.stop()
+          self.state_timer.reset()
+      elif copilot_stick.RightBumper().get() and copilot_stick.B().get():
+        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_HIGH:
+          self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_HIGH
+          self.lift_setpoint = self.lift_side_hatch_high
+          self.state_timer.stop()
+          self.state_timer.reset()
+      else:
+        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW:
+          self.current_lift_preset = LiftPreset.LIFT_PRESET_STOW
+          self.state_timer.reset()
+          self.state_timer.start()
+
+      self.bang_bang_to_setpoint()
 
 
     #****************DEPLOYED*********************************
