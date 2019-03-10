@@ -6,6 +6,8 @@ class DeepSpaceSettings():
   def __init__(self):
     self.min_lift_position = Shuffleboard.getTab("RobotSettings").addPersistent("MinLiftPosition", 75)
     self.max_lift_position = Shuffleboard.getTab("RobotSettings").addPersistent("MaxLiftPosition", 225)
+    self.max_lift_adjust_rate = Shuffleboard.getTab("RobotSettings").addPersistent("MaxLiftAdjustRate", 10)
+    self.max_lift_adjust_value = Shuffleboard.getTab("RobotSettings").addPersistent("MaxLiftAdjustValue", 15)
 
     self.lift_stow_position = Shuffleboard.getTab("RobotSettings").addPersistent("LiftStowPosition", 90)
 

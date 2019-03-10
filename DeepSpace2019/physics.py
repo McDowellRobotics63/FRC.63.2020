@@ -30,6 +30,7 @@ class PhysicsEngine(object):
 
         self.physics_controller = physics_controller
         self.position = 0
+        self.lift_position = 0
 
         # Change these parameters to fit your robot!
         bumper_width = 3.25 * units.inch
@@ -72,9 +73,10 @@ class PhysicsEngine(object):
         hal_data["dio"][1]["value"] = False #bool(random.getrandbits(1))
         hal_data["dio"][2]["value"] = False #bool(random.getrandbits(1))
         hal_data["dio"][3]["value"] = True #bool(random.getrandbits(1))
-
+        
         try:
-            hal_data["CAN"][7]["analog_position"] += int(hal_data["CAN"][7]["value"] * 2)
+            self.lift_position += hal_data["CAN"][7]["value"] * tm_diff * 6
+            hal_data["CAN"][7]["analog_position"] = int(self.lift_position)
         except KeyError:
             pass
 
