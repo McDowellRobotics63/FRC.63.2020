@@ -33,36 +33,36 @@ class XboxController(Joystick):
 
     def config(self):
         #Left Y
-        self.left_y_rate = self.settings.left_y_rate.getEntry().getDouble(1.0)
-        self.left_y_expo = self.settings.left_y_expo.getEntry().getDouble(0.0)
-        self.left_y_deadband = self.settings.left_y_deadband.getEntry().getDouble(0.1)
-        self.left_y_power = self.settings.left_y_power.getEntry().getDouble(1.0)
-        self.left_y_min = self.settings.left_y_min.getEntry().getDouble(-1.0)
-        self.left_y_max = self.settings.left_y_max.getEntry().getDouble(1.0)
+        self.left_y_rate = self.settings.left_y_rate.get()
+        self.left_y_expo = self.settings.left_y_expo.get()
+        self.left_y_deadband = self.settings.left_y_deadband.get()
+        self.left_y_power = self.settings.left_y_power.get()
+        self.left_y_min = self.settings.left_y_min.get()
+        self.left_y_max = self.settings.left_y_max.get()
 
         #Left X
-        self.left_x_rate = self.settings.left_x_rate.getEntry().getDouble(1.0)
-        self.left_x_expo = self.settings.left_x_expo.getEntry().getDouble(0.0)
-        self.left_x_deadband = self.settings.left_x_deadband.getEntry().getDouble(0.1)
-        self.left_x_power = self.settings.left_x_power.getEntry().getDouble(1.0)
-        self.left_x_min = self.settings.left_x_min.getEntry().getDouble(-1.0)
-        self.left_x_max = self.settings.left_x_max.getEntry().getDouble(1.0)
+        self.left_x_rate = self.settings.left_x_rate.get()
+        self.left_x_expo = self.settings.left_x_expo.get()
+        self.left_x_deadband = self.settings.left_x_deadband.get()
+        self.left_x_power = self.settings.left_x_power.get()
+        self.left_x_min = self.settings.left_x_min.get()
+        self.left_x_max = self.settings.left_x_max.get()
         
         #Right Y
-        self.right_y_rate = self.settings.right_y_rate.getEntry().getDouble(1.0)
-        self.right_y_expo = self.settings.right_y_expo.getEntry().getDouble(0.0)
-        self.right_y_deadband = self.settings.right_y_deadband.getEntry().getDouble(0.1)
-        self.right_y_power = self.settings.right_y_power.getEntry().getDouble(1.0)
-        self.right_y_min = self.settings.right_y_min.getEntry().getDouble(-1.0)
-        self.right_y_max = self.settings.right_y_max.getEntry().getDouble(1.0)
+        self.right_y_rate = self.settings.right_y_rate.get()
+        self.right_y_expo = self.settings.right_y_expo.get()
+        self.right_y_deadband = self.settings.right_y_deadband.get()
+        self.right_y_power = self.settings.right_y_power.get()
+        self.right_y_min = self.settings.right_y_min.get()
+        self.right_y_max = self.settings.right_y_max.get()
 
         #Right X
-        self.right_x_rate = self.settings.right_x_rate.getEntry().getDouble(1.0)
-        self.right_x_expo = self.settings.right_x_expo.getEntry().getDouble(0.0)
-        self.right_x_deadband = self.settings.right_x_deadband.getEntry().getDouble(0.1)
-        self.right_x_power = self.settings.right_x_power.getEntry().getDouble(1.0)
-        self.right_x_min = self.settings.right_x_min.getEntry().getDouble(-1.0)
-        self.right_x_max = self.settings.right_x_max.getEntry().getDouble(1.0)
+        self.right_x_rate = self.settings.right_x_rate.get()
+        self.right_x_expo = self.settings.right_x_expo.get()
+        self.right_x_deadband = self.settings.right_x_deadband.get()
+        self.right_x_power = self.settings.right_x_power.get()
+        self.right_x_min = self.settings.right_x_min.get()
+        self.right_x_max = self.settings.right_x_max.get()
 
     def conditonAxis(self, axis, deadband, rate, expo, power, minimum, maximum):
         deadband = min(abs(deadband), 1)

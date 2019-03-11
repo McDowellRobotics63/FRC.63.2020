@@ -27,17 +27,17 @@ class DeepSpaceLift():
     self.timer.start()
 
     #*****************Configs************************************************************************
-    self.min_lift_position = int(self.settings.min_lift_position.getEntry().getNumber(1))
-    self.max_lift_position = int(self.settings.max_lift_position.getEntry().getNumber(1))
-    self.max_lift_adjust_rate = self.settings.max_lift_adjust_rate.getEntry().getNumber(1)
-    self.max_lift_adjust_value = self.settings.max_lift_adjust_value.getEntry().getNumber(1)
-    self.lift_stow_position = int(self.settings.lift_stow_position.getEntry().getNumber(1))
-    self.lift_front_port_low = int(self.settings.lift_front_port_low.getEntry().getNumber(1))
-    self.lift_front_port_middle = int(self.settings.lift_front_port_middle.getEntry().getNumber(1))
-    self.lift_front_port_high = int(self.settings.lift_front_port_high.getEntry().getNumber(1))
-    self.lift_side_hatch_low = int(self.settings.lift_side_hatch_low.getEntry().getNumber(1))
-    self.lift_side_hatch_middle = int(self.settings.lift_side_hatch_middle.getEntry().getNumber(1))
-    self.lift_side_hatch_high = int(self.settings.lift_side_hatch_high.getEntry().getNumber(1))
+    self.min_lift_position = int(self.settings.min_lift_position.get())
+    self.max_lift_position = int(self.settings.max_lift_position.get())
+    self.max_lift_adjust_rate = self.settings.max_lift_adjust_rate.get()
+    self.max_lift_adjust_value = self.settings.max_lift_adjust_value.get()
+    self.lift_stow_position = int(self.settings.lift_stow_position.get())
+    self.lift_front_port_low = int(self.settings.lift_front_port_low.get())
+    self.lift_front_port_middle = int(self.settings.lift_front_port_middle.get())
+    self.lift_front_port_high = int(self.settings.lift_front_port_high.get())
+    self.lift_side_hatch_low = int(self.settings.lift_side_hatch_low.get())
+    self.lift_side_hatch_middle = int(self.settings.lift_side_hatch_middle.get())
+    self.lift_side_hatch_high = int(self.settings.lift_side_hatch_high.get())
     #*****************Configs************************************************************************
 
     self.last_lift_adjust_time = 0
