@@ -1,23 +1,14 @@
 
 import wpilib
+from wpilib import SmartDashboard
+
 import math
 import ctre
 import robotmap
 
+from robotenums import ClawState
+
 class DeepSpaceClaw():
-
-  CLAW_STOW_MOVE_TO_STOW = 3
-  CLAW_STOW_WAIT2 = 4
-  CLAW_STOW_HOLD = 5
-  CLAW_DEPLOY = 6
-  CLAW_DEPLOY_WAIT1 = 7
-  CLAW_DEPLOY_ACTIVE = 8
-  CLAW_SHOOT_BALL = 9
-  CLAW_SHOOT_BALL_WAIT1 = 10
-
-  CLAW_STOW_BEGIN = CLAW_STOW_MOVE_TO_STOW
-  CLAW_DEPLOY_BEGIN = CLAW_DEPLOY
-
   def __init__(self, logger):
     self.logger = logger
 
@@ -27,7 +18,7 @@ class DeepSpaceClaw():
     self.timer.start()
 
     self.state_timer = wpilib.Timer()
-    self.current_state = self.CLAW_STOW_HOLD
+    self.current_state = ClawState.CLAW_STOW_HOLD
 
     self.ball_infrared = wpilib.DigitalInput(robotmap.BALL_IR_SENSOR)
     
@@ -62,65 +53,70 @@ class DeepSpaceClaw():
       talon.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
   
   def deploy_claw(self):
-    self.current_state = self.CLAW_DEPLOY_BEGIN
+    self.current_state = ClawState.CLAW_DEPLOY_BEGIN
 
   def stow_claw(self):
-    self.current_state = self.CLAW_STOW_BEGIN
+    self.current_state = ClawState.CLAW_STOW_BEGIN
 
   def shoot_ball(self):
-    self.current_state = self.CLAW_SHOOT_BALL
+    self.current_state = ClawState.CLAW_SHOOT_BALL
 
   def iterate(self, robot_mode, pilot_stick, copilot_stick):
-    if pilot_stick.getRawButton(robotmap.XBOX_LEFT_BUMPER):
+    if pilot_stick.LeftBumper().get():
       self.claw_close.set(True)
       self.claw_open.set(False)
-    elif pilot_stick.getRawButton(robotmap.XBOX_RIGHT_BUMPER):
+    elif pilot_stick.RightBumper().get():
       self.claw_close.set(False)
       self.claw_open.set(True)
 
-    if pilot_stick.getRawButtonPressed(robotmap.XBOX_A):
+    if pilot_stick.A().get():
       self.shoot_ball()
 
     #Do we need a boolean to look for pressed edge?
-    if pilot_stick.getPOV() == 0: #Dpad Up
+    if pilot_stick.DpadUp().get():
       self.stow_claw()
 
     #Do we need a boolean to look for pressed edge?
-    if pilot_stick.getPOV() == 180: #Dpad Down
+    if pilot_stick.DpadDown().get():
       self.deploy_claw()
 
+    self.iterate_state_machine()
+
+    SmartDashboard.putString("Claw State", self.current_state.name)
+
+  def iterate_state_machine(self):
     #****************STOW SEQUENCE****************************
-    if self.current_state == self.CLAW_STOW_MOVE_TO_STOW:
+    if self.current_state == ClawState.CLAW_STOW_MOVE_TO_STOW:
       self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
       self.wrist_down.set(False)
       self.wrist_up.set(True)
       self.state_timer.reset()
       self.state_timer.start()
-      self.current_state = self.CLAW_STOW_WAIT2
+      self.current_state = ClawState.CLAW_STOW_WAIT2
 
-    elif self.current_state == self.CLAW_STOW_WAIT2:
+    elif self.current_state == ClawState.CLAW_STOW_WAIT2:
       if self.state_timer.hasPeriodPassed(0.25):
-        self.current_state = self.CLAW_STOW_HOLD
+        self.current_state = ClawState.CLAW_STOW_HOLD
     
-    elif self.current_state == self.CLAW_STOW_HOLD:
+    elif self.current_state == ClawState.CLAW_STOW_HOLD:
       self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
     #****************STOW SEQUENCE****************************
     
     #****************DEPLOY SEQUENCE****************************
-    elif self.current_state == self.CLAW_DEPLOY:
+    elif self.current_state == ClawState.CLAW_DEPLOY:
       self.wrist_down.set(True)
       self.wrist_up.set(False)
       self.state_timer.reset()
       self.state_timer.start()
-      self.current_state = self.CLAW_DEPLOY_WAIT1
+      self.current_state = ClawState.CLAW_DEPLOY_WAIT1
 
-    elif self.current_state == self.CLAW_DEPLOY_WAIT1:
+    elif self.current_state == ClawState.CLAW_DEPLOY_WAIT1:
       if self.state_timer.hasPeriodPassed(0.25):
-        self.current_state = self.CLAW_DEPLOY_ACTIVE
+        self.current_state = ClawState.CLAW_DEPLOY_ACTIVE
     
-    elif self.current_state == self.CLAW_DEPLOY_ACTIVE:
+    elif self.current_state == ClawState.CLAW_DEPLOY_ACTIVE:
       if not self.ball_infrared.get():
         self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
         self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
@@ -130,16 +126,16 @@ class DeepSpaceClaw():
     #****************DEPLOY SEQUENCE****************************
 
     #****************SHOOT SEQUENCE****************************
-    elif self.current_state == self.CLAW_SHOOT_BALL:
+    elif self.current_state == ClawState.CLAW_SHOOT_BALL:
       self.left_grab.set(ctre.ControlMode.PercentOutput, -0.5)
       self.right_grab.set(ctre.ControlMode.PercentOutput, 0.5)
-      self.current_state = self.CLAW_SHOOT_BALL_WAIT1
+      self.current_state = ClawState.CLAW_SHOOT_BALL_WAIT1
       self.state_timer.reset()
       self.state_timer.start()
 
-    elif self.current_state == self.CLAW_SHOOT_BALL_WAIT1:
+    elif self.current_state == ClawState.CLAW_SHOOT_BALL_WAIT1:
       if self.state_timer.hasPeriodPassed(0.25):
-        self.current_state = self.CLAW_DEPLOY
+        self.current_state = ClawState.CLAW_DEPLOY
     #****************SHOOT SEQUENCE****************************
 
   def disable(self):

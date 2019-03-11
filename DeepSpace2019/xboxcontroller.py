@@ -5,6 +5,7 @@ from networktables.util import ntproperty
 import wpilib
 
 from xboxdpadbutton import DPAD_BUTTON
+from xboxdpadbutton import XboxDPadButton
 
 import robotmap
 
@@ -57,10 +58,10 @@ class XboxController(Joystick):
         self.btnRB = JoystickButton(self, robotmap.XBOX_RIGHT_BUMPER)
         self.btnStart = JoystickButton(self, robotmap.XBOX_START)
         self.btnBack = JoystickButton(self, robotmap.XBOX_BACK)
-        self.btnDpadUp = JoystickButton(self, DPAD_BUTTON.DPAD_UP)
-        self.btnDpadRight = JoystickButton(self, DPAD_BUTTON.DPAD_RIGHT)
-        self.btnDpadDown = JoystickButton(self, DPAD_BUTTON.DPAD_DOWN)
-        self.btnDpadLeft = JoystickButton(self, DPAD_BUTTON.DPAD_LEFT)
+        self.btnDpadUp = XboxDPadButton(self, DPAD_BUTTON.DPAD_UP)
+        self.btnDpadRight = XboxDPadButton(self, DPAD_BUTTON.DPAD_RIGHT)
+        self.btnDpadDown = XboxDPadButton(self, DPAD_BUTTON.DPAD_DOWN)
+        self.btnDpadLeft = XboxDPadButton(self, DPAD_BUTTON.DPAD_LEFT)
 
     def config(self):
         pass
