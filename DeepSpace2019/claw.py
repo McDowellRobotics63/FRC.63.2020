@@ -49,7 +49,7 @@ class DeepSpaceClaw():
     self.wrist_up.set(True)
 
   def config(self, simulation):
-    self.logger.info("DeepSpaceClaw::config(): ")
+    self.logger.info("DeepSpaceClaw::config()")
 
     '''Configuration items common for all talons'''
     for talon in self.talons:
@@ -88,10 +88,6 @@ class DeepSpaceClaw():
     #Do we need a boolean to look for pressed edge?
     if pilot_stick.getPOV() == 180: #Dpad Down
       self.deploy_claw()
-    
-    if self.timer.hasPeriodPassed(0.5):
-      self.logger.info("DeepSpaceClaw::iterate()")
-      self.logger.info("current state: " + str(self.current_state))
 
     #****************STOW SEQUENCE****************************
     if self.current_state == self.CLAW_STOW_MOVE_TO_STOW:

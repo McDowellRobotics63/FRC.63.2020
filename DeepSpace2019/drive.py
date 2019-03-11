@@ -131,12 +131,6 @@ class DeepSpaceDrive():
     self.drive_back_retract.set(True)
 
   def iterate(self, robot_mode, pilot_stick, copilot_stick):
-    if self.timer.hasPeriodPassed(0.5):
-      self.logger.info("DeepSpaceDrive::iterate()")
-      self.logger.info("vleft: " + str(self.leftTalonSlave.getSelectedSensorVelocity(0)) + ", vright: " + str(self.rightTalonSlave.getSelectedSensorVelocity(0)))
-      self.logger.info("amps_left: " + str(self.leftTalonMaster.getOutputCurrent()) + ", amps_right: " + str(self.rightTalonMaster.getOutputCurrent()))
-      self.logger.info("output_left: " + str(self.leftTalonMaster.getMotorOutputPercent()) + ", output_right: " + str(self.rightTalonMaster.getMotorOutputPercent()))
-    
     pilot_x = pilot_stick.getRawAxis(robotmap.XBOX_LEFT_X_AXIS)
     pilot_y = pilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS)
 
@@ -188,7 +182,6 @@ class DeepSpaceDrive():
     else:
       self.rightTalonMaster.set(ctre.ControlMode.MotionProfile, 0)
 
-    print("Length of trajectory: " + str(len(trajectory)))  
     modifier = pf.modifiers.TankModifier(trajectory).modify(2.1) #Wheelbase in feet
 
     self.leftTrajectory = modifier.getLeftTrajectory()
@@ -226,18 +219,14 @@ class DeepSpaceDrive():
       larbitrary_feed_forward = 0
       rarbitrary_feed_forward = 0
 
-      '''There was no empty constructor.'''
-      print(f'position: {lposition}, aux_position: {aux_position}, lvelcoity: {lvelocity}, rvelocity: {rvelocity}')
       self.leftTrajectory[i] = ctre.BTrajectoryPoint(lposition, lvelocity, larbitrary_feed_forward, aux_position, aux_velocity, slot0, slot1, isLastPoint, zeroPos, timeDur, self.USING_MOTION_ARC)
       self.rightTrajectory[i] = ctre.BTrajectoryPoint(rposition, rvelocity, rarbitrary_feed_forward, aux_position, aux_velocity, slot0, slot1, isLastPoint, zeroPos, timeDur, self.USING_MOTION_ARC)
 
     for point in self.leftTrajectory:
       self.leftTalonMaster.pushMotionProfileTrajectory(point)
-      #print("Top buffer count left: " + str(self.leftTalonMaster.getMotionProfileStatus().topBufferCnt))
 
     for point in self.rightTrajectory:
       self.rightTalonMaster.pushMotionProfileTrajectory(point)
-      #print("Top buffer count right: " + str(self.rightTalonMaster.getMotionProfileStatus().topBufferCnt))
 
     self.leftDone = False
     self.rightDone = False
@@ -262,12 +251,12 @@ class DeepSpaceDrive():
     check that the bottom buffer count is high enough to trigger the motion
     profile execution to begin.  That allows the motion profile execution to
     begin sooner.  For this test we can just wait until the top buffer has
-    been completely emptied into the bottom buffer.
+    been completely (mostly) emptied into the bottom buffer.
     '''
 
     '''Let's time this to see if it's really worth doing it the more sophisticated way'''
     if not self.motionProfileEnabled and self.leftMPStatus.btmBufferCnt == 0 and self.rightMPStatus.btmBufferCnt == 0:
-      print("Beginning to funnel trajectory points into the Talons")
+      self.logger.info("Beginning to funnel trajectory points into the Talons")
       self.bufferProcessingStartTime = self.timer.getFPGATimestamp()
 
     '''
@@ -292,65 +281,23 @@ class DeepSpaceDrive():
         self.rightTalonMaster.set(ctre.ControlMode.MotionProfile, 1)
       self.motionProfileEnabled = True
       self.executionStartTime = self.timer.getFPGATimestamp()
-      print("Beginning motion profile execution")
+      self.logger.info("Beginning motion profile execution")
 
     if self.leftMPStatus.isLast and self.leftMPStatus.outputEnable == ctre.SetValueMotionProfile.Enable and not self.leftDone:
       self.leftTalonMaster.neutralOutput()
       self.leftTalonMaster.set(ctre.ControlMode.PercentOutput, 0)
       self.leftDone = True
-      print("Left motion profile is finished executing")
+      self.logger.info("Left motion profile is finished executing")
 
     if self.rightMPStatus.isLast and self.rightMPStatus.outputEnable == ctre.SetValueMotionProfile.Enable and not self.rightDone:
       self.rightTalonMaster.neutralOutput()
       self.rightTalonMaster.set(ctre.ControlMode.PercentOutput, 0)
       self.rightDone = True
-      print("Right motion profile is finished executing")
+      self.logger.info("Right motion profile is finished executing")
 
-
-    '''
-    It's ok to print debug info on every loop here because the execution
-    is all happening inside the Talon firmware. However... continuosly
-    calling into the Talons to get profile status, output percent, closed loop error etc
-    may cause too much loading on the Talon firware or too much traffic on the
-    CAN bus network... so maybe need to be careful with that.
-    '''
-    
-    if (not self.leftDone or not self.rightDone) and self.timer.hasPeriodPassed(0.25):
-      lTopCount = self.leftMPStatus.topBufferCnt
-      rTopCount = self.rightMPStatus.topBufferCnt
-      lBufCount = self.leftMPStatus.btmBufferCnt
-      rBufCount = self.rightMPStatus.btmBufferCnt
-      lOutput = self.leftTalonMaster.getMotorOutputPercent()
-      rOutput = self.rightTalonMaster.getMotorOutputPercent()
-      lUnderrun = self.leftMPStatus.hasUnderrun
-      rUnderrun = self.rightMPStatus.hasUnderrun
-      lTarget = self.leftTalonMaster.getClosedLoopTarget(0)
-      rTarget = self.rightTalonMaster.getClosedLoopTarget(0)
-      hTarget = self.rightTalonMaster.getClosedLoopTarget(1)
-      lPosition = self.leftTalonMaster.getSelectedSensorPosition(0)
-      rPosition = self.rightTalonMaster.getSelectedSensorPosition(0)
-      lError = self.leftTalonMaster.getClosedLoopError(0)
-      rError = self.rightTalonMaster.getClosedLoopError(0)
-      hError = self.rightTalonMaster.getClosedLoopError(1)
-
-      print(f'\
-        ****************************************\n\
-         Top Count <{lTopCount}, {rTopCount}>\n\
-         Bottom Count <{lBufCount}, {rBufCount}>\n\
-         Motor Output <{lOutput}, {rOutput}>\n\
-         Underrun <{lUnderrun}, {rUnderrun}>\n\
-         Closed Loop Target <{lTarget}, {rTarget}, {hTarget}>\n\
-         Closed Loop Position <{lPosition}, {rPosition}>\n\
-         Closed Loop Error <{lError}, {rError}, {hError}>\n\
-        ****************************************\n\
-        ')
-    else:
+    if self.leftDone and self.rightDone:
       self.executionFinishTime = self.timer.getFPGATimestamp()
       self.current_state == self.OPERATOR_CONTROL_STATE
-      #print("Both Left and Right motion profiles are finished executing")
-      #print(f'Buffer fill time: {self.executionStartTime - self.bufferProcessingStartTime}')
-      #print(f'Profile exec time: {self.executionFinishTime - self.executionStartTime}')
-
 
   def unitsToInches(self, units):
     return units * robotmap.WHEEL_CIRCUMFERENCE / robotmap.DRIVE_ENCODER_COUNTS_PER_REV

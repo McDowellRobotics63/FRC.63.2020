@@ -86,9 +86,6 @@ class DeepSpaceLift():
     self.current_state = LiftState.LIFT_DEPLOY_BEGIN
 
   def iterate(self, robot_mode, simulation, pilot_stick, copilot_stick):
-    if self.timer.hasPeriodPassed(0.5):
-      self.logger.info("DeepSpaceLift::iterate()")
-
     lift_position = self.lift_talon.getSelectedSensorPosition(0)
 
     if robot_mode == RobotMode.TEST:

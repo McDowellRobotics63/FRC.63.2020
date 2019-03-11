@@ -51,7 +51,7 @@ class DeepSpaceHarpoon():
     self.harpoon_outside_retract.set(True)
 
   def config(self, simulation):
-    self.logger.info("DeepSpaceHarpoon::config(): ")
+    self.logger.info("DeepSpaceHarpoon::config()")
 
   def deploy_harpoon(self):
     self.current_state = self.HARPOON_DEPLOY_BEGIN
@@ -65,9 +65,6 @@ class DeepSpaceHarpoon():
 
     if pilot_stick.getRawButtonPressed(robotmap.XBOX_START):
       self.deploy_harpoon()
-
-    if self.timer.hasPeriodPassed(0.5):
-      self.logger.info("DeepSpaceHarpoon::iterate()")
 
     #****************DEPLOY SEQUENCE****************************
     if self.current_state == self.HARPOON_DEPLOY_EXTEND_OUTSIDE:
