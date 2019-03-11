@@ -7,7 +7,6 @@ from wpilib import Compressor
 from wpilib import sendablechooser
 from wpilib import SmartDashboard
 
-from robotsettings import DeepSpaceSettings
 from xboxcontroller import XboxController
 from drive import DeepSpaceDrive
 from lift import DeepSpaceLift
@@ -28,8 +27,6 @@ class MyRobot(wpilib.TimedRobot):
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.settings = DeepSpaceSettings()
-
     self.auto1 = Auto1(self, self.logger)
     self.auto2 = Auto2(self, self.logger)
     self.auto3 = Auto3(self, self.logger)
@@ -46,19 +43,19 @@ class MyRobot(wpilib.TimedRobot):
     else:
       self.compressor = Compressor(0)
 
-    self.pilot_stick = XboxController(0, self.settings)
-    self.copilot_stick = XboxController(1, self.settings)
+    self.pilot_stick = XboxController(0)
+    self.copilot_stick = XboxController(1)
 
-    self.drive = DeepSpaceDrive(self.logger, self.settings)
+    self.drive = DeepSpaceDrive(self.logger)
     self.drive.init()
 
-    self.lift = DeepSpaceLift(self.logger, self.settings)
+    self.lift = DeepSpaceLift(self.logger)
     self.lift.init()
 
-    self.claw = DeepSpaceClaw(self.logger, self.settings)
+    self.claw = DeepSpaceClaw(self.logger)
     self.claw.init()
 
-    self.harpoon = DeepSpaceHarpoon(self.logger, self.settings)
+    self.harpoon = DeepSpaceHarpoon(self.logger)
     self.harpoon.init()
 
 

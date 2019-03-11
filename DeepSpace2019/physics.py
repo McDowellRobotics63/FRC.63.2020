@@ -75,7 +75,7 @@ class PhysicsEngine(object):
         hal_data["dio"][3]["value"] = True #bool(random.getrandbits(1))
         
         try:
-            self.lift_position += hal_data["CAN"][7]["value"] * tm_diff * 6
+            self.lift_position += hal_data["CAN"][7]["value"] * tm_diff * 20
             hal_data["CAN"][7]["analog_position"] = int(self.lift_position)
         except KeyError:
             pass

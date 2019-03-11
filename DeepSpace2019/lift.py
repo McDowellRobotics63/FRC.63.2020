@@ -3,6 +3,7 @@ import wpilib
 
 from wpilib import Solenoid
 from wpilib import SmartDashboard
+from networktables.util import ntproperty
 
 import robotmap
 
@@ -16,29 +17,28 @@ from robotenums import LiftState
 from robotenums import LiftPreset
 
 class DeepSpaceLift():
+  min_lift_position = ntproperty("/LiftSettings/MinLiftPosition", 75, persistent = True)
+  max_lift_position = ntproperty("/LiftSettings/MaxLiftPosition", 225, persistent = True)
+  max_lift_adjust_rate = ntproperty("/LiftSettings/MaxLiftAdjustRate", 10, persistent = True)
+  max_lift_adjust_value = ntproperty("/LiftSettings/MaxLiftAdjustValue", 15, persistent = True)
 
-  def __init__(self, logger, settings):
+  lift_stow_position = ntproperty("/LiftSettings/LiftStowPosition", 90, persistent = True)
+
+  lift_front_port_low = ntproperty("/LiftSettings/LiftFrontPortLow", 150, persistent = True)
+  lift_front_port_middle = ntproperty("/LiftSettings/LiftFrontPortMiddle", 175, persistent = True)
+  lift_front_port_high = ntproperty("/LiftSettings/LiftFrontPortHigh", 200, persistent = True)
+  
+  lift_side_hatch_low = ntproperty("/LiftSettings/LiftSideHatchLow", 135, persistent = True)
+  lift_side_hatch_middle = ntproperty("/LiftSettings/LiftSideHatchMiddle", 160, persistent = True)
+  lift_side_hatch_high = ntproperty("/LiftSettings/LiftSideHatchHigh", 185, persistent = True)
+
+  def __init__(self, logger):
     self.logger = logger
-    self.settings = settings
 
   def init(self):
     self.logger.info("DeepSpaceLift::init()")
     self.timer = wpilib.Timer()
     self.timer.start()
-
-    #*****************Configs************************************************************************
-    self.min_lift_position = int(self.settings.min_lift_position.getEntry().getNumber(1))
-    self.max_lift_position = int(self.settings.max_lift_position.getEntry().getNumber(1))
-    self.max_lift_adjust_rate = self.settings.max_lift_adjust_rate.getEntry().getNumber(1)
-    self.max_lift_adjust_value = self.settings.max_lift_adjust_value.getEntry().getNumber(1)
-    self.lift_stow_position = int(self.settings.lift_stow_position.getEntry().getNumber(1))
-    self.lift_front_port_low = int(self.settings.lift_front_port_low.getEntry().getNumber(1))
-    self.lift_front_port_middle = int(self.settings.lift_front_port_middle.getEntry().getNumber(1))
-    self.lift_front_port_high = int(self.settings.lift_front_port_high.getEntry().getNumber(1))
-    self.lift_side_hatch_low = int(self.settings.lift_side_hatch_low.getEntry().getNumber(1))
-    self.lift_side_hatch_middle = int(self.settings.lift_side_hatch_middle.getEntry().getNumber(1))
-    self.lift_side_hatch_high = int(self.settings.lift_side_hatch_high.getEntry().getNumber(1))
-    #*****************Configs************************************************************************
 
     self.last_lift_adjust_time = 0
     self.lift_adjust_timer = wpilib.Timer()

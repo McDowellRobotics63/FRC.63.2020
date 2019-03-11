@@ -16,9 +16,8 @@ class DeepSpaceDrive():
 
   USING_MOTION_ARC = False
 
-  def __init__(self, logger, settings):
+  def __init__(self, logger):
     self.logger = logger
-    self.settings = settings
 
   def init(self):
     self.logger.info("DeepSpaceDrive::init()")
