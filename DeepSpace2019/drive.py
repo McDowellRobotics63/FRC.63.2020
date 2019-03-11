@@ -1,8 +1,12 @@
 
 import math
+
 import wpilib
+from wpilib import SmartDashboard
+
 import ctre
 import robotmap
+from robotenums import DriveState
 
 from ctre.pigeonimu import PigeonIMU
 from ctre.pigeonimu import PigeonIMU_StatusFrame
@@ -10,10 +14,6 @@ from ctre.pigeonimu import PigeonIMU_StatusFrame
 import pathfinder as pf
 
 class DeepSpaceDrive():
-
-  FOLLOW_PATH_STATE = 1
-  OPERATOR_CONTROL_STATE = 2
-
   USING_MOTION_ARC = False
 
   def __init__(self, logger):
@@ -24,7 +24,7 @@ class DeepSpaceDrive():
     self.timer = wpilib.Timer()
     self.timer.start()
 
-    self.current_state = self.OPERATOR_CONTROL_STATE
+    self.current_state = DriveState.OPERATOR_CONTROL
 
     self.pigeon = PigeonIMU(robotmap.PIGEON_IMU_CAN_ID)
 
@@ -131,31 +131,33 @@ class DeepSpaceDrive():
     self.drive_back_retract.set(True)
 
   def iterate(self, robot_mode, pilot_stick, copilot_stick):
-    pilot_x = pilot_stick.getRawAxis(robotmap.XBOX_LEFT_X_AXIS)
-    pilot_y = pilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS)
+    pilot_x = pilot_stick.LeftStickX()
+    pilot_y = pilot_stick.LeftStickY()
 
     if abs(pilot_x) > 0 or abs(pilot_y) > 0:
-      self.current_state = self.OPERATOR_CONTROL_STATE
+      self.current_state = DriveState.OPERATOR_CONTROL
       self.drive.arcadeDrive(pilot_x, pilot_y)
     else:
-      if self.current_state == self.FOLLOW_PATH_STATE:
+      if self.current_state == DriveState.FOLLOW_PATH:
         self.process_auto_path()
 
-    if pilot_stick.getRawButton(robotmap.XBOX_X):
+    if pilot_stick.X().get():
       self.drive_front_extend.set(True)
       self.drive_front_retract.set(False)
       self.drive_back_extend.set(False)
       self.drive_back_retract.set(True)
-    elif pilot_stick.getRawButton(robotmap.XBOX_Y):
+    elif pilot_stick.Y().get():
       self.drive_front_extend.set(False)
       self.drive_front_retract.set(True)
       self.drive_back_extend.set(True)
       self.drive_back_retract.set(False)
-    elif pilot_stick.getRawButton(robotmap.XBOX_B):
+    elif pilot_stick.B().get():
       self.drive_front_extend.set(False)
       self.drive_front_retract.set(True)
       self.drive_back_extend.set(False)
       self.drive_back_retract.set(True)
+
+    SmartDashboard.putString("Drive State", self.current_state.name)
 
   def disable(self):
     self.logger.info("DeepSpaceDrive::disable()")
@@ -235,7 +237,7 @@ class DeepSpaceDrive():
     self.executionStartTime = 0
     self.executionFinishTime = 0
 
-    self.current_state = self.FOLLOW_PATH_STATE
+    self.current_state = DriveState.FOLLOW_PATH
 
   def process_auto_path(self):
     self.leftMPStatus = self.leftTalonMaster.getMotionProfileStatus()
@@ -297,7 +299,7 @@ class DeepSpaceDrive():
 
     if self.leftDone and self.rightDone:
       self.executionFinishTime = self.timer.getFPGATimestamp()
-      self.current_state == self.OPERATOR_CONTROL_STATE
+      self.current_state == DriveState.OPERATOR_CONTROL
 
   def unitsToInches(self, units):
     return units * robotmap.WHEEL_CIRCUMFERENCE / robotmap.DRIVE_ENCODER_COUNTS_PER_REV

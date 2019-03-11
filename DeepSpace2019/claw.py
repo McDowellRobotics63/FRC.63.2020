@@ -18,7 +18,7 @@ class DeepSpaceClaw():
     self.timer.start()
 
     self.state_timer = wpilib.Timer()
-    self.current_state = ClawState.CLAW_STOW_HOLD
+    self.current_state = ClawState.CLAW_STOWED
 
     self.ball_infrared = wpilib.DigitalInput(robotmap.BALL_IR_SENSOR)
     
@@ -97,9 +97,9 @@ class DeepSpaceClaw():
 
     elif self.current_state == ClawState.CLAW_STOW_WAIT2:
       if self.state_timer.hasPeriodPassed(0.25):
-        self.current_state = ClawState.CLAW_STOW_HOLD
+        self.current_state = ClawState.CLAW_STOWED
     
-    elif self.current_state == ClawState.CLAW_STOW_HOLD:
+    elif self.current_state == ClawState.CLAW_STOWED:
       self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
       self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
     #****************STOW SEQUENCE****************************
@@ -114,9 +114,9 @@ class DeepSpaceClaw():
 
     elif self.current_state == ClawState.CLAW_DEPLOY_WAIT1:
       if self.state_timer.hasPeriodPassed(0.25):
-        self.current_state = ClawState.CLAW_DEPLOY_ACTIVE
+        self.current_state = ClawState.CLAW_DEPLOYED
     
-    elif self.current_state == ClawState.CLAW_DEPLOY_ACTIVE:
+    elif self.current_state == ClawState.CLAW_DEPLOYED:
       if not self.ball_infrared.get():
         self.left_grab.set(ctre.ControlMode.PercentOutput, 0.0)
         self.right_grab.set(ctre.ControlMode.PercentOutput, 0.0)
