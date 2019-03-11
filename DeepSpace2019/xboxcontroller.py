@@ -1,6 +1,7 @@
 from wpilib import Joystick
 from wpilib.buttons import JoystickButton
 from wpilib.smartdashboard import SmartDashboard
+from networktables.util import ntproperty
 import wpilib
 
 from xboxdpadbutton import DPAD_BUTTON
@@ -10,10 +11,40 @@ import robotmap
 import math
 
 class XboxController(Joystick):
-    def __init__(self, port, settings):
-        super().__init__(port)
+    #Left Y
+    left_y_rate = ntproperty("/DriveSettings/left_y_rate", 0.85, persistent = True)
+    left_y_expo = ntproperty("/DriveSettings/left_y_expo", 0.6, persistent = True)
+    left_y_deadband = ntproperty("/DriveSettings/left_y_deadband", 0.02, persistent = True)
+    left_y_power = ntproperty("/DriveSettings/left_y_power", 1.5, persistent = True)
+    left_y_min = ntproperty("/DriveSettings/left_y_min", -1.0, persistent = True)
+    left_y_max = ntproperty("/DriveSettings/left_y_max", 1.0, persistent = True)
 
-        self.settings = settings
+    #Left X
+    left_x_rate = ntproperty("/DriveSettings/left_x_rate", 0.85, persistent = True)
+    left_x_expo = ntproperty("/DriveSettings/left_x_expo", 0.6, persistent = True)
+    left_x_deadband = ntproperty("/DriveSettings/left_x_deadband", 0.02, persistent = True)
+    left_x_power = ntproperty("/DriveSettings/left_x_power", 1.5, persistent = True)
+    left_x_min = ntproperty("/DriveSettings/left_x_min", -1.0, persistent = True)
+    left_x_max = ntproperty("/DriveSettings/left_x_max", 1.0, persistent = True)
+    
+    #Right Y
+    right_y_rate = ntproperty("/DriveSettings/right_y_rate", 1.0, persistent = True)
+    right_y_expo = ntproperty("/DriveSettings/right_y_expo", 0.0, persistent = True)
+    right_y_deadband = ntproperty("/DriveSettings/right_y_deadband", 0.1, persistent = True)
+    right_y_power = ntproperty("/DriveSettings/right_y_power", 1.0, persistent = True)
+    right_y_min = ntproperty("/DriveSettings/right_y_min", -1.0, persistent = True)
+    right_y_max = ntproperty("/DriveSettings/right_y_max", 1.0, persistent = True)
+
+    #Right X
+    right_x_rate = ntproperty("/DriveSettings/right_x_rate", 1.0, persistent = True)
+    right_x_expo = ntproperty("/DriveSettings/right_x_expo", 0.0, persistent = True)
+    right_x_deadband = ntproperty("/DriveSettings/right_x_deadband", 0.1, persistent = True)
+    right_x_power = ntproperty("/DriveSettings/right_x_power", 1.0, persistent = True)
+    right_x_min = ntproperty("/DriveSettings/right_x_min", -1.0, persistent = True)
+    right_x_max = ntproperty("/DriveSettings/right_x_max", 1.0, persistent = True)
+
+    def __init__(self, port):
+        super().__init__(port)
 
         self.timer = wpilib.Timer()
         self.timer.start()
@@ -32,38 +63,8 @@ class XboxController(Joystick):
         self.btnDpadLeft = JoystickButton(self, DPAD_BUTTON.DPAD_LEFT)
 
     def config(self):
-        #Left Y
-        self.left_y_rate = self.settings.left_y_rate.getEntry().getDouble(1.0)
-        self.left_y_expo = self.settings.left_y_expo.getEntry().getDouble(0.0)
-        self.left_y_deadband = self.settings.left_y_deadband.getEntry().getDouble(0.1)
-        self.left_y_power = self.settings.left_y_power.getEntry().getDouble(1.0)
-        self.left_y_min = self.settings.left_y_min.getEntry().getDouble(-1.0)
-        self.left_y_max = self.settings.left_y_max.getEntry().getDouble(1.0)
-
-        #Left X
-        self.left_x_rate = self.settings.left_x_rate.getEntry().getDouble(1.0)
-        self.left_x_expo = self.settings.left_x_expo.getEntry().getDouble(0.0)
-        self.left_x_deadband = self.settings.left_x_deadband.getEntry().getDouble(0.1)
-        self.left_x_power = self.settings.left_x_power.getEntry().getDouble(1.0)
-        self.left_x_min = self.settings.left_x_min.getEntry().getDouble(-1.0)
-        self.left_x_max = self.settings.left_x_max.getEntry().getDouble(1.0)
-        
-        #Right Y
-        self.right_y_rate = self.settings.right_y_rate.getEntry().getDouble(1.0)
-        self.right_y_expo = self.settings.right_y_expo.getEntry().getDouble(0.0)
-        self.right_y_deadband = self.settings.right_y_deadband.getEntry().getDouble(0.1)
-        self.right_y_power = self.settings.right_y_power.getEntry().getDouble(1.0)
-        self.right_y_min = self.settings.right_y_min.getEntry().getDouble(-1.0)
-        self.right_y_max = self.settings.right_y_max.getEntry().getDouble(1.0)
-
-        #Right X
-        self.right_x_rate = self.settings.right_x_rate.getEntry().getDouble(1.0)
-        self.right_x_expo = self.settings.right_x_expo.getEntry().getDouble(0.0)
-        self.right_x_deadband = self.settings.right_x_deadband.getEntry().getDouble(0.1)
-        self.right_x_power = self.settings.right_x_power.getEntry().getDouble(1.0)
-        self.right_x_min = self.settings.right_x_min.getEntry().getDouble(-1.0)
-        self.right_x_max = self.settings.right_x_max.getEntry().getDouble(1.0)
-
+        pass
+    
     def conditonAxis(self, axis, deadband, rate, expo, power, minimum, maximum):
         deadband = min(abs(deadband), 1)
         rate = max(0.1, min(abs(rate), 10))

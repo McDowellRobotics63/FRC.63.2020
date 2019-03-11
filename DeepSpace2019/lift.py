@@ -17,32 +17,28 @@ from robotenums import LiftState
 from robotenums import LiftPreset
 
 class DeepSpaceLift():
+  min_lift_position = ntproperty("/LiftSettings/MinLiftPosition", 75, persistent = True)
+  max_lift_position = ntproperty("/LiftSettings/MaxLiftPosition", 225, persistent = True)
+  max_lift_adjust_rate = ntproperty("/LiftSettings/MaxLiftAdjustRate", 10, persistent = True)
+  max_lift_adjust_value = ntproperty("/LiftSettings/MaxLiftAdjustValue", 15, persistent = True)
 
-  def __init__(self, logger, settings):
+  lift_stow_position = ntproperty("/LiftSettings/LiftStowPosition", 90, persistent = True)
+
+  lift_front_port_low = ntproperty("/LiftSettings/LiftFrontPortLow", 150, persistent = True)
+  lift_front_port_middle = ntproperty("/LiftSettings/LiftFrontPortMiddle", 175, persistent = True)
+  lift_front_port_high = ntproperty("/LiftSettings/LiftFrontPortHigh", 200, persistent = True)
+  
+  lift_side_hatch_low = ntproperty("/LiftSettings/LiftSideHatchLow", 135, persistent = True)
+  lift_side_hatch_middle = ntproperty("/LiftSettings/LiftSideHatchMiddle", 160, persistent = True)
+  lift_side_hatch_high = ntproperty("/LiftSettings/LiftSideHatchHigh", 185, persistent = True)
+
+  def __init__(self, logger):
     self.logger = logger
-    self.settings = settings
 
   def init(self):
     self.logger.info("DeepSpaceLift::init()")
     self.timer = wpilib.Timer()
     self.timer.start()
-
-    #*****************Configs************************************************************************
-    self.min_lift_position = ntproperty("/LiftSettings/MinLiftPosition", 75, persistent = True)
-    self.max_lift_position = ntproperty("/LiftSettings/MaxLiftPosition", 225, persistent = True)
-    self.max_lift_adjust_rate = ntproperty("/LiftSettings/MaxLiftAdjustRate", 10, persistent = True)
-    self.max_lift_adjust_value = ntproperty("/LiftSettings/MaxLiftAdjustValue", 15, persistent = True)
-
-    self.lift_stow_position = ntproperty("/LiftSettings/LiftStowPosition", 90, persistent = True)
-
-    self.lift_front_port_low = ntproperty("/LiftSettings/LiftFrontPortLow", 150, persistent = True)
-    self.lift_front_port_middle = ntproperty("/LiftSettings/LiftFrontPortMiddle", 175, persistent = True)
-    self.lift_front_port_high = ntproperty("/LiftSettings/LiftFrontPortHigh", 200, persistent = True)
-    
-    self.lift_side_hatch_low = ntproperty("/LiftSettings/LiftSideHatchLow", 135, persistent = True)
-    self.lift_side_hatch_middle = ntproperty("/LiftSettings/LiftSideHatchMiddle", 160, persistent = True)
-    self.lift_side_hatch_high = ntproperty("/LiftSettings/LiftSideHatchHigh", 185, persistent = True)
-    #*****************Configs************************************************************************
 
     self.last_lift_adjust_time = 0
     self.lift_adjust_timer = wpilib.Timer()
@@ -112,7 +108,7 @@ class DeepSpaceLift():
 
     SmartDashboard.putString("Lift State", self.current_state.name)
     SmartDashboard.putString("Lift Preset", self.current_lift_preset.name)
-    #SmartDashboard.putNumber("Lift Setpoint", self.lift_setpoint)
+    SmartDashboard.putNumber("Lift Setpoint", self.lift_setpoint)
     SmartDashboard.putNumber("Lift Position", lift_position)
 
   def iterate_state_machine(self, pilot_stick, copilot_stick):
