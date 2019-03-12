@@ -119,10 +119,10 @@ class DeepSpaceLift():
 
     elif self.current_state == LiftState.LIFT_DEPLOY_WAIT1:
       if self.state_timer.hasPeriodPassed(0.5):
-        self.current_state = LiftState.LIFT_DEPLOY_MOVE_TO_PRESET
+        self.current_state = LiftState.LIFT_DEPLOY_MOVE_TO_STOW
     
-    elif self.current_state == LiftState.LIFT_DEPLOY_MOVE_TO_PRESET:
-      self.lift_setpoint = self.lift_side_hatch_low
+    elif self.current_state == LiftState.LIFT_DEPLOY_MOVE_TO_STOW:
+      self.lift_setpoint = self.lift_stow_position
       if self.bang_bang_to_setpoint():
         self.current_state = LiftState.LIFT_DEPLOY_RETRACT_PNEUMATIC
 
@@ -135,12 +135,8 @@ class DeepSpaceLift():
 
     elif self.current_state == LiftState.LIFT_DEPLOY_WAIT2:
       if self.state_timer.hasPeriodPassed(0.25):
-        self.current_state = LiftState.LIFT_DEPLOY_MOVE_TO_STOW
-
-    elif self.current_state == LiftState.LIFT_DEPLOY_MOVE_TO_STOW:
-      self.lift_setpoint = self.lift_stow_position
-      if self.bang_bang_to_setpoint():
         self.current_state = LiftState.LIFT_DEPLOYED
+    
     #****************DEPLOY SEQUENCE**************************
 
     #****************DEPLOYED*********************************
