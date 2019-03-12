@@ -40,6 +40,8 @@ class DeepSpaceLift():
     self.timer = wpilib.Timer()
     self.timer.start()
 
+    self.robot_mode = RobotMode.TEST
+
     self.last_lift_adjust_time = 0
     self.lift_adjust_timer = wpilib.Timer()
     self.lift_adjust_timer.start()
@@ -85,7 +87,65 @@ class DeepSpaceLift():
   def deploy_lift(self):
     self.current_state = LiftState.LIFT_DEPLOY_BEGIN
 
+  def go_to_preset(self, preset):
+    self.lift_adjust_val = 0
+
+    if preset == LiftPreset.LIFT_PRESET_PORT_LOW:
+      self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_LOW
+      self.current_lift_preset_val = self.lift_front_port_low
+      self.lift_pneumatic_extend.set(False) 
+      self.lift_pneumatic_retract.set(True)
+      self.state_timer.stop()
+      self.state_timer.reset()
+
+    elif preset == LiftPreset.LIFT_PRESET_PORT_MIDDLE:
+      self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_MIDDLE
+      self.current_lift_preset_val = self.lift_front_port_middle
+      self.lift_pneumatic_extend.set(False) 
+      self.lift_pneumatic_retract.set(True)
+      self.state_timer.stop()
+      self.state_timer.reset()
+
+    elif preset == LiftPreset.LIFT_PRESET_PORT_HIGH:
+      self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_HIGH
+      self.current_lift_preset_val = self.lift_front_port_high
+      self.lift_pneumatic_extend.set(True) 
+      self.lift_pneumatic_retract.set(False)
+      self.state_timer.stop()
+      self.state_timer.reset()
+
+    elif preset == LiftPreset.LIFT_PRESET_HATCH_LOW:
+      self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_LOW
+      self.current_lift_preset_val = self.lift_side_hatch_low
+      self.lift_pneumatic_extend.set(False) 
+      self.lift_pneumatic_retract.set(True)
+      self.state_timer.stop()
+      self.state_timer.reset()
+
+    elif preset == LiftPreset.LIFT_PRESET_HATCH_MIDDLE:
+      self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_MIDDLE
+      self.current_lift_preset_val = self.lift_side_hatch_middle
+      self.lift_pneumatic_extend.set(False) 
+      self.lift_pneumatic_retract.set(True)
+      self.state_timer.stop()
+      self.state_timer.reset()
+
+    elif preset == LiftPreset.LIFT_PRESET_HATCH_HIGH:
+      self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_HIGH
+      self.current_lift_preset_val = self.lift_side_hatch_high
+      self.lift_pneumatic_extend.set(True) 
+      self.lift_pneumatic_retract.set(False)
+      self.state_timer.stop()
+      self.state_timer.reset()
+
+    elif preset == LiftPreset.LIFT_PRESET_STOW:
+      self.current_lift_preset = LiftPreset.LIFT_PRESET_STOW
+      self.current_lift_preset_val = self.lift_stow_position
+      self.state_timer.reset()
+      self.state_timer.start()
+
   def iterate(self, robot_mode, simulation, pilot_stick, copilot_stick):
+    self.robot_mode = robot_mode
     lift_position = self.lift_talon.getSelectedSensorPosition(0)
 
     if robot_mode == RobotMode.TEST:
@@ -122,7 +182,7 @@ class DeepSpaceLift():
         self.current_state = LiftState.LIFT_DEPLOY_MOVE_TO_STOW
     
     elif self.current_state == LiftState.LIFT_DEPLOY_MOVE_TO_STOW:
-      self.lift_setpoint = self.lift_stow_position
+      self.go_to_preset(LiftPreset.LIFT_PRESET_STOW)
       if self.bang_bang_to_setpoint():
         self.current_state = LiftState.LIFT_DEPLOY_RETRACT_PNEUMATIC
 
@@ -141,75 +201,28 @@ class DeepSpaceLift():
 
     #****************DEPLOYED*********************************
     elif self.current_state == LiftState.LIFT_DEPLOYED:
-      if copilot_stick.LeftBumper().get() and copilot_stick.X().get():
-        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_LOW:
-          self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_LOW
-          self.current_lift_preset_val = self.lift_front_port_low
-          self.lift_pneumatic_extend.set(False) 
-          self.lift_pneumatic_retract.set(True)
-          self.lift_adjust_val = 0
-          self.state_timer.stop()
-          self.state_timer.reset()
-      elif copilot_stick.LeftBumper().get() and copilot_stick.Y().get():
-        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_MIDDLE:
-          self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_MIDDLE
-          self.current_lift_preset_val = self.lift_front_port_middle
-          self.lift_pneumatic_extend.set(False) 
-          self.lift_pneumatic_retract.set(True)
-          self.lift_adjust_val = 0
-          self.state_timer.stop()
-          self.state_timer.reset()
-      elif copilot_stick.LeftBumper().get() and copilot_stick.B().get():
-        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_HIGH:
-          self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_HIGH
-          self.current_lift_preset_val = self.lift_front_port_high
-          self.lift_pneumatic_extend.set(True) 
-          self.lift_pneumatic_retract.set(False)
-          self.lift_adjust_val = 0
-          self.state_timer.stop()
-          self.state_timer.reset()
-      elif copilot_stick.RightBumper().get() and copilot_stick.X().get():
-        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_LOW:
-          self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_LOW
-          self.current_lift_preset_val = self.lift_side_hatch_low
-          self.lift_pneumatic_extend.set(False) 
-          self.lift_pneumatic_retract.set(True)
-          self.lift_adjust_val = 0
-          self.state_timer.stop()
-          self.state_timer.reset()
-      elif copilot_stick.RightBumper().get() and copilot_stick.Y().get():
-        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_MIDDLE:
-          self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_MIDDLE
-          self.current_lift_preset_val = self.lift_side_hatch_middle
-          self.lift_pneumatic_extend.set(False) 
-          self.lift_pneumatic_retract.set(True)
-          self.lift_adjust_val = 0
-          self.state_timer.stop()
-          self.state_timer.reset()
-      elif copilot_stick.RightBumper().get() and copilot_stick.B().get():
-        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_HIGH:
-          self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_HIGH
-          self.current_lift_preset_val = self.lift_side_hatch_high
-          self.lift_pneumatic_extend.set(True) 
-          self.lift_pneumatic_retract.set(False)
-          self.lift_adjust_val = 0
-          self.state_timer.stop()
-          self.state_timer.reset()
-      else:
-        if not self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW:
-          self.current_lift_preset = LiftPreset.LIFT_PRESET_STOW
-          self.current_lift_preset_val = self.lift_stow_position
-          self.lift_adjust_val = 0
-          self.state_timer.reset()
-          self.state_timer.start()
-
-      if self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW and self.state_timer.get() > 1.0:
-          self.lift_pneumatic_extend.set(False) 
-          self.lift_pneumatic_retract.set(True)
-          self.set_lift_setpoint(self.current_lift_preset_val + int(self.lift_adjust_val))
-      
-      if not self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW:
-        self.set_lift_setpoint(self.current_lift_preset_val + int(self.lift_adjust_val))
+      if self.robot_mode == RobotMode.TELE:
+        if copilot_stick.LeftBumper().get() and copilot_stick.X().get():
+          if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_LOW:
+            self.go_to_preset(LiftPreset.LIFT_PRESET_PORT_LOW)
+        elif copilot_stick.LeftBumper().get() and copilot_stick.Y().get():
+          if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_MIDDLE:
+            self.go_to_preset(LiftPreset.LIFT_PRESET_PORT_MIDDLE)
+        elif copilot_stick.LeftBumper().get() and copilot_stick.B().get():
+          if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_HIGH:
+            self.go_to_preset(LiftPreset.LIFT_PRESET_PORT_HIGH)
+        elif copilot_stick.RightBumper().get() and copilot_stick.X().get():
+          if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_LOW:
+            self.go_to_preset(LiftPreset.LIFT_PRESET_HATCH_LOW)
+        elif copilot_stick.RightBumper().get() and copilot_stick.Y().get():
+          if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_MIDDLE:
+            self.go_to_preset(LiftPreset.LIFT_PRESET_HATCH_MIDDLE)
+        elif copilot_stick.RightBumper().get() and copilot_stick.B().get():
+          if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_HIGH:
+            self.go_to_preset(LiftPreset.LIFT_PRESET_HATCH_HIGH)
+        else:
+          if not self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW:
+            self.go_to_preset(LiftPreset.LIFT_PRESET_STOW)
 
       current_lift_adjust_time = self.lift_adjust_timer.get()
       dt = current_lift_adjust_time - self.last_lift_adjust_time
@@ -228,6 +241,14 @@ class DeepSpaceLift():
     #****************DEPLOYED*********************************
 
   def bang_bang_to_setpoint(self):
+    if self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW and (self.state_timer.get() > 1.0 or self.robot_mode == RobotMode.AUTO):
+        self.lift_pneumatic_extend.set(False) 
+        self.lift_pneumatic_retract.set(True)
+        self.set_lift_setpoint(self.current_lift_preset_val + int(self.lift_adjust_val))
+    
+    if not self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW:
+      self.set_lift_setpoint(self.current_lift_preset_val + int(self.lift_adjust_val))
+
     on_target = False
     lift_position = self.lift_talon.getSelectedSensorPosition(0)
     err = abs(lift_position - self.lift_setpoint)

@@ -56,7 +56,7 @@
           },
           "4,2": {
             "size": [
-              5,
+              2,
               1
             ],
             "content": {
@@ -96,6 +96,50 @@
               "_type": "Text View",
               "_source0": "network_table:///SmartDashboard/Drive State",
               "_title": "Drive State"
+            }
+          },
+          "4,5": {
+            "size": [
+              2,
+              1
+            ],
+            "content": {
+              "_type": "Split Button Chooser",
+              "_source0": "network_table:///SmartDashboard/TargetChooser",
+              "_title": "TargetChooser"
+            }
+          },
+          "4,4": {
+            "size": [
+              2,
+              1
+            ],
+            "content": {
+              "_type": "Split Button Chooser",
+              "_source0": "network_table:///SmartDashboard/LeftRightChooser",
+              "_title": "LeftRightChooser"
+            }
+          },
+          "4,3": {
+            "size": [
+              2,
+              1
+            ],
+            "content": {
+              "_type": "Split Button Chooser",
+              "_source0": "network_table:///SmartDashboard/HabLevelChooser",
+              "_title": "HabLevelChooser"
+            }
+          },
+          "8,0": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///SmartDashboard/Auto1 State",
+              "_title": "Auto1 State"
             }
           }
         }

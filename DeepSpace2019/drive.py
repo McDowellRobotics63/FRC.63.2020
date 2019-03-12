@@ -18,6 +18,7 @@ class DeepSpaceDrive():
 
   def __init__(self, logger):
     self.logger = logger
+    self.simulation = False
 
   def init(self):
     self.logger.info("DeepSpaceDrive::init()")
@@ -48,6 +49,7 @@ class DeepSpaceDrive():
     self.drive_back_retract = wpilib.Solenoid(robotmap.PCM1_CANID, robotmap.DRIVE_REAR_RETRACT_SOLENOID)
 
   def config(self, simulation):
+    self.simulation = simulation
     self.logger.info("DeepSpaceDrive::config()")
 
     if not simulation:
@@ -130,13 +132,16 @@ class DeepSpaceDrive():
     self.drive_back_extend.set(False)
     self.drive_back_retract.set(True)
 
+  def drive_straight(self, value):
+    self.drive.arcadeDrive(value, 0, False)
+
   def iterate(self, robot_mode, pilot_stick, copilot_stick):
     pilot_x = pilot_stick.LeftStickX()
     pilot_y = pilot_stick.LeftStickY()
 
     if abs(pilot_x) > 0 or abs(pilot_y) > 0:
       self.current_state = DriveState.OPERATOR_CONTROL
-      self.drive.arcadeDrive(pilot_x, pilot_y)
+      self.drive.arcadeDrive(pilot_x, pilot_y, False)
     else:
       if self.current_state == DriveState.FOLLOW_PATH:
         self.process_auto_path()
@@ -168,8 +173,9 @@ class DeepSpaceDrive():
 
     self.leftTalonSlave.setSelectedSensorPosition(0, 0, robotmap.CAN_TIMEOUT_MS)
     self.leftTalonSlave.getSensorCollection().setQuadraturePosition(0, robotmap.CAN_TIMEOUT_MS)
-    self.leftTalonMaster.clearMotionProfileTrajectories()
-    self.leftTalonMaster.clearMotionProfileHasUnderrun(0)
+    if not self.simulation:
+      self.leftTalonMaster.clearMotionProfileTrajectories()
+      self.leftTalonMaster.clearMotionProfileHasUnderrun(0)
     if self.USING_MOTION_ARC:
       self.leftTalonMaster.set(ctre.ControlMode.MotionProfileArc, 0)
     else:
@@ -177,8 +183,9 @@ class DeepSpaceDrive():
 
     self.rightTalonSlave.setSelectedSensorPosition(0, 0, robotmap.CAN_TIMEOUT_MS)
     self.rightTalonSlave.getSensorCollection().setQuadraturePosition(0, robotmap.CAN_TIMEOUT_MS)
-    self.rightTalonMaster.clearMotionProfileTrajectories()
-    self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
+    if not self.simulation:
+      self.rightTalonMaster.clearMotionProfileTrajectories()
+      self.rightTalonMaster.clearMotionProfileHasUnderrun(0)
     if self.USING_MOTION_ARC:
       self.rightTalonMaster.set(ctre.ControlMode.MotionProfileArc, 0)
     else:
@@ -213,22 +220,25 @@ class DeepSpaceDrive():
       slot0 = 0
       slot1 = 1
       timeDur = 0
-      zeroPos = i == 0
-      isLastPoint = i == len(trajectory) - 1
+      zeroPos = bool(i == 0)
+      isLastPoint = bool(i == len(trajectory) - 1)
       lvelocity = self.inchesToUnits(leftSeg.velocity * 12) / 10
       rvelocity = self.inchesToUnits(rightSeg.velocity * 12) / 10
 
       larbitrary_feed_forward = 0
       rarbitrary_feed_forward = 0
+      aux_feed_forward = 0
 
-      self.leftTrajectory[i] = ctre.BTrajectoryPoint(lposition, lvelocity, larbitrary_feed_forward, aux_position, aux_velocity, slot0, slot1, isLastPoint, zeroPos, timeDur, self.USING_MOTION_ARC)
-      self.rightTrajectory[i] = ctre.BTrajectoryPoint(rposition, rvelocity, rarbitrary_feed_forward, aux_position, aux_velocity, slot0, slot1, isLastPoint, zeroPos, timeDur, self.USING_MOTION_ARC)
+      self.leftTrajectory[i] = ctre.BTrajectoryPoint(lposition, lvelocity, larbitrary_feed_forward, aux_position, aux_velocity, aux_feed_forward, slot0, slot1, isLastPoint, zeroPos, timeDur, self.USING_MOTION_ARC)
+      self.rightTrajectory[i] = ctre.BTrajectoryPoint(rposition, rvelocity, rarbitrary_feed_forward, aux_position, aux_velocity, aux_feed_forward, slot0, slot1, isLastPoint, zeroPos, timeDur, self.USING_MOTION_ARC)
 
     for point in self.leftTrajectory:
-      self.leftTalonMaster.pushMotionProfileTrajectory(point)
+      if not self.simulation:
+        self.leftTalonMaster.pushMotionProfileTrajectory(point)
 
     for point in self.rightTrajectory:
-      self.rightTalonMaster.pushMotionProfileTrajectory(point)
+      if not self.simulation:
+        self.rightTalonMaster.pushMotionProfileTrajectory(point)
 
     self.leftDone = False
     self.rightDone = False
@@ -240,66 +250,70 @@ class DeepSpaceDrive():
     self.current_state = DriveState.FOLLOW_PATH
 
   def process_auto_path(self):
-    self.leftMPStatus = self.leftTalonMaster.getMotionProfileStatus()
-    self.rightMPStatus = self.rightTalonMaster.getMotionProfileStatus()
-
-    '''
-    The processMotionProfileBuffer() moves trajectory points from the
-    "Top" level buffer into the "Bottom" level buffer.  This just means
-    they are moved from a buffer inside the roboRIO into a buffer inside
-    the Talon firmware itself.  The more sophisticated method is to call
-    this function on a seperate background thread which is running at a rate which
-    is twice as fast as the duration of the trajectory points.  Then in the main thread
-    check that the bottom buffer count is high enough to trigger the motion
-    profile execution to begin.  That allows the motion profile execution to
-    begin sooner.  For this test we can just wait until the top buffer has
-    been completely (mostly) emptied into the bottom buffer.
-    '''
-
-    '''Let's time this to see if it's really worth doing it the more sophisticated way'''
-    if not self.motionProfileEnabled and self.leftMPStatus.btmBufferCnt == 0 and self.rightMPStatus.btmBufferCnt == 0:
-      self.logger.info("Beginning to funnel trajectory points into the Talons")
-      self.bufferProcessingStartTime = self.timer.getFPGATimestamp()
-
-    '''
-    Don't print anything while funneling points into the Talons.
-    Printing will slow down execution and we want to measure time
-    that it took to do this operation.
-    '''
-    if self.leftMPStatus.topBufferCnt > 0 and self.leftMPStatus.btmBufferCnt < 50:
-      self.leftTalonMaster.processMotionProfileBuffer()
-
-    if self.rightMPStatus.topBufferCnt > 0 and self.rightMPStatus.btmBufferCnt < 50:
-      self.rightTalonMaster.processMotionProfileBuffer()
-
-    if not self.motionProfileEnabled and \
-       self.leftMPStatus.btmBufferCnt > 20 and \
-       self.rightMPStatus.btmBufferCnt > 20:
-      if self.USING_MOTION_ARC:
-        self.leftTalonMaster.set(ctre.ControlMode.MotionProfileArc, 1)
-        self.rightTalonMaster.set(ctre.ControlMode.MotionProfileArc, 1)
-      else:
-        self.leftTalonMaster.set(ctre.ControlMode.MotionProfile, 1)
-        self.rightTalonMaster.set(ctre.ControlMode.MotionProfile, 1)
-      self.motionProfileEnabled = True
-      self.executionStartTime = self.timer.getFPGATimestamp()
-      self.logger.info("Beginning motion profile execution")
-
-    if self.leftMPStatus.isLast and self.leftMPStatus.outputEnable == ctre.SetValueMotionProfile.Enable and not self.leftDone:
-      self.leftTalonMaster.neutralOutput()
-      self.leftTalonMaster.set(ctre.ControlMode.PercentOutput, 0)
+    if self.simulation:
       self.leftDone = True
-      self.logger.info("Left motion profile is finished executing")
-
-    if self.rightMPStatus.isLast and self.rightMPStatus.outputEnable == ctre.SetValueMotionProfile.Enable and not self.rightDone:
-      self.rightTalonMaster.neutralOutput()
-      self.rightTalonMaster.set(ctre.ControlMode.PercentOutput, 0)
       self.rightDone = True
-      self.logger.info("Right motion profile is finished executing")
+    else:
+      self.leftMPStatus = self.leftTalonMaster.getMotionProfileStatus()
+      self.rightMPStatus = self.rightTalonMaster.getMotionProfileStatus()
+
+      '''
+      The processMotionProfileBuffer() moves trajectory points from the
+      "Top" level buffer into the "Bottom" level buffer.  This just means
+      they are moved from a buffer inside the roboRIO into a buffer inside
+      the Talon firmware itself.  The more sophisticated method is to call
+      this function on a seperate background thread which is running at a rate which
+      is twice as fast as the duration of the trajectory points.  Then in the main thread
+      check that the bottom buffer count is high enough to trigger the motion
+      profile execution to begin.  That allows the motion profile execution to
+      begin sooner.  For this test we can just wait until the top buffer has
+      been completely (mostly) emptied into the bottom buffer.
+      '''
+
+      '''Let's time this to see if it's really worth doing it the more sophisticated way'''
+      if not self.motionProfileEnabled and self.leftMPStatus.btmBufferCnt == 0 and self.rightMPStatus.btmBufferCnt == 0:
+        self.logger.info("Beginning to funnel trajectory points into the Talons")
+        self.bufferProcessingStartTime = self.timer.getFPGATimestamp()
+
+      '''
+      Don't print anything while funneling points into the Talons.
+      Printing will slow down execution and we want to measure time
+      that it took to do this operation.
+      '''
+      if self.leftMPStatus.topBufferCnt > 0 and self.leftMPStatus.btmBufferCnt < 50:
+        self.leftTalonMaster.processMotionProfileBuffer()
+
+      if self.rightMPStatus.topBufferCnt > 0 and self.rightMPStatus.btmBufferCnt < 50:
+        self.rightTalonMaster.processMotionProfileBuffer()
+
+      if not self.motionProfileEnabled and \
+        self.leftMPStatus.btmBufferCnt > 20 and \
+        self.rightMPStatus.btmBufferCnt > 20:
+        if self.USING_MOTION_ARC:
+          self.leftTalonMaster.set(ctre.ControlMode.MotionProfileArc, 1)
+          self.rightTalonMaster.set(ctre.ControlMode.MotionProfileArc, 1)
+        else:
+          self.leftTalonMaster.set(ctre.ControlMode.MotionProfile, 1)
+          self.rightTalonMaster.set(ctre.ControlMode.MotionProfile, 1)
+        self.motionProfileEnabled = True
+        self.executionStartTime = self.timer.getFPGATimestamp()
+        self.logger.info("Beginning motion profile execution")
+
+      if self.leftMPStatus.isLast and self.leftMPStatus.outputEnable == ctre.SetValueMotionProfile.Enable and not self.leftDone:
+        self.leftTalonMaster.neutralOutput()
+        self.leftTalonMaster.set(ctre.ControlMode.PercentOutput, 0)
+        self.leftDone = True
+        self.logger.info("Left motion profile is finished executing")
+
+      if self.rightMPStatus.isLast and self.rightMPStatus.outputEnable == ctre.SetValueMotionProfile.Enable and not self.rightDone:
+        self.rightTalonMaster.neutralOutput()
+        self.rightTalonMaster.set(ctre.ControlMode.PercentOutput, 0)
+        self.rightDone = True
+        self.logger.info("Right motion profile is finished executing")
 
     if self.leftDone and self.rightDone:
       self.executionFinishTime = self.timer.getFPGATimestamp()
-      self.current_state == DriveState.OPERATOR_CONTROL
+      self.current_state = DriveState.OPERATOR_CONTROL
 
   def unitsToInches(self, units):
     return units * robotmap.WHEEL_CIRCUMFERENCE / robotmap.DRIVE_ENCODER_COUNTS_PER_REV

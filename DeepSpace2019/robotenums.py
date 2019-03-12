@@ -54,3 +54,16 @@ class LiftPreset(Enum):
   LIFT_PRESET_HATCH_LOW = 5
   LIFT_PRESET_HATCH_MIDDLE = 6
   LIFT_PRESET_HATCH_HIGH = 7
+
+class TargetHeight(Enum):
+  LOW = 1
+  MIDDLE = 2
+  HIGH = 3
+
+class RightLeft(Enum):
+  RIGHT = 1
+  LEFT = 2
+
+class HabLevel(Enum):
+  LEVEL1 = 1
+  LEVEL2 = 2
