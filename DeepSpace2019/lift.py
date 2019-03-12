@@ -149,6 +149,8 @@ class DeepSpaceLift():
         if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_LOW:
           self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_LOW
           self.current_lift_preset_val = self.lift_front_port_low
+          self.lift_pneumatic_extend.set(False) 
+          self.lift_pneumatic_retract.set(True)
           self.lift_adjust_val = 0
           self.state_timer.stop()
           self.state_timer.reset()
@@ -156,6 +158,8 @@ class DeepSpaceLift():
         if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_MIDDLE:
           self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_MIDDLE
           self.current_lift_preset_val = self.lift_front_port_middle
+          self.lift_pneumatic_extend.set(False) 
+          self.lift_pneumatic_retract.set(True)
           self.lift_adjust_val = 0
           self.state_timer.stop()
           self.state_timer.reset()
@@ -163,6 +167,8 @@ class DeepSpaceLift():
         if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_HIGH:
           self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_HIGH
           self.current_lift_preset_val = self.lift_front_port_high
+          self.lift_pneumatic_extend.set(True) 
+          self.lift_pneumatic_retract.set(False)
           self.lift_adjust_val = 0
           self.state_timer.stop()
           self.state_timer.reset()
@@ -170,6 +176,8 @@ class DeepSpaceLift():
         if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_LOW:
           self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_LOW
           self.current_lift_preset_val = self.lift_side_hatch_low
+          self.lift_pneumatic_extend.set(False) 
+          self.lift_pneumatic_retract.set(True)
           self.lift_adjust_val = 0
           self.state_timer.stop()
           self.state_timer.reset()
@@ -177,6 +185,8 @@ class DeepSpaceLift():
         if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_MIDDLE:
           self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_MIDDLE
           self.current_lift_preset_val = self.lift_side_hatch_middle
+          self.lift_pneumatic_extend.set(False) 
+          self.lift_pneumatic_retract.set(True)
           self.lift_adjust_val = 0
           self.state_timer.stop()
           self.state_timer.reset()
@@ -184,6 +194,8 @@ class DeepSpaceLift():
         if not self.current_lift_preset == LiftPreset.LIFT_PRESET_HATCH_HIGH:
           self.current_lift_preset = LiftPreset.LIFT_PRESET_HATCH_HIGH
           self.current_lift_preset_val = self.lift_side_hatch_high
+          self.lift_pneumatic_extend.set(True) 
+          self.lift_pneumatic_retract.set(False)
           self.lift_adjust_val = 0
           self.state_timer.stop()
           self.state_timer.reset()
@@ -195,8 +207,12 @@ class DeepSpaceLift():
           self.state_timer.reset()
           self.state_timer.start()
 
-      if not self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW or \
-         (self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW and self.state_timer.get() > 1.0):
+      if self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW and self.state_timer.get() > 1.0:
+          self.lift_pneumatic_extend.set(False) 
+          self.lift_pneumatic_retract.set(True)
+          self.set_lift_setpoint(self.current_lift_preset_val + int(self.lift_adjust_val))
+      
+      if not self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW:
         self.set_lift_setpoint(self.current_lift_preset_val + int(self.lift_adjust_val))
 
       current_lift_adjust_time = self.lift_adjust_timer.get()
