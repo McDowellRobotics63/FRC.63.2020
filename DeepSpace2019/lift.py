@@ -148,6 +148,11 @@ class DeepSpaceLift():
     self.robot_mode = robot_mode
     lift_position = self.lift_talon.getSelectedSensorPosition(0)
 
+    if lift_position > self.lift_stow_position + 5:
+      SmartDashboard.putBoolean("Creep", True)
+    else:
+      SmartDashboard.putBoolean("Creep", False)
+
     if robot_mode == RobotMode.TEST:
       #need to check these separately so we don't disable the mechanism completely if we end up one tick outside our allowable range
       if lift_position > self.min_lift_position or lift_position < self.max_lift_position:

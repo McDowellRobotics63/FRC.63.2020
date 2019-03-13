@@ -2,6 +2,7 @@ from wpilib import Joystick
 from wpilib.buttons import JoystickButton
 from wpilib.smartdashboard import SmartDashboard
 from networktables.util import ntproperty
+
 import wpilib
 
 from xboxdpadbutton import DPAD_BUTTON
@@ -44,6 +45,20 @@ class XboxController(Joystick):
     right_x_min = ntproperty("/DriveSettings/right_x_min", -1.0, persistent = True)
     right_x_max = ntproperty("/DriveSettings/right_x_max", 1.0, persistent = True)
 
+    creep_x_rate = ntproperty("/DriveSettings/creep_x_rate", 0.6, persistent = True)
+    creep_x_expo = ntproperty("/DriveSettings/creep_x_expo", 0.6, persistent = True)
+    creep_x_deadband = ntproperty("/DriveSettings/creep_x_deadband", 0.02, persistent = True)
+    creep_x_power = ntproperty("/DriveSettings/creep_x_power", 1.5, persistent = True)
+    creep_x_min = ntproperty("/DriveSettings/creep_x_min", -1.0, persistent = True)
+    creep_x_max = ntproperty("/DriveSettings/creep_x_max", 1.0, persistent = True)
+
+    creep_y_rate = ntproperty("/DriveSettings/creep_y_rate", 0.6, persistent = True)
+    creep_y_expo = ntproperty("/DriveSettings/creep_y_expo", 0.6, persistent = True)
+    creep_y_deadband = ntproperty("/DriveSettings/creep_y_deadband", 0.02, persistent = True)
+    creep_y_power = ntproperty("/DriveSettings/creep_y_power", 1.5, persistent = True)
+    creep_y_min = ntproperty("/DriveSettings/creep_y_min", -1.0, persistent = True)
+    creep_y_max = ntproperty("/DriveSettings/creep_y_max", 1.0, persistent = True)
+
     def __init__(self, port):
         super().__init__(port)
 
@@ -85,10 +100,20 @@ class XboxController(Joystick):
         return axis
 
     def LeftStickY(self):
-        return self.conditonAxis(-self.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), self.left_y_deadband, self.left_y_rate, self.left_y_expo, self.left_y_power, self.left_y_min, self.left_y_max)
+        creep_mode = SmartDashboard.getBoolean("Creep", False)
+
+        if creep_mode:
+            return self.conditonAxis(-self.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), self.creep_y_deadband, self.creep_y_rate, self.creep_y_expo, self.creep_y_power, self.creep_y_min, self.creep_y_max)
+        else:
+            return self.conditonAxis(-self.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), self.left_y_deadband, self.left_y_rate, self.left_y_expo, self.left_y_power, self.left_y_min, self.left_y_max)
 
     def LeftStickX(self):
-        return self.conditonAxis(self.getRawAxis(robotmap.XBOX_LEFT_X_AXIS), self.left_x_deadband, self.left_x_rate, self.left_x_expo, self.left_x_power, self.left_x_min, self.left_x_max)
+        creep_mode = SmartDashboard.getBoolean("Creep", False)
+
+        if creep_mode:
+            return self.conditonAxis(self.getRawAxis(robotmap.XBOX_LEFT_X_AXIS), self.creep_x_deadband, self.creep_x_rate, self.creep_x_expo, self.creep_x_power, self.creep_x_min, self.creep_x_max)
+        else:
+            return self.conditonAxis(self.getRawAxis(robotmap.XBOX_LEFT_X_AXIS), self.left_x_deadband, self.left_x_rate, self.left_x_expo, self.left_x_power, self.left_x_min, self.left_x_max)
 
     def RightStickY(self):
         return self.conditonAxis(-self.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS), self.right_y_deadband, self.right_y_rate, self.right_y_expo, self.right_y_power, self.right_y_min, self.right_y_max)
