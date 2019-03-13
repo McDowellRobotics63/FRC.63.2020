@@ -2,7 +2,7 @@ from wpilib import Joystick
 from wpilib.buttons import JoystickButton
 from wpilib.smartdashboard import SmartDashboard
 from networktables.util import ntproperty
-from networktables import NetworkTables
+
 import wpilib
 
 from xboxdpadbutton import DPAD_BUTTON
@@ -79,8 +79,7 @@ class XboxController(Joystick):
         self.btnDpadLeft = XboxDPadButton(self, DPAD_BUTTON.DPAD_LEFT)
 
     def config(self):
-        self.lift_settings_table = NetworkTables.getTable('LiftSettings')
-        self.lift_stow_position = self.lift_settings_table.getEntry("LiftStowPosition")
+        pass
     
     def conditonAxis(self, axis, deadband, rate, expo, power, minimum, maximum):
         deadband = min(abs(deadband), 1)
@@ -101,16 +100,17 @@ class XboxController(Joystick):
         return axis
 
     def LeftStickY(self):
-        lift_position = SmartDashboard.getNumber("Lift Position", 0)
+        creep_mode = SmartDashboard.getBoolean("Creep", False)
 
-        if lift_position > self.lift_stow_position.get() + 5:
+        if creep_mode:
             return self.conditonAxis(-self.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), self.creep_y_deadband, self.creep_y_rate, self.creep_y_expo, self.creep_y_power, self.creep_y_min, self.creep_y_max)
         else:
             return self.conditonAxis(-self.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), self.left_y_deadband, self.left_y_rate, self.left_y_expo, self.left_y_power, self.left_y_min, self.left_y_max)
 
     def LeftStickX(self):
-        lift_position = SmartDashboard.getNumber("Lift Position", 0)
-        if lift_position > self.lift_stow_position.get() + 5:
+        creep_mode = SmartDashboard.getBoolean("Creep", False)
+
+        if creep_mode:
             return self.conditonAxis(self.getRawAxis(robotmap.XBOX_LEFT_X_AXIS), self.creep_x_deadband, self.creep_x_rate, self.creep_x_expo, self.creep_x_power, self.creep_x_min, self.creep_x_max)
         else:
             return self.conditonAxis(self.getRawAxis(robotmap.XBOX_LEFT_X_AXIS), self.left_x_deadband, self.left_x_rate, self.left_x_expo, self.left_x_power, self.left_x_min, self.left_x_max)
