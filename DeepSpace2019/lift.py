@@ -32,6 +32,8 @@ class DeepSpaceLift():
   lift_side_hatch_middle = ntproperty("/LiftSettings/LiftSideHatchMiddle", 160, persistent = True)
   lift_side_hatch_high = ntproperty("/LiftSettings/LiftSideHatchHigh", 185, persistent = True)
 
+  on_target = False
+
   def __init__(self, logger):
     self.logger = logger
 
@@ -254,19 +256,19 @@ class DeepSpaceLift():
     if not self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW:
       self.set_lift_setpoint(self.current_lift_preset_val + int(self.lift_adjust_val))
 
-    on_target = False
     lift_position = self.lift_talon.getSelectedSensorPosition(0)
     err = abs(lift_position - self.lift_setpoint)
     if  err > 1:
+      self.on_target = False
       if lift_position < self.lift_setpoint:
         self.lift_talon.set(ControlMode.PercentOutput, 1.0)
       elif lift_position > self.lift_setpoint:
         self.lift_talon.set(ControlMode.PercentOutput, -1.0)
     else:
       self.lift_talon.set(ControlMode.PercentOutput, 0.0)
-      on_target = True
+      self.on_target = True
 
-    return on_target
+    return self.on_target
 
   def disable(self):
     self.logger.info("DeepSpaceLift::disable()")

@@ -18,6 +18,7 @@ from auto2 import Auto2
 from auto3 import Auto3
 
 from robotenums import RobotMode
+from robotenums import LiftPreset
 
 class MyRobot(wpilib.TimedRobot):
 
@@ -104,6 +105,13 @@ class MyRobot(wpilib.TimedRobot):
     self.lift.iterate(self.robot_mode, self.isSimulation(), self.pilot_stick, self.copilot_stick)
     self.claw.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
     self.harpoon.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+
+    if self.lift.current_lift_preset != LiftPreset.LIFT_PRESET_STOW and self.lift.on_target:
+      self.pilot_stick.pulseRumble(1.0)
+      self.copilot_stick.pulseRumble(1.0)
+    else:
+      self.pilot_stick.stopRumble()
+      self.copilot_stick.stopRumble()
 
   def disabledInit(self):
     self.robot_mode = RobotMode.DISABLED

@@ -97,7 +97,7 @@ class Auto1():
             self.state = 7
 
         elif self.state == 7:
-            if self.robot.lift.bang_bang_to_setpoint():
+            if self.robot.lift.on_target:
                 self.state = 8
 
         elif self.state == 8:
@@ -123,7 +123,7 @@ class Auto1():
             self.state = 13
 
         elif self.state == 13:
-            if self.robot.lift.bang_bang_to_setpoint():
+            if self.robot.lift.on_target:
                 self.state = 14
 
         elif self.state == 14:

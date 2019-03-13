@@ -165,5 +165,8 @@ class XboxController(Joystick):
         elif self.timer.get() > pulse_time and self.timer.get() < (time + pulse_time):
             self.setRumble(Joystick.RumbleType.kRightRumble, 0)
         elif self.timer.get() > (time + pulse_time):
-            self.timer.reset()    
+            self.timer.reset()
             self.timer.start()
+
+    def stopRumble(self):
+        self.setRumble(Joystick.RumbleType.kRightRumble, 0)
