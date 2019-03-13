@@ -44,6 +44,20 @@ class XboxController(Joystick):
     right_x_min = ntproperty("/DriveSettings/right_x_min", -1.0, persistent = True)
     right_x_max = ntproperty("/DriveSettings/right_x_max", 1.0, persistent = True)
 
+    creep_x_rate = ntproperty("/DriveSettings/creep_x_rate", 0.6, persistent = True)
+    creep_x_expo = ntproperty("/DriveSettings/creep_x_expo", 0.6, persistent = True)
+    creep_x_deadband = ntproperty("/DriveSettings/creep_x_deadband", 0.02, persistent = True)
+    creep_x_power = ntproperty("/DriveSettings/creep_x_power", 1.5, persistent = True)
+    creep_x_min = ntproperty("/DriveSettings/creep_x_min", -1.0, persistent = True)
+    creep_x_max = ntproperty("/DriveSettings/creep_x_max", 1.0, persistent = True)
+
+    creep_y_rate = ntproperty("/DriveSettings/creep_y_rate", 0.6, persistent = True)
+    creep_y_expo = ntproperty("/DriveSettings/creep_y_expo", 0.6, persistent = True)
+    creep_y_deadband = ntproperty("/DriveSettings/creep_y_deadband", 0.02, persistent = True)
+    creep_y_power = ntproperty("/DriveSettings/creep_y_power", 1.5, persistent = True)
+    creep_y_min = ntproperty("/DriveSettings/creep_y_min", -1.0, persistent = True)
+    creep_y_max = ntproperty("/DriveSettings/creep_y_max", 1.0, persistent = True)
+
     def __init__(self, port):
         super().__init__(port)
 
