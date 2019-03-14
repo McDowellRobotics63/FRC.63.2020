@@ -81,11 +81,11 @@ class DeepSpaceClaw():
       return
 
     if pilot_stick.LeftBumper().get():
-      self.claw_close.set(True)
-      self.claw_open.set(False)
-    elif pilot_stick.RightBumper().get():
       self.claw_close.set(False)
       self.claw_open.set(True)
+    elif pilot_stick.RightBumper().get():
+      self.claw_close.set(True)
+      self.claw_open.set(False)
 
     if pilot_stick.A().get():
       self.shoot_ball()
