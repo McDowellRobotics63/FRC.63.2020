@@ -4,6 +4,7 @@ import wpilib
 from wpilib import Solenoid
 from wpilib import SmartDashboard
 from networktables.util import ntproperty
+from wpilib import sendablechooser
 
 import robotmap
 
@@ -67,6 +68,12 @@ class DeepSpaceLift():
 
     self.lift_pneumatic_extend.set(False)
     self.lift_pneumatic_retract.set(True)
+
+    self.test_lift_pneumatic = sendablechooser.SendableChooser()
+    self.test_lift_pneumatic.setDefaultOption("Retract", 1)
+    self.test_lift_pneumatic.addOption("Extend", 2)
+
+    SmartDashboard.putData("TestLiftPneumatic", self.test_lift_pneumatic)
 
   def config(self, simulation):
     self.logger.info("DeepSpaceLift::config()")
@@ -156,6 +163,15 @@ class DeepSpaceLift():
       SmartDashboard.putBoolean("Creep", False)
 
     if robot_mode == RobotMode.TEST:
+
+      if self.test_lift_pneumatic.getSelected() == 1:
+        self.lift_pneumatic_extend.set(False)
+        self.lift_pneumatic_retract.set(True)
+      else:
+        self.lift_pneumatic_extend.set(True)
+        self.lift_pneumatic_retract.set(False)
+
+
       #need to check these separately so we don't disable the mechanism completely if we end up one tick outside our allowable range
       if lift_position > self.min_lift_position or lift_position < self.max_lift_position:
         self.lift_talon.set(ControlMode.PercentOutput, -1.0 * pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))

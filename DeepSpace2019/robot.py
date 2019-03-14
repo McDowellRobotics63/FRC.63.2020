@@ -41,6 +41,8 @@ class MyRobot(wpilib.TimedRobot):
     
     if self.isReal():
       self.compressor = Compressor(robotmap.PCM2_CANID)
+      self.compressor.setClosedLoopControl(True)
+      self.logger.info("Compressor enabled: " + str(self.compressor.enabled()))
     else:
       self.compressor = Compressor(0)
 
@@ -61,6 +63,9 @@ class MyRobot(wpilib.TimedRobot):
 
 
   def autonomousInit(self):
+    self.compressor.setClosedLoopControl(True)
+    self.logger.info("autonomousInit Compressor enabled: " + str(self.compressor.enabled()))
+
     self.robot_mode = RobotMode.AUTO
     self.logger.info("MODE: autonomousInit")
 
@@ -87,6 +92,9 @@ class MyRobot(wpilib.TimedRobot):
     self.harpoon.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
   
   def teleopInit(self):
+    self.compressor.setClosedLoopControl(True)
+    self.logger.info("teleopInit Compressor enabled: " + str(self.compressor.enabled()))
+
     self.robot_mode = RobotMode.TELE
     self.logger.info("MODE: teleopInit")
     self.pilot_stick.config()
