@@ -124,6 +124,7 @@ class DeepSpaceHarpoon():
     #*****************STOW SEQUENCE*****************************
 
   def test_mode(self):
+    SmartDashboard.putNumber("IRVolts", self.ir_harpoon.getVoltage())
     if self.test_harpoon_outside.getSelected() == 1:
       self.harpoon_outside_extend.set(False)
       self.harpoon_outside_retract.set(True)

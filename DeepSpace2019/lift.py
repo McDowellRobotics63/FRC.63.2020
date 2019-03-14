@@ -148,7 +148,7 @@ class DeepSpaceLift():
 
   def iterate(self, robot_mode, simulation, pilot_stick, copilot_stick):
     self.robot_mode = robot_mode
-    lift_position = self.lift_talon.getSelectedSensorPosition(0)
+    lift_position = self.lift_talon.getAnalogInRaw()
 
     if lift_position > self.lift_stow_position + 5:
       SmartDashboard.putBoolean("Creep", True)
