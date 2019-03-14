@@ -141,6 +141,77 @@
               "_source0": "network_table:///SmartDashboard/Auto1 State",
               "_title": "Auto1 State"
             }
+          },
+          "6,1": {
+            "size": [
+              2,
+              1
+            ],
+            "content": {
+              "_type": "Boolean Box",
+              "_source0": "network_table:///SmartDashboard/Creep",
+              "_title": "Creep",
+              "Colors/Color when true": "#7CFC00FF",
+              "Colors/Color when false": "#8B0000FF"
+            }
+          },
+          "10,0": {
+            "size": [
+              2,
+              1
+            ],
+            "content": {
+              "_type": "Split Button Chooser",
+              "_source0": "network_table:///SmartDashboard/TestHarpoonOutside",
+              "_title": "TestHarpoonOutside"
+            }
+          },
+          "10,1": {
+            "size": [
+              2,
+              1
+            ],
+            "content": {
+              "_type": "Split Button Chooser",
+              "_source0": "network_table:///SmartDashboard/TestHarpoonCenter",
+              "_title": "TestHarpoonCenter"
+            }
+          },
+          "10,2": {
+            "size": [
+              2,
+              1
+            ],
+            "content": {
+              "_type": "Split Button Chooser",
+              "_source0": "network_table:///SmartDashboard/TestWrist",
+              "_title": "TestWrist"
+            }
+          },
+          "10,3": {
+            "size": [
+              2,
+              1
+            ],
+            "content": {
+              "_type": "Split Button Chooser",
+              "_source0": "network_table:///SmartDashboard/TestClaw",
+              "_title": "TestClaw"
+            }
+          },
+          "10,4": {
+            "size": [
+              2,
+              1
+            ],
+            "content": {
+              "_type": "Number Slider",
+              "_source0": "network_table:///SmartDashboard/TestClawMotors",
+              "_title": "TestClawMotors",
+              "Slider Settings/Min": -1.0,
+              "Slider Settings/Max": 1.0,
+              "Slider Settings/Block increment": 0.0625
+            }
           }
         }
       }
@@ -721,6 +792,138 @@
               "_type": "Text View",
               "_source0": "network_table:///DriveSettings/left_y_power",
               "_title": "left_y_power"
+            }
+          },
+          "5,0": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_y_rate",
+              "_title": "creep_y_rate"
+            }
+          },
+          "5,4": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_y_expo",
+              "_title": "creep_y_expo"
+            }
+          },
+          "5,1": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_y_deadband",
+              "_title": "creep_y_deadband"
+            }
+          },
+          "5,5": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_y_power",
+              "_title": "creep_y_power"
+            }
+          },
+          "5,2": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_y_min",
+              "_title": "creep_y_min"
+            }
+          },
+          "5,3": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_y_max",
+              "_title": "creep_y_max"
+            }
+          },
+          "6,0": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_x_rate",
+              "_title": "creep_x_rate"
+            }
+          },
+          "6,4": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_x_expo",
+              "_title": "creep_x_expo"
+            }
+          },
+          "6,1": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_x_deadband",
+              "_title": "creep_x_deadband"
+            }
+          },
+          "6,5": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_x_power",
+              "_title": "creep_x_power"
+            }
+          },
+          "6,2": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_x_min",
+              "_title": "creep_x_min"
+            }
+          },
+          "6,3": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///DriveSettings/creep_x_max",
+              "_title": "creep_x_max"
             }
           }
         }
