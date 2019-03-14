@@ -103,9 +103,9 @@ class XboxController(Joystick):
         creep_mode = SmartDashboard.getBoolean("Creep", False)
 
         if creep_mode:
-            return self.conditonAxis(-self.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), self.creep_y_deadband, self.creep_y_rate, self.creep_y_expo, self.creep_y_power, self.creep_y_min, self.creep_y_max)
+            return self.conditonAxis(self.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), self.creep_y_deadband, self.creep_y_rate, self.creep_y_expo, self.creep_y_power, self.creep_y_min, self.creep_y_max)
         else:
-            return self.conditonAxis(-self.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), self.left_y_deadband, self.left_y_rate, self.left_y_expo, self.left_y_power, self.left_y_min, self.left_y_max)
+            return self.conditonAxis(self.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS), self.left_y_deadband, self.left_y_rate, self.left_y_expo, self.left_y_power, self.left_y_min, self.left_y_max)
 
     def LeftStickX(self):
         creep_mode = SmartDashboard.getBoolean("Creep", False)
