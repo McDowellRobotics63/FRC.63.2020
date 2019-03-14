@@ -2,6 +2,7 @@
 import wpilib
 from wpilib import SmartDashboard
 from wpilib import sendablechooser
+from wpilib import AnalogInput
 
 import math
 import robotmap
@@ -19,6 +20,8 @@ class DeepSpaceHarpoon():
     self.logger.info("DeepSpaceHarpoon::init()")
     self.timer = wpilib.Timer()
     self.timer.start()
+
+    self.ir_harpoon = AnalogInput(robotmap.IR_HARPOON)
     
     self.state_timer = wpilib.Timer()
     self.current_state = HarpoonState.HARPOON_STOWED
@@ -69,6 +72,7 @@ class DeepSpaceHarpoon():
     self.iterate_state_machine()
 
     SmartDashboard.putString("Harpoon State", self.current_state.name)
+    SmartDashboard.putNumber("IRVolts", self.ir_harpoon.getVoltage())
 
   def iterate_state_machine(self):
     #****************DEPLOY SEQUENCE****************************
