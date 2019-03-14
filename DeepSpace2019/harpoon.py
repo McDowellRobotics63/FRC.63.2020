@@ -134,9 +134,6 @@ class DeepSpaceHarpoon():
       self.harpoon_center_extend.set(True)
       self.harpoon_center_retract.set(False)
 
-
-
-
   def disable(self):
     self.logger.info("DeepSpaceHarpoon::disable()")
 
