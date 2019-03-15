@@ -80,10 +80,10 @@ class DeepSpaceClaw():
       self.test_mode()
       return
 
-    if pilot_stick.LeftBumper().get():
+    if pilot_stick.DpadLeft().get():
       self.claw_close.set(False)
       self.claw_open.set(True)
-    elif pilot_stick.RightBumper().get():
+    elif pilot_stick.DpadRight().get():
       self.claw_close.set(True)
       self.claw_open.set(False)
 

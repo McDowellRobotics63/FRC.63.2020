@@ -87,7 +87,7 @@ class DeepSpaceLift():
     self.robot_mode = robot_mode
     lift_position = self.lift_talon.getAnalogInRaw()
 
-    if lift_position > self.lift_stow_position + 30:
+    if pilot_stick.RightBumper().get():
       SmartDashboard.putBoolean("Creep", True)
     else:
       SmartDashboard.putBoolean("Creep", False)
