@@ -51,10 +51,10 @@ class DeepSpaceLift():
 
     self.state_timer = wpilib.Timer()
     self.current_state = LiftState.LIFT_START_CONFIGURATION
-    self.current_lift_preset = LiftPreset.LIFT_PRESET_STOW
-    self.current_lift_preset_val = self.lift_stow_position
+    self.current_lift_preset = LiftPreset.LIFT_PRESET_PORT_MIDDLE
+    self.current_lift_preset_val = self.lift_front_port_middle
 
-    self.lift_setpoint = self.min_lift_position
+    self.lift_setpoint = self.lift_front_port_middle
     self.lift_adjust_val = 0
 
     self.lift_talon = TalonSRX(robotmap.LIFT_CAN_ID)
@@ -157,7 +157,7 @@ class DeepSpaceLift():
     self.robot_mode = robot_mode
     lift_position = self.lift_talon.getAnalogInRaw()
 
-    if lift_position > self.lift_stow_position + 5:
+    if lift_position > self.lift_stow_position + 15:
       SmartDashboard.putBoolean("Creep", True)
     else:
       SmartDashboard.putBoolean("Creep", False)
@@ -171,7 +171,7 @@ class DeepSpaceLift():
         self.lift_pneumatic_extend.set(True)
         self.lift_pneumatic_retract.set(False)
 
-
+#      if abs(pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS)) > 0.1:
       #need to check these separately so we don't disable the mechanism completely if we end up one tick outside our allowable range
       if lift_position > self.min_lift_position or lift_position < self.max_lift_position:
         self.lift_talon.set(ControlMode.PercentOutput, -1.0 * pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
@@ -183,9 +183,12 @@ class DeepSpaceLift():
         self.lift_talon.set(ControlMode.PercentOutput, min(-1.0 * pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS), 0))
       else:
         self.lift_talon.set(ControlMode.PercentOutput, 0.0)
+
+      self.iterate_state_machine(pilot_stick, copilot_stick)
     else:
       self.iterate_state_machine(pilot_stick, copilot_stick)
 
+    SmartDashboard.putString("Lift Cmd", pilot_stick.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS))
     SmartDashboard.putString("Lift State", self.current_state.name)
     SmartDashboard.putString("Lift Preset", self.current_lift_preset.name)
     SmartDashboard.putNumber("Lift Setpoint", self.lift_setpoint)
@@ -201,7 +204,7 @@ class DeepSpaceLift():
       self.current_state = LiftState.LIFT_DEPLOY_WAIT1
 
     elif self.current_state == LiftState.LIFT_DEPLOY_WAIT1:
-      if self.state_timer.hasPeriodPassed(0.5):
+      if self.state_timer.hasPeriodPassed(2.0):
         self.current_state = LiftState.LIFT_DEPLOY_MOVE_TO_STOW
     
     elif self.current_state == LiftState.LIFT_DEPLOY_MOVE_TO_STOW:
@@ -217,14 +220,14 @@ class DeepSpaceLift():
       self.current_state = LiftState.LIFT_DEPLOY_WAIT2
 
     elif self.current_state == LiftState.LIFT_DEPLOY_WAIT2:
-      if self.state_timer.hasPeriodPassed(0.25):
+      if self.state_timer.hasPeriodPassed(1.0):
         self.current_state = LiftState.LIFT_DEPLOYED
     
     #****************DEPLOY SEQUENCE**************************
 
     #****************DEPLOYED*********************************
-    elif self.current_state == LiftState.LIFT_DEPLOYED:
-      if self.robot_mode == RobotMode.TELE:
+    elif self.current_state == LiftState.LIFT_DEPLOYED or self.robot_mode == RobotMode.TEST:
+      if self.robot_mode == RobotMode.TELE or self.robot_mode == RobotMode.TEST:
         if copilot_stick.LeftBumper().get() and copilot_stick.X().get():
           if not self.current_lift_preset == LiftPreset.LIFT_PRESET_PORT_LOW:
             self.go_to_preset(LiftPreset.LIFT_PRESET_PORT_LOW)
@@ -272,16 +275,22 @@ class DeepSpaceLift():
     if not self.current_lift_preset == LiftPreset.LIFT_PRESET_STOW:
       self.set_lift_setpoint(self.current_lift_preset_val + int(self.lift_adjust_val))
 
-    lift_position = self.lift_talon.getSelectedSensorPosition(0)
+    lift_position = self.lift_talon.getAnalogInRaw()
     err = abs(lift_position - self.lift_setpoint)
-    if  err > 1:
+    cmd = 0
+    if  err > 5:
       self.on_target = False
       if lift_position < self.lift_setpoint:
-        self.lift_talon.set(ControlMode.PercentOutput, 1.0)
+        cmd = min(max(0.7, 0.2*err), 1.0)
+        SmartDashboard.putString("Lift Cmd", cmd)
+        self.lift_talon.set(ControlMode.PercentOutput, cmd)
       elif lift_position > self.lift_setpoint:
-        self.lift_talon.set(ControlMode.PercentOutput, -1.0)
+        cmd = max(min(-0.5, -0.16*err), -1.0)
+        SmartDashboard.putString("Lift Cmd", cmd)
+        self.lift_talon.set(ControlMode.PercentOutput, cmd)
     else:
       self.lift_talon.set(ControlMode.PercentOutput, 0.0)
+      SmartDashboard.putString("Lift Cmd", 0)
       self.on_target = True
 
     return self.on_target
