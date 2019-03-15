@@ -162,8 +162,6 @@ class DeepSpaceDrive():
       self.drive_back_extend.set(False)
       self.drive_back_retract.set(True)
 
-    SmartDashboard.putString("Drive State", self.current_state.name)
-
   def disable(self):
     self.logger.info("DeepSpaceDrive::disable()")
   
