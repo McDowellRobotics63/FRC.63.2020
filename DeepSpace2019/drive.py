@@ -69,7 +69,7 @@ class DeepSpaceDrive():
       talon.configPeakOutputReverse(-1.0, robotmap.CAN_TIMEOUT_MS)
       talon.enableVoltageCompensation(True)
       talon.configVoltageCompSaturation(11.5, robotmap.CAN_TIMEOUT_MS)
-      talon.configOpenLoopRamp(0.125, robotmap.CAN_TIMEOUT_MS)
+      talon.configOpenLoopRamp(0.5, robotmap.CAN_TIMEOUT_MS)
 
     self.leftTalonMaster.setInverted(False)
     self.leftTalonSlave.setInverted(False)
