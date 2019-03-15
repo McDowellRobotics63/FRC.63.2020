@@ -69,6 +69,29 @@ class MyRobot(wpilib.TimedRobot):
     self.claw.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
     self.harpoon.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
 
+  def autonomousInit(self):
+    self.compressor.setClosedLoopControl(True)
+    self.logger.info("teleopInit Compressor enabled: " + str(self.compressor.enabled()))
+
+    self.robot_mode = RobotMode.TELE
+    self.logger.info("MODE: autonomousInit")
+    self.pilot_stick.config()
+    self.copilot_stick.config()
+    self.drive.config(self.isSimulation())
+    self.lift.config(self.isSimulation())
+    self.claw.config(self.isSimulation())
+    self.harpoon.config(self.isSimulation())
+
+  def autonomousPeriodic(self):
+    self.robot_mode = RobotMode.TELE
+    if self.timer.hasPeriodPassed(1.0):
+      self.logger.info("MODE: autonomousPeriodic")
+
+    self.drive.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.lift.iterate(self.robot_mode, self.isSimulation(), self.pilot_stick, self.copilot_stick)
+    self.claw.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+    self.harpoon.iterate(self.robot_mode, self.pilot_stick, self.copilot_stick)
+
   def disabledInit(self):
     self.robot_mode = RobotMode.DISABLED
     self.logger.info("MODE: disabledInit")
