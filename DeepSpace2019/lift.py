@@ -75,7 +75,8 @@ class DeepSpaceLift():
     self.lift_talon.setInverted(SmartDashboard.getBoolean("motor_inverted", False))
 
     '''Closed-loop feedback config'''
-    self.lift_talon.configFeedbackNotContinuous(True)
+    if not simulation:
+      self.lift_talon.configFeedbackNotContinuous(True)
     self.lift_talon.configSelectedFeedbackCoefficient(1.0, 0, robotmap.CAN_TIMEOUT_MS)
     self.lift_talon.setSensorPhase(SmartDashboard.getBoolean("sensor_phase", False))
     self.lift_talon.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 10, robotmap.CAN_TIMEOUT_MS)
