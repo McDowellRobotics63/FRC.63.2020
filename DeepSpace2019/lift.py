@@ -49,6 +49,7 @@ class DeepSpaceLift():
     SmartDashboard.putNumber("lift_position", self.lift_talon.getSelectedSensorPosition(0))
     SmartDashboard.putNumber("lift_velocity", self.lift_talon.getSelectedSensorVelocity(0))
     SmartDashboard.putNumber("percent_output", self.lift_talon.getMotorOutputPercent())
+    SmartDashboard.putNumber("amps_output", self.lift_talon.getOutputCurrent())
 
     self.lift_mode = sendablechooser.SendableChooser()
     self.lift_mode.setDefaultOption("OpenLoop", 1)
@@ -119,6 +120,12 @@ class DeepSpaceLift():
       self.lift_talon.set(ControlMode.PercentOutput, -pilot_stick.getRawAxis(robotmap.XBOX_LEFT_Y_AXIS))
     else:
       self.setLiftSetpoint(int(SmartDashboard.getNumber("lift_setpoint", robotmap.MIN_POSITION_LIFT)))
+
+    SmartDashboard.putNumber("lift_raw", self.lift_talon.getAnalogInRaw())
+    SmartDashboard.putNumber("lift_position", self.lift_talon.getSelectedSensorPosition(0))
+    SmartDashboard.putNumber("lift_velocity", self.lift_talon.getSelectedSensorVelocity(0))
+    SmartDashboard.putNumber("percent_output", self.lift_talon.getMotorOutputPercent())
+    SmartDashboard.putNumber("amps_output", self.lift_talon.getOutputCurrent())
 
   def disable(self):
     self.logger.info("DeepSpaceLift::disable()")
