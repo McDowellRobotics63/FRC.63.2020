@@ -60,9 +60,9 @@ class DeepSpaceLift():
     self.lift_talon.config_kI(0, robotmap.GAIN_I_LIFT, robotmap.CAN_TIMEOUT_MS)
     self.lift_talon.config_kD(0, robotmap.GAIN_D_LIFT, robotmap.CAN_TIMEOUT_MS)
     self.lift_talon.config_IntegralZone(0, robotmap.GAIN_IZONE_LIFT, robotmap.CAN_TIMEOUT_MS)
-    if not simulation:
-      self.lift_talon.configMotionCruiseVelocity(robotmap.CRUISE_VELOCITY_LIFT, robotmap.CAN_TIMEOUT_MS)
-      self.lift_talon.configMotionAcceleration(robotmap.ACCELERATION_LIFT, robotmap.CAN_TIMEOUT_MS)
+
+    self.lift_talon.configMotionCruiseVelocity(robotmap.CRUISE_VELOCITY_LIFT, robotmap.CAN_TIMEOUT_MS)
+    self.lift_talon.configMotionAcceleration(robotmap.ACCELERATION_LIFT, robotmap.CAN_TIMEOUT_MS)
 
   def iterate(self, test_mode, pilot_stick, copilot_stick):
     if self.timer.hasPeriodPassed(0.5):
