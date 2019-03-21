@@ -2,6 +2,8 @@
 import wpilib
 
 import robotmap
+import statistics
+import numpy
 
 from wpilib import Compressor
 from wpilib import sendablechooser
@@ -104,6 +106,17 @@ class MyRobot(wpilib.TimedRobot):
     self.robot_mode = RobotMode.DISABLED
     if self.timer.hasPeriodPassed(1.0):
       self.logger.info("MODE: disabledPeriodic")
+  
+    self.harpoon.ir_data.append(self.harpoon.ir_harpoon.getVoltage())
+
+    if len(self.harpoon.ir_data) == 10:
+      self.harpoon.ir_data.sort()
+      med = statistics.median(self.harpoon.ir_data)
+      val = numpy.interp(med, self.harpoon.ir_loookup.keys(), self.harpoon.ir_loookup.values())
+      SmartDashboard.putNumber("IRVolts", val)
+      self.harpoon.ir_data.clear()
+      
+      
 
   def testInit(self):
     self.robot_mode = RobotMode.TEST

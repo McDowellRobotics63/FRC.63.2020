@@ -5,10 +5,13 @@ from wpilib import sendablechooser
 from wpilib import AnalogInput
 
 import math
+import statistics
 import robotmap
 
 from robotenums import HarpoonState
 from robotenums import RobotMode
+
+import numpy
 
 class DeepSpaceHarpoon():
   HARPOON_PNUEMATIC_WAIT_TIME = 0.25
@@ -20,6 +23,17 @@ class DeepSpaceHarpoon():
     self.logger.info("DeepSpaceHarpoon::init()")
     self.timer = wpilib.Timer()
     self.timer.start()
+
+    self.ir_loookup = {
+      0.4: 31.5,
+      0.45: 27.5,
+      0.5: 23.6,
+      0.6: 19.6,
+      0.75: 15.75,
+      0.9: 11.8,
+      1.25: 7.87,
+      2.25: 3.93
+    }
 
     self.ir_harpoon = AnalogInput(robotmap.IR_HARPOON)
     
@@ -49,6 +63,8 @@ class DeepSpaceHarpoon():
     SmartDashboard.putData("TestHarpoonOutside", self.test_harpoon_outside)
     SmartDashboard.putData("TestHarpoonCenter", self.test_harpoon_center)
 
+    self.ir_data = []
+
   def config(self, simulation):
     self.logger.info("DeepSpaceHarpoon::config()")
 
@@ -72,7 +88,17 @@ class DeepSpaceHarpoon():
     self.iterate_state_machine()
 
     SmartDashboard.putString("Harpoon State", self.current_state.name)
-    SmartDashboard.putNumber("IRVolts", self.ir_harpoon.getVoltage())
+  
+    self.ir_data.append(self.ir_harpoon.getVoltage())
+
+    if len(self.ir_data) == 10:
+      self.ir_data.sort()
+      med = statistics.median(self.ir_data)
+      val = numpy.interp(med, self.ir_loookup.keys(), self.ir_loookup.values())
+      SmartDashboard.putNumber("IRVolts", val)
+      self.ir_data.clear()
+      
+  
 
   def iterate_state_machine(self):
     #****************DEPLOY SEQUENCE****************************
