@@ -19,10 +19,6 @@ class ColorWheel():
         self.colorWheelExtend.set(False)
         self.colorWheelRetract.set(True)
 
-        self.red = 100
-        self.green = 100
-        self.blue = 100
-
     def DeployWheelArm(self):
         self.colorWheelExtend.set(True)
         self.colorWheelRetract.set(False)

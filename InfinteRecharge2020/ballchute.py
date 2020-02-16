@@ -5,6 +5,7 @@ import math
 import wpilib
 from wpilib import Solenoid
 from wpilib import Spark
+from wpilib import Talon
 from xboxcontroller import XBox
 
 #from robotenums import BallRakeState
@@ -22,7 +23,7 @@ class BallChute():
 
         self.ballTickler = Spark(robotmap.BALL_TICKLER_ID)
         self.bottomIntake = Spark(robotmap.BOTTOM_INTAKE_ID)
-        self.rakeMotor = Spark(robotmap.RAKE_ID)
+        self.rakeMotor = Talon(robotmap.RAKE_ID)
 
         self.ballRakeExtend.set(False)
         self.ballRakeRetract.set(True)
