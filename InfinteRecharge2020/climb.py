@@ -1,5 +1,6 @@
 import wpilib
 from wpilib import Solenoid
+from wpilib import Encoder
 import ctre
 
 import robotmap
@@ -11,6 +12,7 @@ class Climb():
         self.climbRetract = Solenoid(robotmap.PCM_ID, robotmap.CLIMB_RETRACT_SOLENOID)
 
         self.climbMotor = ctre.WPI_TalonSRX(robotmap.LIFT_WINCH_ID)
+        self.climbEncoder = Encoder()
 
         self.climbExtend.set(False)
         self.climbRetract.set(True)
