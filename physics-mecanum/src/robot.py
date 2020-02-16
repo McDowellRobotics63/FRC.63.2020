@@ -101,16 +101,8 @@ class MyRobot(wpilib.TimedRobot):
             talon.config_kD(0, 0.0, 25)
             talon.config_kF(0, 0.35, 25)
 
-            talon.config_kP(1, 7.0, 25)
-            talon.config_kI(1, 0.0, 25)
-            talon.config_kD(1, 8.0, 25)
-            talon.config_kF(1, 0.0, 25)
-
             talon.selectProfileSlot(0, 0)
             talon.configClosedLoopPeakOutput(0, 1.0, 25)
-
-            talon.selectProfileSlot(1, 1)
-            talon.configClosedLoopPeakOutput(1, 1.0, 25)
 
             talon.configSelectedFeedbackSensor(ctre.FeedbackDevice.RemoteSensor0, 0, 25)
             talon.configSelectedFeedbackSensor(ctre.FeedbackDevice.RemoteSensor1, 1, 25)
@@ -220,14 +212,14 @@ class MyRobot(wpilib.TimedRobot):
                 self.gyro.getYaw()
             )
 
-            if self.timer.get() > 1:
+            if self.timer.hasPeriodPassed(1.5):
                 if (JoystickButton(self.lstick, 3).get()):
-                    self.timer.reset()
                     self.COMPRESSOR_STATE = not self.COMPRESSOR_STATE
-                    if self.COMPRESSOR_STATE:
-                        self.compressor.start()
-                    else:
-                        self.compressor.stop()
+                    self.activate(
+                        self.compressor.start,
+                        self.compressor.stop,
+                        self.COMPRESSOR_STATE
+                    )
                 
                 #pilotstick 1
                 if JoystickButton(self.lstick, 5).get():
@@ -264,16 +256,6 @@ class MyRobot(wpilib.TimedRobot):
                         self.GEAR_PUSHER_STATE
                     )
 
-                #if JoystickButton (self.rStick, 8).get():
-                    #self.activate(
-                        #self.
-                    #)
-                
-                #self.logger.info("Gyro: " + str(self.gyro.getYaw()))
-                #self.logger.info("Front Left Motor: " + str(self.frontLeftMotor.getSelectedSensorPosition()))
-
-            #wpilib.Timer.delay(0.04)
-
 
 if __name__ == "__main__":
-    wpilib.run(MyRobot)
+    wpilib.run(MyRobot, physics_enabled=True)
