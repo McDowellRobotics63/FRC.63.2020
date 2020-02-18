@@ -14,6 +14,9 @@ class Climb():
         self.hookExtend = Solenoid(robotmap.PCM2_ID, robotmap.HOOK_EXTEND_SOLENOID)
         self.hookRetract = Solenoid(robotmap.PCM2_ID, robotmap.HOOK_RETRACT_SOLENOID)
 
+        self.hookReleaseExtend = Solenoid(robotmap.PCM2_ID, robotmap.HOOK_RELEASE_EXTEND_SOLENOID)
+        self.hookReleaseRetract = Solenoid(robotmap.PCM2_ID, robotmap.HOOK_RELEASE_RETRACT_SOLENOID)
+
         self.climbMotor = ctre.WPI_TalonSRX(robotmap.LIFT_WINCH_ID)
 
         self.climbExtend.set(False)
@@ -37,6 +40,11 @@ class Climb():
     def StowHook(self):
         self.hookExtend.set(False)
         self.hookRetract.set(True)
+
+    def ReleaseHook(self):
+        self.hookReleaseExtend(False)
+        self.hookReleaseRetract(True)
+
 
     def config(self):
         pass
