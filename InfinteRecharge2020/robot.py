@@ -4,7 +4,7 @@ from drive import InfiniteRechargeDrive
 from ballchute import BallChute
 from colorwheel import ColorWheel
 from climb import Climb
-from autochute import AutoChute
+from autochute1 import AutoChute
 
 from xboxcontroller import XBox
 import robotmap
@@ -14,7 +14,7 @@ class MyRobot(wpilib.TimedRobot):
         self.timer = wpilib.Timer()
 
         self.compressor = wpilib.Compressor(robotmap.PCM_ID)
-        self.compressor.start()
+        self.compressor.setClosedLoopControl(True)
 
         self.pilot = XBox(0)
         self.copilot = XBox(1)
@@ -23,8 +23,6 @@ class MyRobot(wpilib.TimedRobot):
         self.ballChute = BallChute()
         self.colorWheel = ColorWheel()
         self.climb = Climb()
-
-        
 
     def disabledInit(self):
         self.logger.info("Disabled::Init()")
@@ -37,10 +35,14 @@ class MyRobot(wpilib.TimedRobot):
         self.drive.Config()
         self.auto = AutoChute(self.drive, self.ballChute)
 
+        self.compressor.setClosedLoopControl(True)
+
     def autonomousPeriodic(self):
         self.auto.Iterate()
 
     def teleopInit(self):
+        self.compressor.setClosedLoopControl(True)
+
         self.drive.Config()
 
     def teleopPeriodic(self):

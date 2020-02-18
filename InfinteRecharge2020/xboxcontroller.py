@@ -14,6 +14,7 @@ class XBox(Joystick):
     def __init__(self, port):
         super().__init__(port)
 
+    #Bunch of math to follow rate curve spreadsheet
     def conditonAxis(self, axis, deadband, rate, expo, power, minimum, maximum):
         deadband = min(abs(deadband), 1)
         rate = max(0.1, min(abs(rate), 10))
@@ -32,6 +33,7 @@ class XBox(Joystick):
 
         return axis
 
+    #Return axis values (with conditioning)
     def leftStickX(self):
         return -self.conditonAxis(self.getRawAxis(robotmap.XBOX_LEFT_X_AXIS), 0.06, 0.85, 0.6, 1.5, -1, 1)
 
@@ -44,6 +46,7 @@ class XBox(Joystick):
     def rightStickY(self):
         return self.conditonAxis(self.getRawAxis(robotmap.XBOX_RIGHT_Y_AXIS), 0.15, 0.85, 0.6, 1.5, -1, 1)
 
+    #Return true if button is pressed
     def A(self):
         return self.getRawButton(robotmap.XBOX_A)
 
@@ -68,6 +71,7 @@ class XBox(Joystick):
     def RightBumper(self):
         return self.getRawButton(robotmap.XBOX_RIGHT_BUMPER)
 
+    #DPad values are measured in degrees
     def getDPadUp(self):
         return self.getPOV() == 0
 

@@ -24,9 +24,18 @@ class AutoChute():
 
         self.autoState = AutoState.DRIVE_BACK
 
-    def DriveStraight(self, distance, speed):
-        distanceTraveled = 0
+    def DriveStraight(self, unitsTraveled, targetDistance, speed):
+        if abs(self.UnitsToFeet(unitsTraveled)) < targetDistance:
+            self.drive.drive.driveCartesian(0, speed, 0)
 
+            return False
+        else:
+            for talon in self.drive.talons:
+                talon.stopMotor()
+
+            return True
+
+        '''
         while abs(distanceTraveled) < distance:
             distanceTraveled = self.drive.frontLeftMotor.getSelectedSensorPosition() * robotmap.FEET_PER_UNIT
             self.drive.drive.driveCartesian(0, speed, 0)
@@ -34,14 +43,20 @@ class AutoChute():
         if abs(distanceTraveled) >= distance:
             for talon in self.drive.talons:
                 talon.stopMotor()
+                '''
+
+    def UnitsToFeet(self, units):
+        return units * robotmap.FEET_PER_UNIT
 
     def Iterate(self):
         if self.autoState == AutoState.DRIVE_BACK:
-            self.DriveStraight(10, -0.5)
-            self.autoState = AutoState.WAIT
+            #self.DriveStraight(self.drive.frontLeftMotor, 10, -.5)
+            targetReached = self.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 10, -.5)
+            if targetReached:
+                self.autoState = AutoState.WAIT
 
-            self.autoTimer.reset()
-            self.autoTimer.start()
+                self.autoTimer.reset()
+                self.autoTimer.start()
 
         elif self.autoState == AutoState.WAIT:
             if self.autoTimer.hasPeriodPassed(0.5):
@@ -61,18 +76,18 @@ class AutoChute():
                 self.chute.BottomMotorStop()
 
                 self.autoState = AutoState.DRIVE_FORWARD
+                
+                for talon in self.drive.talons:
+                    talon.setSelectedSensorPosition(0)
 
         elif self.autoState == AutoState.DRIVE_FORWARD:
-            self.DriveStraight(11, 0.5)
-            self.autoState = AutoState.END_AUTO
+            targetReached = self.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 11, .5)
+            if targetReached:
+                self.autoState = AutoState.END_AUTO
 
         elif self.autoState == AutoState.END_AUTO:
             for talon in self.drive.talons:
                 talon.stopMotor()
-            
-            self.chute.CloseHatch()
-            self.chute.BallTicklerStop()
-            self.chute.BottomMotorStop()
 
 
 

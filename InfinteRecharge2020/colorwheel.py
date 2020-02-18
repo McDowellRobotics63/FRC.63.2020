@@ -28,7 +28,31 @@ class ColorWheel():
         self.colorWheelRetract.set(True)
 
     def Iterate(self, copilot: xboxcontroller.XBox):
-        self.color = self.RGBSensor.getRawColor()
+        self.color = self.RGBSensor.getColor()
+
+        self.ir = self.RGBSensor.getIR()
+
+        self.proxy = self.RGBSensor.getProximity() #proxy's still alive Jazz band
+
+        self.RGBSensor.configureProximitySensorLED
+
+        self.RGBSensor.LEDPulseFrequency.k100kHz
+        self.RGBSensor.LEDCurrent.kPulse100mA
+        self.RGBSensor.ProximityResolution.k10bit
+
+        #self.red = color.red
+        #self.blue = color.blue
+        #self.green = color.green
+
+        wpilib.SmartDashboard.putNumber("Rojo", self.color.red)
+
+        wpilib.SmartDashboard.putNumber("Azul", self.color.blue)
+
+        wpilib.SmartDashboard.putNumber("Verde", self.color.green)
+
+        wpilib.SmartDashboard.putNumber("IR", self.ir)
+
+        wpilib.SmartDashboard.putNumber("Proxy", self.proxy)
 
         if copilot.X():
             self.colorWheelMotor.set(0.5)
