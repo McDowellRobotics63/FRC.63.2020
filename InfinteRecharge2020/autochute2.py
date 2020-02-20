@@ -25,23 +25,25 @@ class AutoChute2():
         self.chute = chute
         self.autoState2 = AutoState2.DRIVE_LEFT
 
-    def DriveLeft(self, speed, distance):
-        distanceTraveled = 0
-        while abs(distanceTraveled) < distance:
-            distanceTraveled = self.drive.frontLeftMotor.getSelectedSensorPosition() * robotmap.FEET_PER_UNIT
+    def DriveSideways(self, unitsTraveled, targetDistance, speed):
+        if abs(self.UnitsToFeet(unitsTraveled)) < targetDistance:
             self.drive.drive.driveCartesian(speed, 0, 0)
 
-        if abs(distanceTraveled) >= distance:
+            return False
+        else:
             for talon in self.drive.talons:
                 talon.stopMotor()
 
+            return True
+
     def Iterate(self):
         if self.autoState2 == AutoState2.DRIVE_LEFT:
-            self.DriveLeft(.5, 10)
-            self.autoState2 = AutoState2.WAIT1
+            targetReached = self.DriveSideways(self.drive.frontLeftMotor.getSelectedSensorPosition(), 10, .5)
+            if targetReached:
+                self.autoState2 = AutoState2.WAIT1
 
-            self.autoTimer.reset()
-            self.autoTimer.start()
+                self.autoTimer.reset()
+                self.autoTimer.start()
 
         elif self.AutoState2 == AutoState2.WAIT1:
             if self.autoTimer.hasPeriodPassed(.5):
@@ -60,19 +62,38 @@ class AutoChute2():
         elif self.autoState2 == AutoState2.WAIT2:
 
             if self.autoTimer.hasPeriodPassed(2):
-                self.autoState2 = AutoState2.STOW_HATCH
+                self.autoState2 = AutoState2.DEPLOY_HATCH
                 self.autoTimer.reset()
                 self.autoTimer.start()
 
-        elif self.autoState2 == AutoState2.STOW_HATCH:
+        elif self.autoState2 == AutoState2.DEPLOY_HATCH:
+            self.chute.OpenHatch()
+            self.chute.BallTicklerStart(self.chute.motorPercent)
+            self.chute.BottomMotorStart(self.chute.motorPercent)
 
-            BallChute.CloseHatch()
+            self.autoState2 = AutoState2.WAIT3
+            self.autoTimer.reset()
+            self.autoTimer.start()
+
+        elif self.autoState2 == AutoState2.WAIT3:
+            if self.autoTimer.hasPeriodPassed(5):
+                self.autoState2 = AutoState2.STOW_HATCH
+                self.autoTimer.reset()
+                self.autoTimer.start()    
+
+        elif self.autoState2 == AutoState2.STOW_HATCH:
+            self.chute.CloseHatch()
+            self.chute.BallTicklerStop()
+            self.chute.BottomMotorStop()
+
             self.autoState2 = AutoState2.DRIVE_FORWARD
             self.autoTimer.reset()
             self.autoTimer.start()
+            
         elif self.autoState2 == AutoState2.DRIVE_FORWARD:
-            AutoChute.DriveStraight(12, .5)
-            self.AutoState2 = AutoState2.END_AUTO
+             targetReached = AutoChute.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 12, 0.5)
+            if targetReached:
+                self.AutoState2 = AutoState2.END_AUTO
 
         elif self.autoState2 == AutoState2.END_AUTO:
             for talon in self.drive.talons:

@@ -67,10 +67,10 @@ class AutoChute():
             
         elif self.autoState == AutoState.DEPLOY_CHUTE:
             self.chute.OpenHatch()
-            self.chute.BallTicklerStart()
-            self.chute.BottomMotorStart()
+            self.chute.BallTicklerStart(self.chute.motorPercent)
+            self.chute.BottomMotorStart(self.chute.motorPercent)
 
-            if self.autoTimer.hasPeriodPassed(2):
+            if self.autoTimer.hasPeriodPassed(5):
                 self.chute.CloseHatch()
                 self.chute.BallTicklerStop()
                 self.chute.BottomMotorStop()
