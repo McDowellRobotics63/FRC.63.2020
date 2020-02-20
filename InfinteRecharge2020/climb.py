@@ -8,16 +8,16 @@ from xboxcontroller import XBox
 
 class Climb():
     def __init__(self):
-        self.climbExtend = Solenoid(robotmap.PCM2_ID, robotmap.CLIMB_EXTEND_SOLENOID)
-        self.climbRetract = Solenoid(robotmap.PCM2_ID, robotmap.CLIMB_RETRACT_SOLENOID)
+        self.climbExtend = Solenoid(robotmap.PCM_ID, robotmap.CLIMB_EXTEND_SOLENOID)
+        self.climbRetract = Solenoid(robotmap.PCM_ID, robotmap.CLIMB_RETRACT_SOLENOID)
 
-        self.hookExtend = Solenoid(robotmap.PCM2_ID, robotmap.HOOK_EXTEND_SOLENOID)
-        self.hookRetract = Solenoid(robotmap.PCM2_ID, robotmap.HOOK_RETRACT_SOLENOID)
+        self.hookExtend = Solenoid(robotmap.PCM_ID, robotmap.HOOK_EXTEND_SOLENOID)
+        self.hookRetract = Solenoid(robotmap.PCM_ID, robotmap.HOOK_RETRACT_SOLENOID)
 
         self.hookReleaseExtend = Solenoid(robotmap.PCM2_ID, robotmap.HOOK_RELEASE_EXTEND_SOLENOID)
         self.hookReleaseRetract = Solenoid(robotmap.PCM2_ID, robotmap.HOOK_RELEASE_RETRACT_SOLENOID)
 
-        self.climbMotor = ctre.WPI_TalonSRX(robotmap.LIFT_WINCH_ID)
+        self.climbMotor = ctre.WPI_VictorSPX(robotmap.LIFT_WINCH_ID)
 
         self.climbExtend.set(False)
         self.climbRetract.set(True)

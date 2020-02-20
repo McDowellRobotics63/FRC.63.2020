@@ -34,12 +34,6 @@ class ColorWheel():
 
         self.proxy = self.RGBSensor.getProximity() #proxy's still alive Jazz band
 
-        self.RGBSensor.configureProximitySensorLED
-
-        self.RGBSensor.LEDPulseFrequency.k100kHz
-        self.RGBSensor.LEDCurrent.kPulse100mA
-        self.RGBSensor.ProximityResolution.k10bit
-
         #self.red = color.red
         #self.blue = color.blue
         #self.green = color.green
@@ -54,14 +48,16 @@ class ColorWheel():
 
         wpilib.SmartDashboard.putNumber("Proxy", self.proxy)
 
+        #print(self.color)
+
         if copilot.X():
             self.colorWheelMotor.set(0.5)
         else:
             self.colorWheelMotor.stopMotor()
 
-        if copilot.getDPadUp():
+        if copilot.getDPadRight():
             self.DeployWheelArm()
-        elif copilot.getDPadDown():
+        elif copilot.getDPadLeft():
             self.StowWheelArm()
 
         

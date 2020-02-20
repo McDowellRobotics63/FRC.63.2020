@@ -33,48 +33,50 @@ class AutoChute2():
 
         if abs(distanceTraveled) >= distance:
             for talon in self.drive.talons:
-                talon.stopMotor
+                talon.stopMotor()
 
     def Iterate(self):
         if self.autoState2 == AutoState2.DRIVE_LEFT:
             self.DriveLeft(.5, 10)
             self.autoState2 = AutoState2.WAIT1
 
-            self.autoTimer.reset
-            self.autoTimer.start
+            self.autoTimer.reset()
+            self.autoTimer.start()
 
         elif self.AutoState2 == AutoState2.WAIT1:
-            if self.autoTimer.hasPeriodPassed(.5)
+            if self.autoTimer.hasPeriodPassed(.5):
                 self.autoState2 = AutoState2.DRIVE_BACK
 
-                self.autoTimer.reset
-                self.autoTimer.start
+                self.autoTimer.reset()
+                self.autoTimer.start()
 
-        elif self.autoState2 == AutoState2.DRIVE_BACK
+        elif self.autoState2 == AutoState2.DRIVE_BACK:
             targetReached = AutoChute.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 10, -0.5)
             if targetReached:
                 self.autoState2 = AutoState2.WAIT2
                 self.autoTimer.reset()
                 self.autoTimer.start()
 
-        elif self.autoState2 == AutoState2.WAIT2
+        elif self.autoState2 == AutoState2.WAIT2:
 
-            if self.autoTimer.hasPeriodPassed(2)
+            if self.autoTimer.hasPeriodPassed(2):
                 self.autoState2 = AutoState2.STOW_HATCH
-                self.autoTimer.reset
-                self.autoTimer.start
+                self.autoTimer.reset()
+                self.autoTimer.start()
 
-        elif self.autoState2 == AutoState2.STOW_HATCH
+        elif self.autoState2 == AutoState2.STOW_HATCH:
 
             BallChute.CloseHatch()
             self.autoState2 = AutoState2.DRIVE_FORWARD
-            self.autoTimer.reset
-            self.autoTimer.start
-        elif self.autoState2 == AutoState2.DRIVE_FORWARD
+            self.autoTimer.reset()
+            self.autoTimer.start()
+        elif self.autoState2 == AutoState2.DRIVE_FORWARD:
             AutoChute.DriveStraight(12, .5)
             self.AutoState2 = AutoState2.END_AUTO
 
-        elif self.autoState2 == AutoState2.END_AUTO
+        elif self.autoState2 == AutoState2.END_AUTO:
+            for talon in self.drive.talons:
+                talon.stopMotor()
 
 
 

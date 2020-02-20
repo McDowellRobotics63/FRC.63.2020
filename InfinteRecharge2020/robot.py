@@ -48,7 +48,7 @@ class MyRobot(wpilib.TimedRobot):
     def teleopPeriodic(self):
         self.drive.Iterate(self.pilot)
         self.ballChute.Iterate(self.copilot)
-        self.colorWheel.Iterate(self.copilot)
+        self.colorWheel.Iterate(self.pilot)
         self.climb.Iterate(self.pilot)
 
 if __name__ == "__main__":

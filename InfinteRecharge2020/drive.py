@@ -16,10 +16,10 @@ class InfiniteRechargeDrive():
         self.rearRightMotor = ctre.WPI_TalonSRX(robotmap.FRONT_RIGHT_ID)
 
         # invert the left side motors
-        self.frontLeftMotor.setInverted(True)
-        self.frontRightMotor.setInverted(True)
-        self.rearLeftMotor.setInverted(True)
-        self.rearRightMotor.setInverted(True)
+        self.frontLeftMotor.setInverted(False)
+        self.frontRightMotor.setInverted(False)
+        self.rearLeftMotor.setInverted(False)
+        self.rearRightMotor.setInverted(False)
         
         self.talons = [self.frontLeftMotor, self.rearLeftMotor, self.frontRightMotor, self.rearRightMotor]
 
@@ -59,7 +59,8 @@ class InfiniteRechargeDrive():
         #Take in controller axis values for drive
         self.drive.driveCartesian(
                 pilot.leftStickX(),
-                pilot.leftStickY(),
-                pilot.rightStickX()
+                -pilot.leftStickY(),
+                -pilot.rightStickX(),
+                0
             )
         
