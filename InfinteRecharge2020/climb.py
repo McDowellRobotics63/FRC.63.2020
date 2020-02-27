@@ -42,8 +42,12 @@ class Climb():
         self.hookRetract.set(True)
 
     def ReleaseHook(self):
-        self.hookReleaseExtend(False)
-        self.hookReleaseRetract(True)
+        self.hookReleaseExtend.set(False)
+        self.hookReleaseRetract.set(True)
+
+    def HoldHook(self):
+        self.hookReleaseExtend.set(True)
+        self.hookReleaseRetract.set(False)
 
 
     def config(self):
@@ -59,6 +63,11 @@ class Climb():
             self.DeployHook()
         elif pilot.LeftBumper():
             self.StowHook()
+
+        if pilot.Start():
+            self.HoldHook()
+        elif pilot.Back():
+            self.ReleaseHook()
 
         if pilot.Y():
             self.climbMotor.set(0.5)

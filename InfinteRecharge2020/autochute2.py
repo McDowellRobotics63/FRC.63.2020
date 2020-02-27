@@ -89,9 +89,9 @@ class AutoChute2():
             self.autoState2 = AutoState2.DRIVE_FORWARD
             self.autoTimer.reset()
             self.autoTimer.start()
-            
+
         elif self.autoState2 == AutoState2.DRIVE_FORWARD:
-             targetReached = AutoChute.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 12, 0.5)
+            targetReached = AutoChute.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 12, 0.5)
             if targetReached:
                 self.AutoState2 = AutoState2.END_AUTO
 

@@ -13,6 +13,10 @@ class MyRobot(wpilib.TimedRobot):
     def robotInit(self):
         self.timer = wpilib.Timer()
 
+        wpilib.CameraServer.launch(0)
+        
+        wpilib.CameraServer.launch(1)
+
         self.compressor = wpilib.Compressor(robotmap.PCM_ID)
         self.compressor.setClosedLoopControl(True)
 
@@ -30,6 +34,8 @@ class MyRobot(wpilib.TimedRobot):
     def disabledPeriodic(self):
         if self.timer.hasPeriodPassed(1):
             self.logger.info("Disabled::Periodic()")
+
+        self.colorWheel.Iterate(self.pilot)
 
     def autonomousInit(self):
         self.drive.Config()
@@ -50,6 +56,8 @@ class MyRobot(wpilib.TimedRobot):
         self.ballChute.Iterate(self.copilot)
         self.colorWheel.Iterate(self.pilot)
         self.climb.Iterate(self.pilot)
+        self.ballChute.Reverse(self.copilot)
+        self.ballChute.Dump(self.copilot)
 
 if __name__ == "__main__":
     wpilib.run(MyRobot, physics_enabled=True)

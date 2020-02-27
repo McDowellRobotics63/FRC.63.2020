@@ -12,8 +12,8 @@ class InfiniteRechargeDrive():
         #Initialize talon motors with talon speed controller
         self.frontLeftMotor = ctre.WPI_TalonSRX(robotmap.FRONT_LEFT_ID)
         self.rearLeftMotor = ctre.WPI_TalonSRX(robotmap.REAR_LEFT_ID)
-        self.frontRightMotor = ctre.WPI_TalonSRX(robotmap.REAR_RIGHT_ID)
-        self.rearRightMotor = ctre.WPI_TalonSRX(robotmap.FRONT_RIGHT_ID)
+        self.frontRightMotor = ctre.WPI_TalonSRX(robotmap.FRONT_RIGHT_ID)
+        self.rearRightMotor = ctre.WPI_TalonSRX(robotmap.REAR_RIGHT_ID)
 
         # invert the left side motors
         self.frontLeftMotor.setInverted(False)
@@ -58,8 +58,8 @@ class InfiniteRechargeDrive():
     def Iterate(self, pilot: XBox):
         #Take in controller axis values for drive
         self.drive.driveCartesian(
-                pilot.leftStickX(),
-                -pilot.leftStickY(),
+                -pilot.leftStickX(),
+                pilot.leftStickY(),
                 -pilot.rightStickX(),
                 0
             )

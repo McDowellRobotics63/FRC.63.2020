@@ -6,6 +6,7 @@ from drive import InfiniteRechargeDrive
 from ballchute import BallChute
 import robotmap
 
+
 class AutoState(Enum):
     DRIVE_BACK = 0
     WAIT = 1
@@ -51,7 +52,7 @@ class AutoChute():
     def Iterate(self):
         if self.autoState == AutoState.DRIVE_BACK:
             #self.DriveStraight(self.drive.frontLeftMotor, 10, -.5)
-            targetReached = self.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 10, -.5)
+            targetReached = self.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 10, .5)
             if targetReached:
                 self.autoState = AutoState.WAIT
 
@@ -67,12 +68,11 @@ class AutoChute():
             
         elif self.autoState == AutoState.DEPLOY_CHUTE:
             self.chute.OpenHatch()
-            self.chute.BallTicklerStart(self.chute.motorPercent)
-            self.chute.BottomMotorStart(self.chute.motorPercent)
+            self.chute.BallTicklerStart(1)
 
             if self.autoTimer.hasPeriodPassed(5):
                 self.chute.CloseHatch()
-                self.chute.BallTicklerStop()
+                self.chute.ballTickler.stopMotor()
                 self.chute.BottomMotorStop()
 
                 self.autoState = AutoState.DRIVE_FORWARD
@@ -81,13 +81,15 @@ class AutoChute():
                     talon.setSelectedSensorPosition(0)
 
         elif self.autoState == AutoState.DRIVE_FORWARD:
-            targetReached = self.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 11, .5)
+            targetReached = self.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 11, -.5)
             if targetReached:
                 self.autoState = AutoState.END_AUTO
 
         elif self.autoState == AutoState.END_AUTO:
             for talon in self.drive.talons:
                 talon.stopMotor()
+                talon.setSelectedSensorPosition(0)
+
 
 
 

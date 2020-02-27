@@ -73,30 +73,33 @@ class BallChute():
         self.ballHatchRetract.set(True)
 
     def Iterate(self, copilot: XBox):
+        '''
         if copilot.X():
             if abs(self.motorPercent) == 0.3:
-                self.motorPercent = -0.3
+                self.motorPercent = -0.5
 
             if abs(self.motorPercent) == 0.5:
                 self.motorPercent = -0.5
+
         elif self.ballHatchExtend.get() and not self.ballHatchRetract.get():
             self.motorPercent = 0.5
-        else:
-            self.motorPercent = 0.3
-        
 
-        if copilot.Y():
-            self.BallTicklerStart(self.motorPercent)
+        else:
+            self.motorPercent = 0.5
+            '''
+
+        if copilot.B():
+            self.BallTicklerStart(1)
         else:
             self.BallTicklerStop()
 
-        if copilot.B():
-            self.BottomMotorStart(self.motorPercent)
+        if copilot.Y():
+            self.BottomMotorStart(1)
         else:
             self.BottomMotorStop()
 
         if copilot.A():
-            self.RakeMotorStart(self.motorPercent)
+            self.RakeMotorStart(.5)
         else:
             self.RakeMotorStop()
 
@@ -109,22 +112,21 @@ class BallChute():
             self.DeployRake()
         elif copilot.LeftBumper():
             self.StowRake()
-'''
+
     def Reverse(self, copilot: XBox):
         while copilot.X():
-
-            if copilot.Y():
-                self.BallTicklerStart()
+            if copilot.B():
+                self.BallTicklerStart(-1)
             else:
                 self.BallTicklerStop()
 
-            if copilot.B():
-                self.BottomMotorStart()
+            if copilot.Y():
+                self.BottomMotorStart(-1)
             else:
                 self.BottomMotorStop()
 
             if copilot.A():
-                self.RakeMotorStart()
+                self.RakeMotorStart(-.5)
             else:
                 self.RakeMotorStop()
 
@@ -137,7 +139,36 @@ class BallChute():
                 self.DeployRake()
             elif copilot.LeftBumper():
                 self.StowRake()
-'''
+
+    def Dump(self, copilot: XBox):
+
+        while copilot.Start():
+            print("works")
+            if copilot.B():
+                self.BallTicklerStart(1)
+            else:
+                self.BallTicklerStop()
+
+            if copilot.Y():
+                self.BottomMotorStart(1)
+            else:
+                self.BottomMotorStop()
+
+            if copilot.A():
+                self.RakeMotorStart(.5)
+            else:
+                self.RakeMotorStop()
+                
+            if copilot.Start():
+                self.OpenHatch()
+            elif copilot.Back():
+                self.CloseHatch()
+
+            if copilot.RightBumper():
+                self.DeployRake()
+            elif copilot.LeftBumper():
+                self.StowRake()
+
 
 
 ''' 
