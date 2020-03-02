@@ -5,8 +5,8 @@ from ballchute import BallChute
 import robotmap
 from autochute1 import AutoChute
 
-class AutoState2(Enum):
-    DRIVE_LEFT = 0
+class AutoStateRight(Enum):
+    DRIVE_RIGHT = 0
     WAIT1 = 1
     DRIVE_BACK = 2
     WAIT2 = 3
@@ -17,13 +17,13 @@ class AutoState2(Enum):
     DRIVE_FORWARD = 8
     END_AUTO = 9
 
-class AutoChute2():
+class AutoChuteRight():
     def __init__(self, drive: InfiniteRechargeDrive, chute: BallChute):
         self.autoTimer = wpilib.Timer()
         self.autoTimer.start()
         self.drive = drive
         self.chute = chute
-        self.autoState2 = AutoState2.DRIVE_LEFT
+        self.autoState2 = AutoState2.DRIVE_RIGHT
 
     def DriveSideways(self, unitsTraveled, targetDistance, speed):
         if abs(self.UnitsToFeet(unitsTraveled)) < targetDistance:
@@ -37,8 +37,8 @@ class AutoChute2():
             return True
 
     def Iterate(self):
-        if self.autoState2 == AutoState2.DRIVE_LEFT:
-            targetReached = self.DriveSideways(self.drive.frontLeftMotor.getSelectedSensorPosition(), 10, .5)
+        if self.autoState2 == AutoState2.DRIVE_RIGHT:
+            targetReached = self.DriveSideways(self.drive.frontLeftMotor.getSelectedSensorPosition(), 10, -.5)
             if targetReached:
                 self.autoState2 = AutoState2.WAIT1
 
@@ -98,6 +98,3 @@ class AutoChute2():
         elif self.autoState2 == AutoState2.END_AUTO:
             for talon in self.drive.talons:
                 talon.stopMotor()
-
-
-
