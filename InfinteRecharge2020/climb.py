@@ -24,6 +24,9 @@ class Climb():
 
         self.hookExtend.set(False)
         self.hookRetract.set(True)
+        
+        self.hookReleaseExtend.set(True)
+        self.hookReleaseRetract.set(False)
 
     def DeployWinch(self):
         self.climbExtend.set(True)
