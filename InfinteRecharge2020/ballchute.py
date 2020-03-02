@@ -94,7 +94,7 @@ class BallChute():
             self.BallTicklerStop()
 
         if copilot.Y():
-            self.BottomMotorStart(1)
+            self.BottomMotorStart(.5)
         else:
             self.BottomMotorStop()
 
@@ -121,12 +121,12 @@ class BallChute():
                 self.BallTicklerStop()
 
             if copilot.Y():
-                self.BottomMotorStart(-1)
+                self.BottomMotorStart(-.5)
             else:
                 self.BottomMotorStop()
 
             if copilot.A():
-                self.RakeMotorStart(-.5)
+                self.RakeMotorStart(-.2)
             else:
                 self.RakeMotorStop()
 
@@ -155,7 +155,7 @@ class BallChute():
                 self.BottomMotorStop()
 
             if copilot.A():
-                self.RakeMotorStart(.5)
+                self.RakeMotorStart(.2)
             else:
                 self.RakeMotorStop()
                 
@@ -168,6 +168,13 @@ class BallChute():
                 self.DeployRake()
             elif copilot.LeftBumper():
                 self.StowRake()
+    '''
+    def YChute (self, copilot: XBox):
+
+        if copilot.Y():
+            wpilibTimer.reset
+            wpilibTimer.start
+            '''
 
 
 
