@@ -31,7 +31,7 @@ class BallChute():
         self.ballHatchExtend.set(False)
         self.ballHatchRetract.set(True)
 
-        self.motorPercent = 0.3
+        self.motorPercent = 1
 
         #self.currentRakeState = BallRakeState.RAKE_STOWED
         #self.currentHatchState = BallRakeState.HATCH_CLOSED

@@ -34,15 +34,31 @@ class ColorWheel():
 
         self.proxy = self.RGBSensor.getProximity() #proxy's still alive Jazz band
 
-        #self.red = color.red
-        #self.blue = color.blue
-        #self.green = color.green
 
-        wpilib.SmartDashboard.putNumber("Rojo", self.color.red)
+        if self.color.red > 0.7 and self.color.red <= 1:
+            self.red = True
+        elif self.color.green > 0.7 and self.color.green <= 1:
+            self.green = True
+        elif self.color.blue > 0.7 and self.color.blue <= 1:
+            self.blue = True
+        else:
+            self.red = False
+            self.green = False
+            self.blue = False
 
-        wpilib.SmartDashboard.putNumber("Azul", self.color.blue)
+        #Boolean
+        wpilib.SmartDashboard.putBoolean("Red", self.red)
+        
+        wpilib.SmartDashboard.putBoolean("Green", self.green)
+        
+        wpilib.SmartDashboard.putBoolean("Blue", self.blue)
 
-        wpilib.SmartDashboard.putNumber("Verde", self.color.green)
+        #Value
+        wpilib.SmartDashboard.putNumber("RedN", self.color.red)
+
+        wpilib.SmartDashboard.putNumber("BlueN", self.color.blue)
+
+        wpilib.SmartDashboard.putNumber("GreenN", self.color.green)
 
         wpilib.SmartDashboard.putNumber("IR", self.ir)
 
@@ -52,6 +68,8 @@ class ColorWheel():
 
         if copilot.X():
             self.colorWheelMotor.set(0.5)
+        elif copilot.B():
+            self.colorWheelMotor.set(-0.5)
         else:
             self.colorWheelMotor.stopMotor()
 

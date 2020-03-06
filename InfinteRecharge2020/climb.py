@@ -73,9 +73,9 @@ class Climb():
             self.ReleaseHook()
 
         if pilot.Y():
-            self.climbMotor.set(0.5)
+            self.climbMotor.set(1)
         elif pilot.A():
-            self.climbMotor.set(-0.5)
+            self.climbMotor.set(-1)
         else:
             self.climbMotor.stopMotor()
             
