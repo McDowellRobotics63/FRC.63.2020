@@ -31,15 +31,17 @@ class MyRobot(wpilib.TimedRobot):
         self.compressor = wpilib.Compressor(robotmap.PCM_ID)
         self.compressor.setClosedLoopControl(True)
 
+        #Initialize Controllers
         self.pilot = XBox(0)
         self.copilot = XBox(1)
 
+        #Initialize Subsystems
         self.drive = InfiniteRechargeDrive()
         self.ballChute = BallChute()
         self.colorWheel = ColorWheel()
         self.climb = Climb()
 
-        #self.autochute1 = AutoChute(self.drive, self.ballChute)
+        #Initialize Autonomous
         self.autochuteLeft = AutoChuteLeft(self.drive, self.ballChute, self.logger)
         self.autochuteRight = AutoChuteRight(self.drive, self.ballChute)
         self.autochuteSafe = AutoChuteSafe(self.drive, self.ballChute)
@@ -64,13 +66,6 @@ class MyRobot(wpilib.TimedRobot):
 
     def autonomousInit(self):
         self.drive.Config()
-        '''
-        self.auto = AutoChute(self.drive, self.ballChute)
-        self.autoL = AutoChuteLeft(self.drive, self.ballChute)
-        self.autoR = AutoChuteRight(self.drive, self.ballChute)
-        self.autoS = AutoChuteSafe(self.drive, self.ballChute)
-        '''
-
         self.compressor.setClosedLoopControl(True)
 
         self.auto_selected = self.auto_chooser.getSelected()
@@ -100,7 +95,6 @@ class MyRobot(wpilib.TimedRobot):
 
     def teleopInit(self):
         self.compressor.setClosedLoopControl(True)
-
         self.drive.Config()
 
     def teleopPeriodic(self):
@@ -108,8 +102,6 @@ class MyRobot(wpilib.TimedRobot):
         self.ballChute.Iterate(self.copilot)
         self.colorWheel.Iterate(self.pilot)
         self.climb.Iterate(self.pilot)
-        self.ballChute.Reverse(self.copilot)
-        self.ballChute.Dump(self.copilot)
 
 if __name__ == "__main__":
     wpilib.run(MyRobot, physics_enabled=True)
