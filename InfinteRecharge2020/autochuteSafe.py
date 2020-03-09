@@ -11,6 +11,7 @@ import robotmap
 class AutoStateSafe(Enum):
     DRIVE_BACK = 0
     WAIT = 1
+    DRIVE_MORE = 9
     DEPLOY_CHUTE = 2
     DRIVE_LEFT = 3
     DRIVE_FORWARD = 4
@@ -18,6 +19,7 @@ class AutoStateSafe(Enum):
     CLEAR_LINE = 6
     WAIT_CLEAR = 7
     RAM = 8
+    WAIT2 = 10
 
 class AutoChuteSafe():
     def __init__(self, drive: InfiniteRechargeDrive, chute: BallChute):
@@ -74,11 +76,27 @@ class AutoChuteSafe():
                 self.autoTimer.start()
         
         elif self.autoStateSafe == AutoStateSafe.DRIVE_BACK:
-            #self.DriveStraight(self.drive.frontLeftMotor, 10, -.5)
-            targetReached = self.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 9.5, .5)
+            targetReached = self.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 10, 0.5)
             if targetReached:
-                self.autoStateSafe = AutoStateSafe.WAIT
+                self.autoStateSafe = AutoStateSafe.WAIT2
 
+                self.autoTimer.reset()
+                self.autoTimer.start()
+
+                for talon in self.drive.talons:
+                    talon.setSelectedSensorPosition(0)
+
+        elif self.autoStateSafe == AutoStateSafe.WAIT2:
+            if self.autoTimer.hasPeriodPassed(1):
+                self.autoStateSafe = AutoStateSafe.DRIVE_MORE
+                self.autoTimer.reset()
+                self.autoTimer.start()
+
+
+        elif self.autoStateSafe == AutoStateSafe.DRIVE_MORE:
+            self.drive.drive.driveCartesian(0, 0.3, 0)
+            if self.autoTimer.hasPeriodPassed(1):
+                self.autoStateSafe = AutoStateSafe.WAIT
                 self.autoTimer.reset()
                 self.autoTimer.start()
 
@@ -86,22 +104,20 @@ class AutoChuteSafe():
                     talon.setSelectedSensorPosition(0)
 
         elif self.autoStateSafe == AutoStateSafe.WAIT:
-            self.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 2, 0.2)
+            
             if self.autoTimer.hasPeriodPassed(0.5):
                 self.autoStateSafe = AutoStateSafe.DEPLOY_CHUTE
 
                 self.autoTimer.reset()
                 self.autoTimer.start()
-
-                for talon in self.drive.talons:
-                    talon.setSelectedSensorPosition(0)
             
         elif self.autoStateSafe == AutoStateSafe.DEPLOY_CHUTE:
+            self.drive.drive.driveCartesian(0, 0.3, 0)
             self.chute.OpenHatch()
             self.chute.BottomMotorStart(1)
             self.chute.BallTicklerStart(1)
 
-            if self.autoTimer.hasPeriodPassed(3):
+            if self.autoTimer.hasPeriodPassed(4):
                 self.chute.CloseHatch()
                 self.chute.ballTickler.stopMotor()
                 self.chute.BottomMotorStop()
@@ -110,11 +126,12 @@ class AutoChuteSafe():
                 
                 for talon in self.drive.talons:
                     talon.setSelectedSensorPosition(0)
+                    talon.stopMotor()
 
         elif self.autoStateSafe == AutoStateSafe.DRIVE_LEFT:
             targetReached = self.DriveSideways(self.drive.frontLeftMotor.getSelectedSensorPosition(), 7, .5)
             if targetReached:
-                self.autoStateSafe = AutoStateSafe.DRIVE_FORWARD
+                self.autoStateSafe = AutoStateSafe.END_AUTO
 
         elif self.autoStateSafe == AutoStateSafe.DRIVE_FORWARD:
             targetReached = self.DriveStraight(self.drive.frontLeftMotor.getSelectedSensorPosition(), 10, -.5)
