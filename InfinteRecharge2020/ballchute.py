@@ -31,11 +31,7 @@ class BallChute():
         self.ballHatchExtend.set(False)
         self.ballHatchRetract.set(True)
 
-        self.motorPercent = 1
-
-        #self.currentRakeState = BallRakeState.RAKE_STOWED
-        #self.currentHatchState = BallRakeState.HATCH_CLOSED
-
+    #-value so motors run that way we want them to
     def RakeMotorStart(self, value):
         self.rakeMotor.set(-value)
 
@@ -54,13 +50,12 @@ class BallChute():
     def BallTicklerStop(self):
         self.ballTickler.stopMotor()
 
+    #Solenoid functions ot make things easier
     def DeployRake(self):
-        #self.currentRakeState = BallRakeState.DEPLOY_BEGIN
         self.ballRakeExtend.set(True)
         self.ballRakeRetract.set(False)
 
     def StowRake(self):
-        #self.currentRakeState = BallRakeState.STOW_BEGIN
         self.ballRakeExtend.set(False)
         self.ballRakeRetract.set(True)
 
@@ -73,33 +68,21 @@ class BallChute():
         self.ballHatchRetract.set(True)
 
     def Iterate(self, copilot: XBox):
-        '''
-        if copilot.X():
-            if abs(self.motorPercent) == 0.3:
-                self.motorPercent = -0.5
-
-            if abs(self.motorPercent) == 0.5:
-                self.motorPercent = -0.5
-
-        elif self.ballHatchExtend.get() and not self.ballHatchRetract.get():
-            self.motorPercent = 0.5
-
-        else:
-            self.motorPercent = 0.5
-            '''
-
-        if copilot.B():
-            self.BallTicklerStart(1)
-        else:
-            self.BallTicklerStop()
-
         if copilot.Y():
-            self.BottomMotorStart(.5)
+            if copilot.Start():
+                self.BottomMotorStart(1)
+            elif copilot.X():
+                self.BottomMotorStart(-.5)
+            else:
+                self.BottomMotorStart(.5)
         else:
             self.BottomMotorStop()
 
         if copilot.A():
-            self.RakeMotorStart(.5)
+            elif copilot.X():
+                self.RakeMotorStart(-.5)
+            else:
+                self.RakeMotorStart(.5)
         else:
             self.RakeMotorStop()
 
@@ -112,107 +95,3 @@ class BallChute():
             self.DeployRake()
         elif copilot.LeftBumper():
             self.StowRake()
-
-    def Reverse(self, copilot: XBox):
-        while copilot.X():
-            if copilot.B():
-                self.BallTicklerStart(-1)
-            else:
-                self.BallTicklerStop()
-
-            if copilot.Y():
-                self.BottomMotorStart(-.5)
-            else:
-                self.BottomMotorStop()
-
-            if copilot.A():
-                self.RakeMotorStart(-.2)
-            else:
-                self.RakeMotorStop()
-
-            if copilot.Start():
-                self.OpenHatch()
-            elif copilot.Back():
-                self.CloseHatch()
-
-            if copilot.RightBumper():
-                self.DeployRake()
-            elif copilot.LeftBumper():
-                self.StowRake()
-
-    def Dump(self, copilot: XBox):
-
-        while copilot.Start():
-            print("works")
-            if copilot.B():
-                self.BallTicklerStart(1)
-            else:
-                self.BallTicklerStop()
-
-            if copilot.Y():
-                self.BottomMotorStart(1)
-            else:
-                self.BottomMotorStop()
-
-            if copilot.A():
-                self.RakeMotorStart(.2)
-            else:
-                self.RakeMotorStop()
-                
-            if copilot.Start():
-                self.OpenHatch()
-            elif copilot.Back():
-                self.CloseHatch()
-
-            if copilot.RightBumper():
-                self.DeployRake()
-            elif copilot.LeftBumper():
-                self.StowRake()
-    '''
-    def YChute (self, copilot: XBox):
-
-        if copilot.Y():
-            wpilibTimer.reset
-            wpilibTimer.start
-            '''
-
-
-
-''' 
-    def     IterateStateMachine(self):
-            #Deploy Rake#
-            if self.currentRakeState == BallRakeState.DEPLOY_BEGIN:
-                self.ballRakeExtend.set(True)
-                self.ballRakeRetract.set(False)
-                self.currentRakeState = BallRakeState.RAKE_DEPLOY_WAIT
-
-                self.stateTimer.reset()
-                self.stateTimer.start()
-
-        elif self.currentRakeState == BallRakeState.RAKE_DEPLOY_WAIT:
-            if self.stateTimer.hasPeriodPassed(0.5):
-                self.currentRakeState = BallRakeState.RAKE_MOTOR_START
-        
-        elif self.currentRakeState == BallRakeState.RAKE_MOTOR_START:
-            self.rakeMotor.set(0.5)
-
-        #Stow Rake#
-        elif self.currentRakeState == BallRakeState.STOW_BEGIN:
-            self.rakeMotor.stopMotor()
-            self.currentRakeState = BallRakeState.RAKE_STOW
-
-        elif self.currentRakeState == BallRakeState.RAKE_STOW:
-            self.ballRakeExtend(False)
-            self.ballRakeRetract(True)
-            self.currentRakeState = BallRakeState.RAKE_STOW_WAIT
-
-            self.stateTimer.reset()
-            self.stateTimer.start()
-
-        elif self.currentRakeState == BallRakeState.RAKE_STOW_WAIT:
-            if self.stateTimer.hasPeriodPassed(0.5):
-                self.currentRakeState = BallRakeState.RAKE_STOWED
-'''
-
-
-
