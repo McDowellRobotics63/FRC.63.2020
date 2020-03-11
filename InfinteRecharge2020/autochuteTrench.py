@@ -121,7 +121,7 @@ class AutoChuteTrench():
             self.chute.BottomMotorStart(1)
             self.chute.BallTicklerStart(1)
 
-            if self.autoTimer.hasPeriodPassed(4):
+            if self.autoTimer.hasPeriodPassed(1):
                 self.chute.CloseHatch()
                 self.chute.ballTickler.stopMotor()
                 self.chute.BottomMotorStop()
@@ -165,15 +165,18 @@ class AutoChuteTrench():
                 self.autoTimer.reset()
                 self.autoTimer.start()
 
-        self.autoStateTrench == AutoStateTrench.DEPLOY_CHUTE2:
+        elif self.autoStateTrench == AutoStateTrench.DEPLOY_CHUTE2:
             targetReached = self.drive.drive.driveCartesian(0, 0.2, 0)
             self.chute.OpenHatch()
-            self.chute.BottomMotorStart(1)
+            self.chute.DeployRake()
+            self.chute.BottomMotorStart(.5)
+            self.chute.RakeMotorStart(.5)
 
-            if self.autoTimer.hasPeriodPassed(3):
+            if self.autoTimer.hasPeriodPassed(4.5):
                 self.chute.CloseHatch()
                 self.chute.ballTickler.stopMotor()
                 self.chute.BottomMotorStop()
+                self.chute.RakeMotorStop()
 
                 self.autoStateTrench = AutoStateTrench.END_AUTO
                 
