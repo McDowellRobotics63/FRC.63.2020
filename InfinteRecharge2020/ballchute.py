@@ -79,7 +79,7 @@ class BallChute():
             self.BottomMotorStop()
 
         if copilot.A():
-            elif copilot.X():
+            if copilot.X():
                 self.RakeMotorStart(-.5)
             else:
                 self.RakeMotorStart(.5)
