@@ -11,7 +11,7 @@ from autochuteLeft import AutoChuteLeft
 from autochuteRight import AutoChuteRight
 from autochuteSafe import AutoChuteSafe
 from autochuteClear import AutoChuteClear
-
+from autochuteTrench import AutoChuteTrench
 
 from xboxcontroller import XBox
 import robotmap
@@ -46,12 +46,14 @@ class MyRobot(wpilib.TimedRobot):
         self.autochuteRight = AutoChuteRight(self.drive, self.ballChute)
         self.autochuteSafe = AutoChuteSafe(self.drive, self.ballChute)
         self.autochuteClear = AutoChuteClear(self.drive, self.ballChute)
+        self.autochuteTrench = AutoChuteTrench(self.drive, self.ballChute)
 
         self.auto_chooser = SendableChooser()
         self.auto_chooser.setDefaultOption('AutochuteClear', self.autochuteClear)
         self.auto_chooser.addOption('AutochuteLeft', self.autochuteLeft)
         self.auto_chooser.addOption('AutochuteRight', self.autochuteRight)
         self.auto_chooser.addOption("AutochuteSafe", self.autochuteSafe)
+        self.auto_chooser.addOption("autochuteTrench", self.autochuteTrench)
 
         SmartDashboard.putData("AutoChooser", self.auto_chooser)
 
@@ -75,10 +77,12 @@ class MyRobot(wpilib.TimedRobot):
         self.autochuteRight.__init__(self.drive, self.ballChute)
         self.autochuteSafe.__init__(self.drive, self.ballChute)
         self.autochuteClear.__init__(self.drive, self.ballChute)
+        self.autochuteTrench.__init__(self.drive, self.ballChute)
 
 
     def autonomousPeriodic(self):
-        
+        self.auto_selected.Iterate()
+        '''
         if self.autoChuteLeft.get() and self.autoChuteSafe.get() and self.autoChuteRight.get():
             self.autochuteClear.Iterate()
         elif self.autoChuteLeft.get():
@@ -88,8 +92,9 @@ class MyRobot(wpilib.TimedRobot):
         elif self.autoChuteRight.get():
             self.autochuteRight.Iterate()
         else:
-            #self.auto_selected.Iterate()
+            self.auto_selected.Iterate()
             pass
+        '''
         
         #self.auto_selected.Iterate()
 
